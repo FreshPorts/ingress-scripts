@@ -1,8 +1,0 @@
-*default host=CHANGE_THIS.FreeBSD.org
-*default base=/usr
-*default release=cvs tag=.
-*default delete use-rel-suffix
-
-*default compress
-
-ports-all
