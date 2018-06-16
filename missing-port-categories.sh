@@ -7,7 +7,7 @@ QUERYORDER="ORDER BY category, name"
 
 if [ ! -f config.sh ]
 then
-	echo "config.sh not found..."
+	echo "config.sh not found by missing-port-categories.sh..."
 	exit 1
 fi
 

@@ -9,7 +9,7 @@ LOGGERTAG="process_CVSROOT_approvers.sh"
 
 if [ ! -f config.sh ]
 then
-	echo "config.sh not found..."
+	echo "config.sh not found by process_CVSROOT_approvers.sh..."
 	${LOGGER} -t ${LOGGERTAG} "config.sh not found..."
 	exit 1
 fi

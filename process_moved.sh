@@ -16,7 +16,7 @@
 
 if [ ! -f config.sh ]
 then
-	echo "config.sh not found..."
+	echo "config.sh not found by process_moved.sh..."
 	exit 1
 fi
 

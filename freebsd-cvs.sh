@@ -19,7 +19,7 @@ fi
 
 if [ ! -f config.sh ]
 then
-	echo "config.sh not found..."
+	echo "config.sh not found by freebsd-cvs.sh..."
 	exit 1
 fi
 
@@ -45,6 +45,7 @@ FILE=`basename ${PATHNAME}`
 # convert the raw file to XML
 #
 ${LOGGER} -t ${LOGGERTAG} "$0 converting to XML via process_mail.pl"
+${LOGGER} -t ${LOGGERTAG} /usr/local/bin/perl ${SCRIPTDIR}/process_mail.pl from ${PATHNAME} into ${XML}/${FILE}.xml errors to ${XML}/${FILE}.errors
 
 /usr/local/bin/perl ${SCRIPTDIR}/process_mail.pl < ${PATHNAME} >    \
        ${XML}/${FILE}.xml 2>${XML}/${FILE}.errors

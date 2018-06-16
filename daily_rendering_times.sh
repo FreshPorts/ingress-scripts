@@ -20,7 +20,7 @@ fi
 
 if [ ! -f config.sh ]
 then
-	echo "config.sh not found..."
+	echo "config.sh not found by daily_rendering_times.sh..."
 	exit 1
 fi
 
