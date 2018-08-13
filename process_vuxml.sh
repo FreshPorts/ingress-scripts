@@ -57,17 +57,25 @@ then
 	then
 	  ${LOGGER} -t ${LOGGERTAG} "process_vuxml.pl finishes normally"
 	else
-	  ${LOGGER} -t ${LOGGERTAG} "FATAL process_vuxml.pl finished with an error"
+	  ${LOGGER} -t ${LOGGERTAG} "FATAL process_vuxml.pl finished with an error: $?"
 	fi
 
 	${LOGGER} -t ${LOGGERTAG} "vuxml ident begins on ${VULNFILE}"
-	/usr/local/bin/perl ./vuxml_ident.pl     ${VULNFILE} > ${HTMLROOT}/vuxml_revision
+	/usr/local/bin/perl ./vuxml_ident.pl ${VULNFILE} > ${HTMLROOT}/vuxml_revision
+	if [ $? -eq 0 ]
+	then
+	  ${LOGGER} -t ${LOGGERTAG} "vuxml_ident.pl finishes normally"
+	else
+	  ${LOGGER} -t ${LOGGERTAG} "FATAL vuxml_ident.pl finished with an error: $?"
+	fi
 
 	${LOGGER} -t ${LOGGERTAG} "vuxml latest begins"
 	/usr/local/bin/perl ./vuln_latest.pl
-	if [ $? = 0 ]
+	if [ $? -eq 0 ]
 	then
-	  ${LOGGER} -t ${LOGGERTAG} "vuxml finishes normally"
+	  ${LOGGER} -t ${LOGGERTAG} "vuln_latest.pl finishes normally"
+	else
+	  ${LOGGER} -t ${LOGGERTAG} "FATAL vuln_latest.pl finished with an error: $?"
 	fi
 
 	rm ${VUXMLMUTEX}
