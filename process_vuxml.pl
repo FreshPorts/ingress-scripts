@@ -16,7 +16,7 @@
 
 #use 5.10.1;
 use strict;
-use FreshPorts::warnings;
+use warnings;
 use Digest::SHA qw(sha256_hex);
 use autodie qw(:default);
 use IO::File;
@@ -78,9 +78,9 @@ MAIN:
                         $updateRequired = 0;
                     }
 
-                    print "$v = '$csum' '$checksum'\n";
+                    print "vuln check: $v = '$csum' '$checksum'\n";
                 } else {
-                    print "$v = '$csum' not found\n";
+                    print "vuln check: $v = '$csum' not found\n";
                 }
 
                 if ($updateRequired) {
