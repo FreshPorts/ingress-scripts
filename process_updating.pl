@@ -13,7 +13,7 @@
 #
 
 use strict;
-use FreshPorts::warnings;
+use warnings;
 
 require Sys::Syslog;
 
