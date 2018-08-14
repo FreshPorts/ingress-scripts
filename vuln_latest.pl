@@ -124,6 +124,8 @@ if (!$SystemStatus->Online()) {
 
 my $dbh = FreshPorts::Database::GetDBHandle();
 
-CreateVulnHTML($dbh);
+my $return = CreateVulnHTML($dbh);
 
 $dbh->disconnect();
+
+exit $return;
