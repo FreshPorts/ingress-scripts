@@ -14,8 +14,11 @@
 # file switch, set by commit processing script
 # That file 
 
+logger -p local3.notice -t FreshPorts $0 is starting
+
 if [ ! -f config.sh ]
 then
+	logger -p local3.notice -t FreshPorts "config.sh not found by process_updating.sh..."
 	echo "config.sh not found by process_updating.sh..."
 	exit 1
 fi
@@ -29,6 +32,7 @@ fi
 
 if [ "${UPDATINGFLAGFILE}x" = 'x' -o "${PORTSDIR}x" = 'x' ]
 then
+	logger -p local3.notice -t FreshPorts "please set UPDATINGFLAGFILE and PORTSDIR in config.sh"
 	echo "please set UPDATINGFLAGFILE and PORTSDIR in config.sh"
 	exit 1
 fi
@@ -36,8 +40,10 @@ fi
 if [ -r ${UPDATINGFLAGFILE} ]
 then
 	rm ${UPDATINGFLAGFILE}
-	logger -t FreshPorts "about to run: /usr/local/bin/perl ./process_updating.pl < ${FRESHPORTS_JAIL_BASE_DIR}/${PORTSDIR}/UPDATING"
+	logger -p local3.notice -t FreshPorts "about to run: /usr/local/bin/perl ./process_updating.pl < ${FRESHPORTS_JAIL_BASE_DIR}/${PORTSDIR}/UPDATING"
 	/usr/local/bin/perl ./process_updating.pl < ${FRESHPORTS_JAIL_BASE_DIR}/${PORTSDIR}/UPDATING
 else
-    logger -t FreshPorts $0 invokved but ${UPDATINGFLAGFILE} was not set.
+    logger -p local3.notice -t FreshPorts $0 invokved but ${UPDATINGFLAGFILE} was not set.
 fi
+
+logger -p local3.notice -t FreshPorts $0 is finishing
