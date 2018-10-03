@@ -70,7 +70,7 @@ CACHE_NEEDS_REFRESH="${BASEDIR}/signals/cache_needs_refresh"
 # scripts for the jail
 FRESHPORTS_JAIL_BASE_DIR="${BASEDIR}/ports-jail"
 FRESHPORTS_JAIL_MASTER_PORT_SCRIPT="/make-master-port-test.sh"
-FRESHPORTS_JAIL_USER="dan"
+FRESHPORTS_JAIL_USER="freshports"
 
 # these are relative to FRESHPORTS_JAIL_BASE_DIR
 PORTSDIRBASE="/var/db/repos/"
