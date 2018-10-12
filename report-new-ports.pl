@@ -19,8 +19,6 @@ use FreshPorts::system_status;
 use Text::Wrap;
 use FreshPorts::email;
 
-my $Debug = 0;
-
 my $NumMsgs		= 0;
 my $NumCommits	= 0;
 my $NumPorts    = 0;
@@ -97,7 +95,7 @@ sub CompileWatchNotifyList($;$;$;$;$;$) {
                                                  U.emailbouncecount = 0
    ORDER BY U.id, (P.date_added + SystemTimeAdjust())::date ASC, category, port";
 
-	if ($Debug)	{
+	if ($FreshPorts::Config::ReportDebugging)	{
 		print "sql is $sql\n";
 	}
 
@@ -139,6 +137,7 @@ sub CompileWatchNotifyList($;$;$;$;$;$) {
 
 	$Body = $BodyHeader;
 	while ($row = $sth->fetchrow_hashref()) {
+		print "now processing $row->{user_email}: $row->{category}/$row->{port}\n";
 		$NumPorts++;
 
 		# make sure that the first time through, we have a value
@@ -151,7 +150,7 @@ sub CompileWatchNotifyList($;$;$;$;$;$) {
 
 		if ($LastID != $row->{user_id}) {
 			$NumMsgs++;
-			if ($Debug) {
+			if ($FreshPorts::Config::ReportDebugging) {
 				print "NOT SENDING EMAIL.. in DEBUG mode\n";
 			} else {
 				SendWatchNoticePersonal($To, $FrequencyLong, $Body);
@@ -188,7 +187,7 @@ sub CompileWatchNotifyList($;$;$;$;$;$) {
 	# if we got at least one, send out email
 	if (defined($LastID)) {
 		$NumMsgs++;
-		if ($Debug) {
+		if ($FreshPorts::Config::ReportDebugging) {
 			print "NOT SENDING EMAIL.. in DEBUG mode\n";
 		} else {
 			SendWatchNoticePersonal($To, $FrequencyLong, $Body);
@@ -243,7 +242,7 @@ my $time = `date "+%Y-%m-%d %H:%M:%S"`;
 #
 chomp $time;
 
-if ($Debug) {
+if ($FreshPorts::Config::ReportDebugging) {
 	print "**********************************\n";
 	print "running in debug mode.............\n";
 	print "**********************************\n";
@@ -311,7 +310,7 @@ if (($#ARGV+1) == 1) {
 
 			CompileWatchNotifyList($Frequency, $NewPorts, $PortCount, $last_sent, $TextAnnounce, $dbh);
 
-			if (!$Debug) {
+			if (!$FreshPorts::Config::ReportDebugging) {
 				AddToLogs($ReportID, $Frequency, $NumMsgs, $NumCommits, $NumPorts, $dbh);
 			}
 

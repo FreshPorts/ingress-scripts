@@ -19,7 +19,6 @@ use FreshPorts::system_status;
 use Text::Wrapper;
 use FreshPorts::email;
 
-my $Debug = 0;
 my $sql;
 my $sth;
 my @row;
@@ -121,7 +120,7 @@ sub CompileWatchNotifyList($;$;$;$;$;$) {
      and report_frequency.id               = report_subscriptions.report_frequency_id
 order by watch_list_id, watch_list_name, user_id, category, port, commit_date";
 
-	if ($Debug)	{
+	if ($FreshPorts::Config::ReportDebugging)	{
 		print "sql is $sql\n";
 	}
 
@@ -165,7 +164,7 @@ order by watch_list_id, watch_list_name, user_id, category, port, commit_date";
 
 	$Body = $BodyHeader;
 	while ($row = $sth->fetchrow_hashref()) {
-		print "now processing @row\n";
+		print "now processing $row->{email}: $row->{category}/$row->{port}\n";
 		$NumPorts++;
 		if ($CommitLogID ne $row->{commit_log_id}) {
 			$NumCommits++;
@@ -182,7 +181,7 @@ order by watch_list_id, watch_list_name, user_id, category, port, commit_date";
 		print "LastWatchListID = '$LastWatchListID' and id = '$row->{watch_list_id}'\n";
 		if ($LastWatchListID != $row->{watch_list_id}) {
 			$NumMsgs++;
-			if ($Debug) {
+			if ($FreshPorts::Config::ReportDebugging) {
 				print "NOT SENDING EMAIL.. in DEBUG mode\n";
 			} else {
 				print "Name = $row->{watch_list_name}\n";
@@ -212,7 +211,7 @@ order by watch_list_id, watch_list_name, user_id, category, port, commit_date";
 	# if we got at least one, send out email
 	if (defined($LastWatchListID)) {
 		$NumMsgs++;
-		if ($Debug) {
+		if ($FreshPorts::Config::ReportDebugging) {
 			print "NOT SENDING EMAIL.. in DEBUG mode\n";
 		} else {
 			print "Name = $WatchListName\n";
@@ -270,7 +269,7 @@ my $time = `date "+%Y-%m-%d %H:%M:%S"`;
 #
 chomp $time;
 
-if ($Debug) {
+if ($FreshPorts::Config::ReportDebugging) {
 	print "**********************************\n";
 	print "running in debug mode.............\n";
 	print "**********************************\n";
@@ -292,7 +291,7 @@ if (($#ARGV+1) == 1) {
 			          from report_log_latest
 			         where frequency = '$Frequency'
 			           and report_id = $ReportID";
-			if ($Debug) {
+			if ($FreshPorts::Config::ReportDebugging) {
 				print "sql is $sql\n";
 			}
 
@@ -338,7 +337,7 @@ if (($#ARGV+1) == 1) {
 
 			CompileWatchNotifyList($Frequency, $NewPorts, $PortCount, $last_sent, $TextAnnounce, $dbh);
 
-			if (!$Debug) {
+			if (!$FreshPorts::Config::ReportDebugging) {
 				AddToLogs($ReportID, $Frequency, $NumMsgs, $NumCommits, $NumPorts, $dbh);
 			}
 
