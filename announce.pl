@@ -22,15 +22,15 @@ my $ReportID = $FreshPorts::Constants::ReportIDAnnouncements;
 
 sub SendAnnouncement($) {
 
-	my $To   = shift;
-
-	my $From          = 'FreshPorts Announcement Daemon <FreshPorts-Announce@FreshPorts.org>';
-	my $CC            = '';
-	my $Subject       = 'HEADS UP: FreshPorts announcement';
-	my $ExtraHeaders = '';
-	$ExtraHeaders   .= 'Auto-Submitted: auto-generated'      . "\n";
-	$ExtraHeaders   .= 'Precedence: bulk'                    . "\n";
-	$ExtraHeaders   .= 'X-FreshPorts-Announcement: HEADS UP' . "\n";
+	my $To      = shift;
+	my $From    = 'FreshPorts Announcement Daemon <FreshPorts-Announce@FreshPorts.org>';
+	my $CC      = '';
+	my $Subject = 'HEADS UP: FreshPorts announcement';
+	my %ExtraHeaders = (
+          'Auto-Submitted'            => 'auto-generated',
+          'Precedence'                => 'bulk',
+          'X-FreshPorts-Announcement' => 'HEADS UP',
+        );
 
 
 
@@ -59,7 +59,7 @@ If a problem occurs, please send details, including the email
 address in question, to postmaster\@freshports.org
 ";
 
-	FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, $ExtraHeaders);
+	FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, \%ExtraHeaders);
 }
 
 sub SendToEachListMember($) {
@@ -92,8 +92,6 @@ sub SendToEachListMember($) {
    }
 }
 
-
-exit;
       my $dbh = FreshPorts::Database::GetDBHandle();
 
       SendToEachListMember($dbh);

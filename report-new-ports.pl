@@ -19,7 +19,7 @@ use FreshPorts::system_status;
 use Text::Wrap;
 use FreshPorts::email;
 
-my $NumMsgs		= 0;
+my $NumMsgs	= 0;
 my $NumCommits	= 0;
 my $NumPorts    = 0;
 
@@ -38,10 +38,11 @@ sub SendWatchNoticePersonal($;$;$) {
 
 	my $From         = 'FreshPorts Watch Daemon <FreshPorts-Watch@FreshPorts.org>';
 	my $Subject      = "FreshPorts $FrequencyLong new ports";
-	my $ExtraHeaders = '';
-	$ExtraHeaders   .= 'Auto-Submitted: auto-generated'           . "\n";
-	$ExtraHeaders   .= 'Precedence: bulk'                         . "\n";
-	$ExtraHeaders   .= 'X-FreshPorts-NewPorts: ' . $FrequencyLong . "\n";
+	my %ExtraHeaders = (
+		'Auto-Submitted'        => 'auto-generated',
+		'Precedence'            => 'bulk',
+		'X-FreshPorts-NewPorts' => $FrequencyLong,
+	);
 	my $CC           = '';
 
 	$Body = "
@@ -52,7 +53,7 @@ have chosen to receive these notices on a $FrequencyLong basis.
 $FreshPorts::ReportConstants::Footer
 ";
 
-	FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, $ExtraHeaders);
+	FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, \%ExtraHeaders);
 }
 
 

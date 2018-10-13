@@ -53,15 +53,16 @@ $BodyIn
 $FreshPorts::ReportConstants::Footer
 ";
 
-	my $Headers = '';
-	$Headers .= 'Auto-Submitted: auto-generated'                     . "\n";
-	$Headers .= 'Precedence: bulk'                                   . "\n";
-	$Headers .= 'X-FreshPorts-WatchListName: '      . $WatchListName . "\n";
-	$Headers .= 'X-FreshPorts-WatchListFrequency: ' . $FrequencyLong . "\n";
+	my %Headers = (
+		'Auto-Submitted'                  => 'auto-generated',
+		'Precedence'                      => 'bulk',
+		'X-FreshPorts-WatchListName:'     => $WatchListName,
+		'X-FreshPorts-WatchListFrequency' => $FrequencyLong,
+	);
 
 	my $CC      = '';
 
-	FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, $Headers);
+	FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, \%Headers);
 }
 
 
@@ -254,6 +255,8 @@ sub AddToLogs($;$;$;$;$;$) {
 	$sth->execute ||
            die "Could not execute SQL $sql ... maybe invalid?";
 }
+
+print "into report-security-notice.pl\n";
 
 #
 # see if the system is online.

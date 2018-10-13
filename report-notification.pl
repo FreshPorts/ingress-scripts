@@ -23,7 +23,7 @@ my $sql;
 my $sth;
 my @row;
 my $Bcc;
-my $NumMsgs		= 0;
+my $NumMsgs	= 0;
 my $NumCommits	= 0;
 my $NumPorts    = 0;
 
@@ -52,15 +52,16 @@ have chosen to receive these notices on a $FrequencyLong basis.
 $FreshPorts::ReportConstants::Footer
 ";
 
-	my $Headers = '';
-	$Headers .= 'Auto-Submitted: auto-generated'                     . "\n";
-	$Headers .= 'Precedence: bulk'                                   . "\n";
-	$Headers .= 'X-FreshPorts-WatchListName: '      . $WatchListName . "\n";
-	$Headers .= 'X-FreshPorts-WatchListFrequency: ' . $FrequencyLong . "\n";
+	my %Headers = (
+		'Auto-Submitted'                  => 'auto-generated',
+		'Precedence'                      => 'bulk',
+		'X-FreshPorts-WatchListName'      => $WatchListName,
+		'X-FreshPorts-WatchListFrequency' => $FrequencyLong,
+	);
 
 	my $CC = '';
 
-	FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, $Headers);
+	FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, \%Headers);
 }
 
 

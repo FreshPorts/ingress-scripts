@@ -12,26 +12,29 @@ use FreshPorts::database;
 use FreshPorts::commit_log_ports_ignore;
 use FreshPorts::system_status;
 
-sub SendNotice($;$) {
+sub SendNotice($;$;$) {
    my $StartDate = shift;
+   my $EndDate   = shift;
    my $msgbody   = shift;
 
-	my $From         = 'FreshPorts Daemon <FreshPorts@FreshPorts.org>';
-	my $To           = 'Dan Langille <dan@langille.org>';
-	my $CC           = '';
-	my $Subject      = "FreshPorts -- new users  - $StartDate";
+   my $From         = 'FreshPorts Daemon <FreshPorts@FreshPorts.org>';
+   my $To           = 'Dan Langille <dan@langille.org>';
+   my $CC           = '';
+   my $Subject      = "FreshPorts -- new users  - $StartDate to $EndDate";
 
-	my $ExtraHeaders = '';
-	$ExtraHeaders .= 'Auto-Submitted: auto-generated'       . "\n";
-	$ExtraHeaders .= 'Precedence: bulk'                     . "\n";
-	$ExtraHeaders .= 'X-FreshPorts-NewUsers: ' . $StartDate . "\n";
+   my %ExtraHeaders = (
+     'Auto-Submitted'        => 'auto-generated',
+     'Precedence'            => 'bulk',
+     'X-FreshPorts-NewUsers' => "$StartDate to $EndDate"
+   );
 
-	my $Body = "The following users were added yesterday:
+   my $Body = "The following users were added in this period:
 
 $msgbody --
 
 ";
-	FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, $ExtraHeaders);
+
+   FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, \%ExtraHeaders);
 }
 
 #
@@ -55,7 +58,7 @@ if (($#ARGV+1) == 2) {
    }
    my $sql = "select id, name, email, ip_address, firstlogin \
               from users \
-              where date_trunc('day', firstlogin) = '$StartDate'
+              where date_trunc('day', firstlogin) between '$StartDate' and '$EndDate'
               order by id";
 
    print "sql is $sql\n";
@@ -72,7 +75,7 @@ if (($#ARGV+1) == 2) {
 
    print "msgbody = \n" . $msgbody;
    if ($msgbody != '') {
-#      SendNotice($StartDate, $msgbody);
+      SendNotice($StartDate, $EndDate, $msgbody);
    }
 
    $dbh->disconnect();

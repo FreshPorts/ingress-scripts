@@ -18,9 +18,9 @@ require FreshPorts::config;
 
 
 sub SendNotice($;$;$) {
-	my $To		 	= shift;
-	my $count		= shift;
-	my $list			= shift;
+	my $To	 	= shift;
+	my $count	= shift;
+	my $list	= shift;
 	my $hostname	= `hostname`;
 
 	chomp $hostname;
@@ -28,10 +28,11 @@ sub SendNotice($;$;$) {
 	my $From         = 'FreshPorts Daemon <FreshPorts@FreshPorts.org>';
 	my $CC           = '';
 	my $Subject      = 'FreshPorts -- ports needing refresh';
-	my $ExtraHeaders = '';
-	$ExtraHeaders   .= 'Auto-Submitted: auto-generated'        . "\n";
-	$ExtraHeaders   .= 'Precedence: bulk'                      . "\n";
-	$ExtraHeaders   .= 'X-FreshPorts-RefreshNeeded: ' . $count . "\n";
+	my %ExtraHeaders = (
+		'Auto-Submitted'             => 'auto-generated',
+		'Precedence'                 => 'bulk',
+		'X-FreshPorts-RefreshNeeded' => $count,
+	);
 
 
 	my $Body = 'At ' . $hostname . '::' . $FreshPorts::Config::dbname . ", there are $count ports needing refresh.
@@ -39,7 +40,7 @@ sub SendNotice($;$;$) {
 $list
 ";
 
-	FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, $ExtraHeaders);
+	FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, \%ExtraHeaders);
 }
 
 
