@@ -32,6 +32,6 @@ then
   echo 'This is a list of the ports in question:' >> ${TMPFILE}
   echo >> ${TMPFILE}
   ${PSQL} -h ${HOST} -q -d ${DB} --user  ${DBUSER} -c "${QUERYROWS} ${QUERYBASE} ${QUERYORDER}"  >> ${TMPFILE}
-  cat  ${TMPFILE} | mail -s "missing ports on ${WEBSITEURL}" ${ADMINEMAIL}
+  cat  ${TMPFILE} | mail -s "missing ports_categories entries on ${WEBSITEURL}" ${ADMINEMAIL}
   rm ${TMPFILE}
 fi
