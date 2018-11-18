@@ -8,10 +8,10 @@
 use strict;
 
 use FreshPorts::config;
-use FreshPorts::constants;
 use FreshPorts::database;
 use FreshPorts::utilities;
-use FreshPorts::status;
+
+my $Debug = 0;
 
 sub SendNotice($) {
 	my $Msg		= shift;
@@ -23,10 +23,24 @@ sub SendNotice($) {
 	print $Body;
 }
 
-my $base=$FreshPorts::Config::QueueBaseDir;
+#
+# Three queues is the usual
+# this is a hash, one entry for each queue.
+# For each queue, we have a directory name on disk, and the the pattern of the file we search for.
+# This pattern is usually a simple suffix, used as a glob with ls.
+#
+my %queues = (
+	incoming => {
+		'/var/db/ingress/message-queues/incoming'  => '*.txt'
+		}, 
+	retry => {
+		'/var/db/freshports/message-queues/retry'  => '*.txt'
+		}, 
+	recent => {
+		'/var/db/freshports/message-queues/recent' => '*.xml'
+		},
+);
 
-my %queues          = ('incoming' => '*.txt',    'retry' => '*.txt', 'recent' => '*.xml');
-my %queue_names     = ('incoming' => 'incoming', 'retry' => 'retry', 'recent' => 'processed');
 my %report_non_zero = ('retry' => 1, 'incoming' => 1);
 
 my $Interval = '10 minutes';
@@ -41,29 +55,35 @@ undef($CountRecent);
 my $dbh = FreshPorts::Database::GetDBHandle();
 
 $msg .= "SITE: $FreshPorts::Config::FreshPortsURL ";
-foreach my $queue (@FreshPorts::Status::queues) {
-	my $pattern = $queues{$queue};
-	my $Command = "find $FreshPorts::Config::QueueBaseDir/$queue/";
-#	print $Command . "\n";
+for my $queue ( keys %queues ) {
+	if ($Debug) {print $queue ."\n";}
+	for my $directory ( keys %{ $queues{$queue} } ) {
+		if ($Debug) { print " * $directory \n"; }
+    
+		my $pattern = $queues{$queue}{$directory};
+		if ($Debug) { print "   * $pattern\n"; }
+		my $Command = "find $directory/";
+		if ($Debug) { print $Command . "\n"; }
 
-	if ($pattern ne '') {
-		$Command .= " -name \"$pattern\"";
-	}
-	$Command .= ' -maxdepth 1 | wc -l';
-
-#	print $Command . "\n";
-
-	my $Count = `$Command`;
-	chomp $Count;
-	$Count = FreshPorts::Utilities::trim($Count);
-	$msg .= " $queue: $Count ";
-
-	if ($queue = 'incoming' && $Count && defined($report_non_zero{$queue})) {
-		if (!defined($CountRecent)) {
-			$CountRecent = FreshPorts::Utilities::CommitCountPeriod($dbh, $Interval);
+		if ($pattern ne '') {
+			$Command .= " -name \"$pattern\"";
 		}
-		if ($Count > $CountRecent) {
-			$send_report = 1;
+		$Command .= ' -maxdepth 1 | wc -l';
+
+		if ($Debug) { print $Command . "\n"; }
+
+		my $Count = `$Command`;
+		chomp $Count;
+		$Count = FreshPorts::Utilities::trim($Count);
+		$msg .= " $queue: $Count ";
+
+		if ($queue = 'incoming' && $Count && defined($report_non_zero{$queue})) {
+			if (!defined($CountRecent)) {
+				$CountRecent = FreshPorts::Utilities::CommitCountPeriod($dbh, $Interval);
+			}
+			if ($Count > $CountRecent) {
+				$send_report = 1;
+			}
 		}
 	}
 }
@@ -76,6 +96,7 @@ if ($send_report) {
 	$dbh->disconnect();
 	exit(1)
 } else {
-	print 'Queues are OK';
-    $dbh->disconnect();
+	print 'Queues are OK. ';
+	print $msg;
+	$dbh->disconnect();
 }
