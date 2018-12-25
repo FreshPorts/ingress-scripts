@@ -9,6 +9,9 @@ use strict;
 
 use FreshPorts::config;
 use FreshPorts::email;
+use Sys::Hostname;
+
+my $hostname = hostname;
 
 sub SendTestEmail($;$) {
 
@@ -16,7 +19,7 @@ sub SendTestEmail($;$) {
 	my $Body          = shift;
 
 	my $From         = 'FreshPorts Watch Daemon <FreshPorts-Watch@FreshPorts.org>';
-	my $Subject      = "FreshPorts test email";
+	my $Subject      = "FreshPorts test email - " . $hostname;
 	my %ExtraHeaders = (
 		'Auto-Submitted'       => 'auto-generated',
 		'Precedence'           => 'bulk',
