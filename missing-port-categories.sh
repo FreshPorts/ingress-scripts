@@ -2,7 +2,7 @@
 
 QUERYBASE='from ports_active PA WHERE NOT EXISTS (SELECT port_id, category_id from ports_categories PC where PC.port_id = PA.id and PC.category_id = PA.category_id)'
 QUERYCOUNT='select count(id)'
-QUERYROWS="select id, category_id, name, category, category || '/' || name AS port"
+QUERYROWS="select id, category_id, name, category, category || '/' || name AS port, element_pathname(element_id)"
 QUERYORDER="ORDER BY category, name"
 
 if [ ! -f config.sh ]
