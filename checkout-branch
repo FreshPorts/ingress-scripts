@@ -1,0 +1,40 @@
+#!/bin/sh
+
+SVN="/usr/local/bin/svn"
+
+# check out a new branch
+
+# destination is ${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIRBASE}/PORTS-YYYYQN
+
+# from https://twitter.com/gumnos/status/1080202197391101953
+
+if [ ! -f config.sh ]
+then
+	echo "config.sh not found by archive-messages.sh..."
+	exit 1
+fi
+
+. config.sh
+
+if [ $OFFLINE = 1 ]
+then
+	exit 0
+fi
+
+BRANCH=$1
+
+REPO_DIR="${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIRBASE}"
+NEW_DIR="PORTS-$BRANCH"
+
+${LOGGER} checking out ${BRANCH} to ${REPO_DIR}${NEW_DIR}
+
+cd ${REPO_DIR}
+
+${LOGGER} now ready to checkout ${FRESHPORTS_FREEBSD_SVN_URL}/ports/branches/${BRANCH} 
+
+${SVN} checkout ${FRESHPORTS_FREEBSD_SVN_URL}/ports/branches/${BRANCH} ${NEW_DIR}
+RESULT=$?
+
+${LOGGER} checkout completed with status=${RESULT}
+
+return ${RESULT}
