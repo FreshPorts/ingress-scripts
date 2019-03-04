@@ -12,3 +12,5 @@ for script in ${SCRIPTS}
 do
   /bin/cp -a ${SCRIPT_DIR}/${script} .
 done
+
+/bin/cp -i ${SCRIPT_DIR}/../files/etc/make.conf ${PORTS_JAIL}/etc/
