@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# This scripts invokes the chroot for freshports and works off the Makefile
+# see also test-master-port.pl which queries the database.
+
 if [ ! -f config.sh ]
 then
 	echo "config.sh not found by test-master-port.sh..."

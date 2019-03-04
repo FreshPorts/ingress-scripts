@@ -6,6 +6,8 @@
 #
 # Verify that master-port is still working.
 # Sometimes it breaks. So let's keep track of it.
+# This script checks the value in the database for a port for which I know the master port.
+# see also test-master-port.sh which queries the Makefile.
 #
 
 use strict;
@@ -33,14 +35,14 @@ sub CheckMasterPorts($) {
 	my $row;
 
 	# quote everything going to the database
-	$sql = "SELECT master_port FROM ports_active WHERE name = 'bacula-client'";
+	$sql = "SELECT master_port FROM ports_active WHERE name = 'bacula9-client'";
 	$sth = $dbh->prepare($sql);
 	if (!$sth->execute())  {
 		FreshPorts::Utilities::ReportError('warning', "Could not execute sql", 1);
 	}
 	$row = $sth->fetchrow_hashref();
-	if ($row->{'master_port'} ne 'sysutils/bacula-server') {
-		FreshPorts::Utilities::ReportErrorEmail('ERR', "The master port for bacula-client is not sysutils/bacula-server", 1, 0);
+	if ($row->{'master_port'} ne 'sysutils/bacula9-server') {
+		FreshPorts::Utilities::ReportErrorEmail('ERR', "The master port for bacula9-client is not sysutils/bacula9-server", 1, 0);
 	}
 }
 
