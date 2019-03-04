@@ -17,8 +17,8 @@ if [ $OFFLINE = 1 ]
 then
 	exit 0
 fi
-echo Checking for porst without ports_categories entries
-echo ${PSQL} -h ${HOST} -q --pset t -d ${DB} --user ${DBUSER} -c "${QUERYCOUNT} ${QUERYBASE}" 
+echo Checking for ports without ports_categories entries
+echo      ${PSQL} -h ${HOST} -q --pset t -d ${DB} --user ${DBUSER} -c "${QUERYCOUNT} ${QUERYBASE}" 
 ROWCOUNT=`${PSQL} -h ${HOST} -q --pset t -d ${DB} --user ${DBUSER} -c "${QUERYCOUNT} ${QUERYBASE}"`
 echo $ROWCOUNT found
 if [ ${ROWCOUNT} -ne 0 ]
