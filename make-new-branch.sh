@@ -8,7 +8,7 @@ fi
 
 if [ ! -f config.sh ]
 then
-	echo "config.sh not found by make-new-branch.sh..."
+	echo "config.sh not found by $0..."
 	exit 1
 fi
 

@@ -10,7 +10,7 @@ SVN="/usr/local/bin/svn"
 
 if [ ! -f config.sh ]
 then
-	echo "config.sh not found by archive-messages.sh..."
+	echo "config.sh not found by $0..."
 	exit 1
 fi
 
