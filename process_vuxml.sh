@@ -50,7 +50,7 @@ then
 	echo `date` "${LOGGERTAG}"  "vuxml processing begins"                  >> ${LOGFILE}
 	
 	# define the vuln file we are going to operate on
-	VULNFILE="${FRESHPORTS_JAIL_BASE_DIR}/${PORTSDIR}/security/vuxml/vuln.xml"
+	VULNFILE="${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}/security/vuxml/vuln.xml"
 	
 	${LOGGER} -t ${LOGGERTAG} "process_vuxml.pl begins on ${VULNFILE}"
 	/usr/local/bin/perl ./process_vuxml.pl < ${VULNFILE} >> ${LOGFILE}
