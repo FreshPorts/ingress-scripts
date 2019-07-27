@@ -122,6 +122,7 @@ sub CompileWatchNotifyList($;$;$;$;$;$) {
      and report_subscriptions.report_id    = $ReportID
      and commit_log.id                     = commit_log_ports_vuxml.commit_log_id
      and commit_log_ports_vuxml.vuxml_id   = vuxml.id
+     and commit_log_ports_vuxml.port_id    = ports.id
 order by watch_list_id, watch_list_name, user_id, category, port, commit_date";
 
 	if ($FreshPorts::Config::ReportDebugging)	{
