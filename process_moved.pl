@@ -105,7 +105,7 @@ sub AddMoved($;$;$;$;$) {
 	$sql = "select PortsMovedAdd ($From, $To, $Date, $Why)";;
 	$sth = $dbh->prepare($sql);
 	if (!$sth->execute())  {
-		FreshPorts::Utilities::ReportError('warning', "Could not execute sql", 1);
+		FreshPorts::Utilities::ReportError('warning', "Could not execute sql: $sql", 1);
 	}
 	@row = $sth->fetchrow_array();   
 	$sth->finish();
@@ -124,7 +124,7 @@ sub EmptyMoved($) {
 	$sql = "DELETE FROM ports_moved";
 	$sth = $dbh->prepare($sql);
 	if (!$sth->execute())  {
-		FreshPorts::Utilities::ReportError('warning', "Could not execute sql", 1);
+		FreshPorts::Utilities::ReportError('warning', "Could not execute sql: $sql", 1);
 	}
 }
 

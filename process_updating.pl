@@ -226,7 +226,7 @@ sub EmptyUpdating($) {
 	$sql = "DELETE FROM ports_updating";
 	$sth = $dbh->prepare($sql);
 	if (!$sth->execute()) {
-		FreshPorts::Utilities::ReportError('warning', "Could not execute sql", 1);
+		FreshPorts::Utilities::ReportError('warning', "Could not execute sql: $sql", 1);
 	}
 }
 

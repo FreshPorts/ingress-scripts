@@ -38,7 +38,7 @@ sub CheckMasterPorts($) {
 	$sql = "SELECT master_port FROM ports_active WHERE name = 'bacula9-client'";
 	$sth = $dbh->prepare($sql);
 	if (!$sth->execute())  {
-		FreshPorts::Utilities::ReportError('warning', "Could not execute sql", 1);
+		FreshPorts::Utilities::ReportError('warning', "Could not execute sql: $sql", 1);
 	}
 	$row = $sth->fetchrow_hashref();
 	if ($row->{'master_port'} ne 'sysutils/bacula9-server') {
