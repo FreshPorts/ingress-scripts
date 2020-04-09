@@ -8,7 +8,7 @@
 use strict;
 
 use FreshPorts::port;
-use FreshPorts::database; 
+use FreshPorts::database;
 use DBI;
 use FreshPorts::commit_log_ports_ignore;
 use FreshPorts::system_status;
