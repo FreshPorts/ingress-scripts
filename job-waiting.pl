@@ -22,15 +22,23 @@ my %Jobs = (
 	$FreshPorts::Config::MovedFileFlag            => 'process_moved.sh',
 	$FreshPorts::Config::UpdatingFileFlag         => 'process_updating.sh',
 	$FreshPorts::Config::VuXMLFileFlag            => 'process_vuxml.sh',
-	$FreshPorts::Config::WWWENPortsCategoriesFlag => 'process_www_en_ports_categories.sh'
+	$FreshPorts::Config::WWWENPortsCategoriesFlag => 'process_www_en_ports_categories.sh',
+	$FreshPorts::Config::NewReposReadyForImport   => 'import_packagesite.py',
+	$FreshPorts::Config::NewRepoImported          => 'UpdatePackagesFromRawPackages.py',
 	);
 
-while (my ($flag, $script) = each %Jobs) {
-	if (-f $flag) {
-		FreshPorts::Utilities::Report('notice', "$flag exists.  About to run $script");
-		`$FreshPorts::Config::scriptpath/$script`;
-		FreshPorts::Utilities::Report('notice', "Finished running $script");
-	} else {
-		FreshPorts::Utilities::Report('notice', "flag '$flag' not set.  no work for $script");
+my $JobFound;
+do {
+	$JobFound = 0;
+	# one job might create another, so we keeping looping until they are all cleared.
+	while (my ($flag, $script) = each %Jobs) {
+		if (-f $flag) {
+			$JobFound =1;
+			FreshPorts::Utilities::Report('notice', "$flag exists.  About to run $script");
+			`$FreshPorts::Config::scriptpath/$script`;
+			FreshPorts::Utilities::Report('notice', "Finished running $script");
+		} else {
+			FreshPorts::Utilities::Report('notice', "flag '$flag' not set.  no work for $script");
+		}
 	}
-}
+} until (!$JobFound);
