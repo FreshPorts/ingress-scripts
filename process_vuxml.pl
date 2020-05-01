@@ -132,8 +132,6 @@ MAIN:
     } # if ($dbh->{Active}
 } # MAIN
 
-system();
-
 my $end = time();
 
 print "Total time: " . ($end - $start) . " seconds\n";
