@@ -7,38 +7,21 @@
 
 LOGGERTAG="$0"
 
+set -e
+
 # invoke this to get the right value for $LOGGER
-if [ ! -f config.sh ]
-then
-	exit 1
-fi
 
 . config.sh
 
 $LOGGER -t ${LOGGERTAG} starts
 
 # I'm hardcoding this path here.
-# This delete is too easy to mess up with a configuration file
+# This delete is too easy to mess up with a configuration file setting
 
-DELDIR=/var/db/freshports/cache/packages/
+DELDIR=/var/db/freshports/cache/packages
 
-if [ -d $DELDIR ]
-then
-	cd $DELDIR
-	if [ $? -ne 0 ]
-	then
-		 ${LOGGER} -t ${LOGGERTAG} FATAL - unable to cd into $DELDIR
-	fi
-
-	mkdir DELETEME && mv ./* DELETEME && rm -rf DELETEME
-	if [ $? -ne 0 ]
-	then
-	  ${LOGGER} -t ${LOGGERTAG} FATAL - unable to clear cache at $DELDIR
-	fi
-else
-
-	${LOGGER} -t ${LOGGERTAG} FATAL - could not cd into $DELDIR
-
-fi
+mkdir $DELDIR/DELETEME
+mv $DELDIR/* DELETEME
+rm -rf $DELDIR DELETEME
 
 ${LOGGER} -t ${LOGGERTAG} finishes
