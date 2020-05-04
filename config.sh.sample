@@ -95,3 +95,5 @@ DB=freshports.org
 HOST='localhost'
 DBUSER='reading'
 # password goes in ~/.pgpass
+
+BASEDIR_PACKAGER="/var/db/freshports/packagesite"
