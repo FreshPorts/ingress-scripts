@@ -96,4 +96,8 @@ HOST='localhost'
 DBUSER='reading'
 # password goes in ~/.pgpass
 
+# used for psql connections to the database
+# see https://www.postgresql.org/docs/12/libpq-envars.html
+PGSSLMODE=verify-full
+
 BASEDIR_PACKAGER="/var/db/freshports/packagesite"
