@@ -26,6 +26,11 @@ use FreshPorts::vuxml;
 use FreshPorts::vuxml_parsing;
 use FreshPorts::vuxml_mark_commits;
 
+# From https://perldoc.perl.org/perlunifaq.html#What-is-a-%22wide-character%22%3f
+# to handle: Wide character in print at /usr/local/lib/perl5/site_perl/FreshPorts/vuxml_parsing.pm line 234, <> chunk 1.\n
+
+binmode STDOUT, ":encoding(UTF-8)";
+
 #use feature qw(switch);
 
 $0 =~ s@.*/@@;
