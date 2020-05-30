@@ -100,7 +100,7 @@ sub CompileMaintinerList($;$;$;$;$;$) {
          report_subscriptions
    where commit_log.date_added            >= '$LastSent'
      and commit_log.id                     = commit_log_ports.commit_log_id 
-     and ports.maintainer                  = users.email
+     and ports.maintainer                  ilike users.email
      and length(users.email)               > 0 
      and users.emailbouncecount            = 0 
      and ports.id                          = commit_log_ports.port_id
