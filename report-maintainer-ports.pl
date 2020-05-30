@@ -302,7 +302,6 @@ if (($#ARGV+1) == 1) {
 				chomp($last_sent);
 			}
 
-			$last_sent = '2020/05/01';
 			print "last_sent = $last_sent\n";
 
 			$sql = "select Stats_PortCountNewInterval(now() - '$last_sent')";
