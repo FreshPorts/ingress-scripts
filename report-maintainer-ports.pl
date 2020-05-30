@@ -170,15 +170,15 @@ order by user_id, category, port, commit_date";
 		print "LastUserID = '$LastUserID' and id = '$row->{user_id}'\n";
 		if ($LastUserID != $row->{user_id}) {
 			$NumMsgs++;
-#			if ($FreshPorts::Config::ReportDebugging) {
-#				print "NOT SENDING EMAIL.. in DEBUG mode\n";
-#			} else {
+			if ($FreshPorts::Config::ReportDebugging) {
+				print "NOT SENDING EMAIL.. in DEBUG mode\n";
+			} else {
 				print "Name = $row->{watch_list_name}\n";
 				print "Freq = $FrequencyLong\n";
 				print "To   = $To\n";
 				print "Body = \n$Body\n";
 				SendWatchNoticePersonal($To, $Body);
-#			}
+			}
 
 			$Body       = $BodyHeader;
 			$LastUserID = $row->{user_id};
@@ -201,14 +201,14 @@ order by user_id, category, port, commit_date";
 	# if we got at least one, send out email
 	if (defined($LastUserID)) {
 		$NumMsgs++;
-#		if ($FreshPorts::Config::ReportDebugging) {
-#			print "NOT SENDING EMAIL.. in DEBUG mode\n";
-#		} else {
+		if ($FreshPorts::Config::ReportDebugging) {
+			print "NOT SENDING EMAIL.. in DEBUG mode\n";
+		} else {
 			print "Freq = $FrequencyLong\n";
 			print "To   = $To\n";
 			print "Body = \n$Body\n";
 			SendWatchNoticePersonal($To, $Body);
-#		}
+		}
 	}
 }
 
