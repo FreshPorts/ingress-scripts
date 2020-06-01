@@ -173,7 +173,6 @@ order by user_id, category, port, commit_date";
 			if ($FreshPorts::Config::ReportDebugging) {
 				print "NOT SENDING EMAIL.. in DEBUG mode\n";
 			} else {
-				print "Name = $row->{watch_list_name}\n";
 				print "Freq = $FrequencyLong\n";
 				print "To   = $To\n";
 				print "Body = \n$Body\n";
