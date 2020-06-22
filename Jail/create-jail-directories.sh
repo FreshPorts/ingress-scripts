@@ -1,7 +1,6 @@
 #!/bin/sh
 
 JAILBASE=$1
-PORTSBASE=$2
 
 mkdir -p ${JAILBASE}/usr/ports    \
          ${JAILBASE}/usr/share/mk \
@@ -16,7 +15,7 @@ mkdir -p ${JAILBASE}/usr/ports    \
          
 cp  -p scripts/*.sh           ${JAILBASE}
 cp  -p scripts/vars.sh.sample ${JAILBASE}
-cp -rp etc                    ${JAILBASE}
+cp -rp file/etc               ${JAILBASE}
 
 echo "
 # Put the following in /etc/fstab
@@ -33,14 +32,14 @@ none                            ${JAILBASE}/dev              devfs   rw         
 
 
 echo "Put the following in sudoers
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /cat-descr.sh *
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /make-category-comment.sh *
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /make-generate-plist.sh *
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /make-master-port-test.sh *
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /make-master-sites-all.sh *
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /make-port.sh *
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /make-showconfig.sh *
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /realpath.sh *
+dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${JAILBASE} /cat-descr.sh *
+dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${JAILBASE} /make-category-comment.sh *
+dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${JAILBASE} /make-generate-plist.sh *
+dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${JAILBASE} /make-master-port-test.sh *
+dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${JAILBASE} /make-master-sites-all.sh *
+dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${JAILBASE} /make-port.sh *
+dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${JAILBASE} /make-showconfig.sh *
+dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${JAILBASE} /realpath.sh *
 "
 
 echo "This entry is required in scripts/config.sh:

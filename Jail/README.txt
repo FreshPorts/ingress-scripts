@@ -7,7 +7,8 @@ following command:
 
 The directory structure will be created at /var/db/freshports/ports-jail
 
-The system expects an up-to-date copy of the ports tree at /var/db/freshports/ports-jail/var/db/repos
+The system expects an up-to-date copy of the ports tree at /var/db/freshports/ports-jail/var/db/repos/PORTS-head
+but this paremeter is not used by this script.
 
 The scripts required for the jail will be copied to the base directory of
 the jail.  These scripts are located in the scripts subdirectory relative to
