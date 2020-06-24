@@ -16,7 +16,7 @@ mkdir -p ${JAILBASE}/usr/ports    \
          
 cp  -p scripts/*.sh           ${JAILBASE}
 cp  -p scripts/vars.sh.sample ${JAILBASE}
-cp -rp etc                    ${JAILBASE}
+cp -rp files/etc              ${JAILBASE}
 
 echo "
 # Put the following in /etc/fstab
@@ -33,22 +33,22 @@ none                            ${JAILBASE}/dev              devfs   rw         
 
 
 echo "Put the following in sudoers
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /cat-descr.sh *
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /make-category-comment.sh *
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /make-generate-plist.sh *
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /make-master-port-test.sh *
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /make-master-sites-all.sh *
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /make-port.sh *
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /make-showconfig.sh *
-dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${PORTSBASE} /realpath.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /cat-descr.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-category-comment.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-flavors-package-names.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-generate-plist.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-master-port-test.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-master-sites-all.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-port.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-showconfig.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /realpath.sh *
 "
 
-echo "This entry is required in scripts/config.sh:
+echo This entry is required in scripts/config.sh:
 
-FRESHPORTS_JAIL_BASE_DIR=\"${JAILBASE}\"
-"
+echo FRESHPORTS_JAIL_BASE_DIR=\"${JAILBASE}\"
 
-echo "This entry is required in /usr/local/etc/freshports/config.pm
 
-\$FreshPorts::Config::JailBaseDir = '${JAILBASE}';
-"
+echo This entry is required in /usr/local/etc/freshports/config.pm
+
+echo \$FreshPorts::Config::JailBaseDir = '${JAILBASE}';

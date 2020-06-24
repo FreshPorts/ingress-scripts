@@ -3,7 +3,7 @@ FreshPorts now uses a chroot strategy for extracting information from the ports 
 To create the chroot structure, which I often refer to as a jail, issue the
 following command:
 
- ./create-jail-directories.sh /var/db/freshports/ports-jail /var/db/freshports/ports-jail/var/db/repos
+echo ./create-jail-directories.sh /var/db/freshports/ports-jail /var/db/freshports/ports-jail/var/db/repos | sudo su -fm freshports
 
 The directory structure will be created at /var/db/freshports/ports-jail
 
