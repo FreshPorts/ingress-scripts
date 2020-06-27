@@ -47,8 +47,7 @@ FILE=`basename ${PATHNAME}`
 ${LOGGER} -t ${LOGGERTAG} "$0 converting to XML via process_mail.pl"
 ${LOGGER} -t ${LOGGERTAG} /usr/local/bin/perl ${SCRIPTDIR}/process_mail.pl from ${PATHNAME} into ${XML}/${FILE}.xml errors to ${XML}/${FILE}.errors
 
-/usr/local/bin/perl ${SCRIPTDIR}/process_mail.pl < ${PATHNAME} >    \
-       ${XML}/${FILE}.xml 2>${XML}/${FILE}.errors
+/usr/local/bin/perl ${SCRIPTDIR}/process_mail.pl < ${PATHNAME} > ${XML}/${FILE}.xml 2>${XML}/${FILE}.errors
 RESULT=$?
 
 if [ -f ${XML}/${FILE}.errors ]
@@ -68,8 +67,7 @@ fi
 
 ${LOGGER} -t ${LOGGERTAG} "$0 loading that XML into the database via load_xml_into_db.pl"
 
-/usr/local/bin/perl ${SCRIPTDIR}/load_xml_into_db.pl ${XML}/${FILE}.xml > \
-               ${OUTPUT}/${FILE}.loading 2>${OUTPUT}/$FILE.errors
+/usr/local/bin/perl ${SCRIPTDIR}/load_xml_into_db.pl ${XML}/${FILE}.xml > ${OUTPUT}/${FILE}.loading 2>${OUTPUT}/$FILE.errors
 RESULT=$?
 
 if [ -f ${OUTPUT}/$FILE.errors ]
