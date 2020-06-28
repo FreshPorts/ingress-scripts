@@ -34,6 +34,7 @@ none                            ${JAILBASE}/dev              devfs   rw         
 echo "Put the following in sudoers
 dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${JAILBASE} /cat-descr.sh *
 dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${JAILBASE} /make-category-comment.sh *
+dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${JAILBASE} /make-flavors-package-names.sh *
 dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${JAILBASE} /make-generate-plist.sh *
 dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${JAILBASE} /make-master-port-test.sh *
 dan      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u dan ${JAILBASE} /make-master-sites-all.sh *
