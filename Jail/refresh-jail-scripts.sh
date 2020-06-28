@@ -14,4 +14,3 @@ do
 done
 
 /bin/cp -i ${SCRIPT_DIR}/../files/etc/make.conf ${PORTS_JAIL}/etc/
-/bin/cp -r ${SCRIPT_DIR}/../files/usr           ${PORTS_JAIL}
