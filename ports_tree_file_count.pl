@@ -6,13 +6,11 @@
 #
 
 use strict;
-#use lib "$ENV{HOME}/scripts";
 use FreshPorts::constants;
 use FreshPorts::config;
-use FreshPorts::branches;
 
 # this is hardcoded to HEAD for now
-my $Command="/usr/bin/find " . FreshPorts::Branches::GetPathToRepoForBranch($FreshPorts::Constants::HEAD) . "/* | /usr/bin/wc -l > $FreshPorts::Config::PortsTreeCount";
+my $Command = "/usr/bin/find $FreshPorts::Config::RepoDir/$FreshPorts::Constants::Repo_Ports | /usr/bin/wc -l > $FreshPorts::Config::PortsTreeCount";
 
 # print $Command;
 
