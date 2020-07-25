@@ -12,16 +12,25 @@ FRESHPORTS_FREEBSD_SVN_URL="https://svn.freebsd.org"
 FETCH="/usr/bin/fetch"
 FETCH_OPTIONS="-qo"
 
-# where is this website installed?
-# do not include a trailing slash
-# this directory should contain the www and scripts directories.
+# At one time, this was where the website was installed.
+# Do not include a trailing slash
+# This is usually the home directory of the freshports user
 BASEDIR="/var/db/freshports"
+
+# The home directory of the ingress user
+INGRESS_BASEDIR="/var/db/ingress"
+INGRESS_PORTS_DIR_BASE="$INGRESS_BASEDIR/repos"
+INGRESS_MSGDIR="${INGRESS_BASEDIR}/message-queues"
 
 #
 # the directory where logs go.  used mainly for notifications
 # and outputs of vuxml processing
 #
 DIRLOG="/var/log/freshports"
+
+# git log, when manipulating the git repo, logs go here:
+GITLOG="${DIRLOG}/git.log"
+GIT="/usr/local/bin/git"
 
 # what is the URL for this website?
 # MUST have a trailing /
@@ -59,6 +68,8 @@ MOVEDFLAGFILE="${BASEDIR}/signals/refresh_moved"
 
 UPDATINGFLAGFILE="${BASEDIR}/signals/refresh_updating"
 
+CHECKGITFILE="${INGRESS_BASEDIR}/signals/check_git"
+
 PORTSFREEZEFILE="${BASEDIR}/signals/PortsFreezeIsOn"
 
 VUXMLFLAGFILE="${BASEDIR}/signals/vuxml"
@@ -74,6 +85,8 @@ FRESHPORTS_JAIL_USER="freshports"
 
 # these are relative to FRESHPORTS_JAIL_BASE_DIR
 PORTSDIRBASE="/var/db/repos/"
+
+
 # note: this works on HEAD only
 # and is relative to ${FRESHPORTS_JAIL_BASE_DIR}
 PORTSDIR="${PORTSDIRBASE}/PORTS-head"
