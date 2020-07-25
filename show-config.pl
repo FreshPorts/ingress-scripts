@@ -55,4 +55,4 @@ print "\$FreshPorts::Config::ports_prefix                          = '$FreshPort
 print "\$FreshPorts::Config::scriptpath                            = '$FreshPorts::Config::scriptpath'\n";
 print "\$FreshPorts::Config::user                                  = '$FreshPorts::Config::user'\n";
 
-print "FreshPorts::Branches::GetPathToRepoForBranchCHROOT('head')  = '" . FreshPorts::Branches::GetPathToRepoForBranchCHROOT('head') . "'\n";
+print "FreshPorts::Branches::GetPathToRepoForBranchCHROOT('master')  = '" . FreshPorts::Branches::GetPathToRepoForBranchCHROOT('master') . "'\n";
