@@ -66,10 +66,9 @@ fi
 # load the XML into the database
 #
 
-${LOGGER} -t ${LOGGERTAG} "$0 loading that XML into the database via load_xml_into_db.pl"
+${LOGGER} -t ${LOGGERTAG} "$0 loading that XML into the database via load_xml_into_db_svn.pl"
 
-/usr/local/bin/perl ${SCRIPTDIR}/load_xml_into_db.pl ${XML}/${FILE}.xml > \
-               ${OUTPUT}/${FILE}.loading 2>${OUTPUT}/$FILE.errors
+/usr/local/bin/perl ${SCRIPTDIR}/load_xml_into_db_svn.pl ${XML}/${FILE}.xml > ${OUTPUT}/${FILE}.loading 2>${OUTPUT}/$FILE.errors
 RESULT=$?
 
 if [ -f ${OUTPUT}/$FILE.errors ]
