@@ -4,6 +4,9 @@
 #
 # Copyright (c) 1999-2007 DVL Software
 #
+# This script is invoked by the fp-freshports.sh script
+# usually located in /var/services/freshports
+#
 
 use strict;
 
@@ -23,7 +26,6 @@ my %Jobs = (
 	$FreshPorts::Config::UpdatingFileFlag         => 'process_updating.sh',
 	$FreshPorts::Config::VuXMLFileFlag            => 'process_vuxml.sh',
 	$FreshPorts::Config::WWWENPortsCategoriesFlag => 'process_www_en_ports_categories.sh',
-	$FreshPorts::Config::CheckGit                 => 'check_git.sh',
 	);
 
 my $JobFound;

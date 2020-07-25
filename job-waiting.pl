@@ -4,6 +4,9 @@
 #
 # Copyright (c) 1999-2007 DVL Software
 #
+# This script is invoked by the fp-freshports.sh script
+# usually located in /var/services/freshports
+#
 
 use strict;
 
@@ -14,11 +17,21 @@ use FreshPorts::commit_log_ports_ignore;
 use FreshPorts::system_status;
 use FreshPorts::utilities;
 
-my $dbh;
+# added in for testing
+require Sys::Syslog;
 
-my $DaysRefreshed;
+FreshPorts::Utilities::InitSyslog();
 
-my %Jobs = (
+#die('we are done here - stopped');
+
+Sys::Syslog::syslog('warning', "running job-waiting.pl");
+
+
+my %Jobs_ingress = (
+	$FreshPorts::Config::CheckGit                 => 'check_git.sh',
+	);
+
+my %Jobs_freshports = (
 	$FreshPorts::Config::MovedFileFlag            => 'process_moved.sh',
 	$FreshPorts::Config::NewReposReadyForImport   => 'import_packagesite.py',
 	$FreshPorts::Config::NewRepoImported          => 'UpdatePackagesFromRawPackages.py',
@@ -26,6 +39,31 @@ my %Jobs = (
 	$FreshPorts::Config::VuXMLFileFlag            => 'process_vuxml.sh',
 	$FreshPorts::Config::WWWENPortsCategoriesFlag => 'process_www_en_ports_categories.sh',
 	);
+
+FreshPorts::Utilities::Report('notice', "starting $0");
+
+#	
+# This script is invoked by either the freshports or the ingress user
+# they have separate lists of jobs to look for. Rather than maintain two
+# scripts, there is one.
+#
+my $username = getpwuid($<);
+my %Jobs;
+
+FreshPorts::Utilities::Report('notice', "running $0 as user = '$username'");
+
+if ($username eq 'freshports') {
+   %Jobs = %Jobs_freshports;
+} elsif ($username eq 'ingress') {
+   %Jobs = %Jobs_ingress;
+} else {
+  FreshPorts::Utilities::Report('notice', "WHO IS THAT USER? I don't know them. Stopping.");
+  die($0 . ' must be run only as the ingress or freshports users');
+  exit;
+}
+
+	
+FreshPorts::Utilities::Report('notice', "checking jobs for $username");
 
 my $JobFound;
 do {
