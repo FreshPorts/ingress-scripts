@@ -21,6 +21,7 @@ BASEDIR="/var/db/freshports"
 INGRESS_BASEDIR="/var/db/ingress"
 INGRESS_PORTS_DIR_BASE="$INGRESS_BASEDIR/repos"
 INGRESS_MSGDIR="${INGRESS_BASEDIR}/message-queues"
+INGRESS_SPOOLINGDIR="${INGRESS_MSGDIR}/spooling"
 
 #
 # the directory where logs go.  used mainly for notifications
@@ -114,3 +115,23 @@ DBUSER='reading'
 PGSSLMODE=verify-full
 
 BASEDIR_PACKAGER="/var/db/freshports/packagesite"
+
+convert_repo_label_to_directory(){
+  repo=$1
+  
+  case $repo in
+     src) dir='freebsd';;
+     doc) dir='freebsd-doc';;
+     ports) dir='freebsd-ports';;
+     *) dir='';;
+  esac
+
+  echo $dir
+}
+
+logfile(){
+  msg=$1
+  
+  timestamp=`date "+%Y.%m.%d %H:%M:%S"` 
+  echo ${timestamp} ${LOGGERTAG} $msg
+}
