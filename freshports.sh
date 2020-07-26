@@ -35,5 +35,3 @@ then
 	sudo apachectl graceful
 	sudo svc -u /var/service/fp-listen
 fi
-#
-#
