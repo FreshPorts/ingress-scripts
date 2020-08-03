@@ -61,7 +61,7 @@ RESULT=$?
 if [ -f ${XML}/${FILE}.errors ]
 then
 #  found errors
-   if [  -s $XML/$FILE.errors ]
+   if [ -s $XML/$FILE.errors ]
    then
       exit 2
    else
