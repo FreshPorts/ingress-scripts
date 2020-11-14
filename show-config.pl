@@ -3,6 +3,8 @@
 require FreshPorts::config;
 require FreshPorts::branches;
 
+use Data::Dumper;
+
 print "\$FreshPorts::Config::BaseDir                               = '$FreshPorts::Config::BaseDir'\n";
 print "\$FreshPorts::Config::CVS_Repository                        = '$FreshPorts::Config::CVS_Repository'\n";
 print "\$FreshPorts::Config::CachingRoot                           = '$FreshPorts::Config::CachingRoot'\n";
@@ -55,4 +57,12 @@ print "\$FreshPorts::Config::ports_prefix                          = '$FreshPort
 print "\$FreshPorts::Config::scriptpath                            = '$FreshPorts::Config::scriptpath'\n";
 print "\$FreshPorts::Config::user                                  = '$FreshPorts::Config::user'\n";
 
-print "FreshPorts::Branches::GetPathToRepoForBranchCHROOT('master')  = '" . FreshPorts::Branches::GetPathToRepoForBranchCHROOT('master') . "'\n";
+# This isn't relevant on git
+#print "FreshPorts::Branches::GetPathToRepoForBranchCHROOT('master', 'head')  = '" . FreshPorts::Branches::GetPathToRepoForBranchCHROOT('master', 'head') . "'\n";
+
+print "\$FreshPorts::Constants::GitRepos:\n";
+print Dumper(\%FreshPorts::Constants::GitRepos);
+
+
+print "\$FreshPorts::Constants::RepoLabelsToGitRepoNames:\n";
+print Dumper(\%FreshPorts::Constants::RepoLabelsToGitRepoNames);
