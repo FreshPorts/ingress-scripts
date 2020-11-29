@@ -17,12 +17,10 @@ else
     # we may not need this cd...
     cd ${GITDIR}
     
-    # we need to a do a pull
+    # we need to a do a git fetch
     # we may not have this commit
-    echo checkout master
-    git checkout master
-    echo git pull
-    git pull
+    echo git fetch
+    git fetch
     echo "git checkout ${REVISION}"
     git checkout ${REVISION}
     exit $?
