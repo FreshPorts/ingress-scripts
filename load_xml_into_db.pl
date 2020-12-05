@@ -25,23 +25,18 @@ use strict;
 
 use FreshPorts::database;
 use FreshPorts::xml_munge;
-use FreshPorts::observer_commits;
 
 my $dbh = FreshPorts::Database::GetDBHandle();
 if ($dbh->{Active}) {
 
-	my $ObserverCommits = FreshPorts::ObserverCommits->new($dbh);
-
 	my $Munger = FreshPorts::XML_Munge->new($dbh);
-
-	$Munger->add_observer($ObserverCommits);
 
 	print "about to process\n";
 	my $ErrorFound = $Munger->process();
 
 	print " now is the commit:\n";
 
-	$Munger->notify_observers($FreshPorts::Messages::TransactionCommitted);
+	print "That commit is of Type: '" . $Munger->getType() . "'\n";
 
 	$dbh->disconnect();
 	print "EOF\n";
