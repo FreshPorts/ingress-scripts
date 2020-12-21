@@ -54,13 +54,13 @@ sub main {
 #	print 'Subject: '    . $Message_Subject . "\n";
 
 	my $found = 0;
-    my $ListProperties = FreshPorts::Branches::ListProperties($ListId);
-    if (defined($ListProperties))
-    {
-      $found = 1;
-      my $process = $ListProperties->{'process'};
-      eval "use FreshPorts::$process";
-    }
+	my $ListProperties = FreshPorts::Branches::ListProperties($ListId);
+	if (defined($ListProperties))
+	{
+		$found = 1;
+		my $process = $ListProperties->{'process'};
+		eval "use FreshPorts::$process";
+	}
 
 	if (!$found) {
 		FreshPorts::Utilities::ReportErrorEmailNoPrint('err', "This List-Id/Message-Id combination is not known to this script. List-Id='" . 
