@@ -133,6 +133,6 @@ convert_repo_label_to_directory(){
 logfile(){
   msg=$1
   
-  timestamp=`date "+%Y.%m.%d %H:%M:%S"` 
+  timestamp=$(date "+%Y.%m.%d %H:%M:%S") 
   echo ${timestamp} ${LOGGERTAG} $msg
 }
