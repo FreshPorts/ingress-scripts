@@ -33,6 +33,6 @@ fi
 
 DAYS=$1
 
-YYYY_MM_DD=`eval date -v-${DAYS}d "+%Y-%m-%d"`
+YYYY_MM_DD=$(eval date -v-${DAYS}d "+%Y-%m-%d")
 
 /usr/local/bin/perl ${SCRIPTDIR}/daily_rendering_times.pl ${YYYY_MM_DD}
