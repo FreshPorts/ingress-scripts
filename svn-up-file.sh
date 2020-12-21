@@ -16,8 +16,11 @@ else
     REVISION=$3
 
     # we may not need this cd...
+    echo cd to ${SVNDIR}
     cd ${SVNDIR}
-    echo "svn up -r ${REVISION} ${SVNITEM}"
+    
+    pwd
+    echo "doing this: svn up -r ${REVISION} ${SVNITEM}"
     svn up -r ${REVISION} ${SVNITEM}
     exit $?
 fi
