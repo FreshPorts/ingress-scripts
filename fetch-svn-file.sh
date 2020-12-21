@@ -29,7 +29,7 @@ else
 
 	# try to get around any possible caching by using a timestamp as a parameter
 	#
-	time=`/bin/date +"%s"`
+	time=$(/bin/date +"%s")
 
     # we may not need this cd...
     cd ${DESTDIR}
