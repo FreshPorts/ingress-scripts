@@ -5,4 +5,4 @@
 # Copyright (c) 2001-2003 DVL Software
 #
 
-grep `date -v-1d "+%Y-%m-%d"` ${CACHINGROOT}/searchlog.txt
+grep $(date -v-1d "+%Y-%m-%d") ${CACHINGROOT}/searchlog.txt

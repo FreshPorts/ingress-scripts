@@ -19,7 +19,7 @@ then
 fi
 echo Checking for ports without ports_categories entries
 echo      ${PSQL} -h ${HOST} -q --pset t -d ${DB} --user ${DBUSER} -c "${QUERYCOUNT} ${QUERYBASE}" 
-ROWCOUNT=`${PSQL} -h ${HOST} -q --pset t -d ${DB} --user ${DBUSER} -c "${QUERYCOUNT} ${QUERYBASE}"`
+ROWCOUNT=$(${PSQL} -h ${HOST} -q --pset t -d ${DB} --user ${DBUSER} -c "${QUERYCOUNT} ${QUERYBASE}")
 echo $ROWCOUNT found
 if [ ${ROWCOUNT} -ne 0 ]
 then

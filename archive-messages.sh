@@ -32,9 +32,9 @@ fi
 
 DAYS=$1
 
-YYYY_MM_DD=`eval date -v-${DAYS}d "+%Y_%m_%d"`
-YYYY_MM=`eval date -v-${DAYS}d "+%Y_%m"`
-YYYYMMDD=`eval date -v-${DAYS}d "+%Y.%m.%d"`
+YYYY_MM_DD=$(eval date -v-${DAYS}d "+%Y_%m_%d")
+YYYY_MM=$(eval date -v-${DAYS}d "+%Y_%m")
+YYYYMMDD=$(eval date -v-${DAYS}d "+%Y.%m.%d")
 
 
 DEST="${MSGDIR}/archive/${YYYY_MM}/${YYYY_MM_DD}/"

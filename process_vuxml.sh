@@ -47,7 +47,7 @@ then
 	touch ${VUXMLMUTEX}
 	rm ${VUXMLFLAGFILE}
 	${LOGGER} -t ${LOGGERTAG} "vuxml processing begins"
-	echo `date` "${LOGGERTAG}"  "vuxml processing begins"                  >> ${LOGFILE}
+	echo $(date) "${LOGGERTAG}"  "vuxml processing begins"                  >> ${LOGFILE}
 	
 	# define the vuln file we are going to operate on
 	VULNFILE="${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}/security/vuxml/vuln.xml"
@@ -80,10 +80,10 @@ then
 	fi
 
 	rm ${VUXMLMUTEX}
-	echo `date` "${LOGGERTAG}"  "vuxml finishes" >> ${LOGFILE}
+	echo $(date) "${LOGGERTAG}"  "vuxml finishes" >> ${LOGFILE}
 	${LOGGER} -t ${LOGGERTAG} "vuxml finishes"
 else
 	${LOGGER} -t ${LOGGERTAG} "${VUXMLFLAGFILE} not set: no processing to do"
 fi
-echo `date` "${LOGGERTAG}"  "vuxml terminates" >> ${LOGFILE}
+echo $(date) "${LOGGERTAG}"  "vuxml terminates" >> ${LOGFILE}
 ${LOGGER} -t ${LOGGERTAG} "vuxml terminates"

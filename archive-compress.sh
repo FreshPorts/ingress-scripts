@@ -13,7 +13,7 @@
 #   exit 1
 #fi
 
-YYYY_MM=`date -v1d  -v-1d "+%Y_%m"`
+YYYY_MM=$(date -v1d  -v-1d "+%Y_%m")
 
 ARCHIVEDIR="/usr/local/etc/freshports/msgs/archives"
 

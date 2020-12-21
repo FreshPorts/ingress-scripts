@@ -4,4 +4,4 @@
 #
 # Copyright (c) 2001-2003 DVL Software
 #
-/usr/local/bin/perl newusers.pl `date -v-1d "+%Y-%m-%d"` `date -v-1d "+%Y-%m-%d"`
+/usr/local/bin/perl newusers.pl $(date -v-1d "+%Y-%m-%d") $(date -v-1d "+%Y-%m-%d")

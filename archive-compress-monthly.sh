@@ -15,7 +15,7 @@ fi
 
 ARCHIVEDIR=$2
 
-YYYY_MM=`eval date -v1d -v-$1m "+%Y_%m"`
+YYYY_MM=$(eval date -v1d -v-$1m "+%Y_%m")
 
 cd ${ARCHIVEDIR}
 tar cvfz ${YYYY_MM}.tgz ${YYYY_MM} && rm -rf ${YYYY_MM}

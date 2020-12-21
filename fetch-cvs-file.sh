@@ -34,7 +34,7 @@ else
 
 	# try to get around any possible caching by using a timestamp as a parameter
 	#
-	time=`/bin/date +"%s"`
+	time=$(/bin/date +"%s")
 
 	echo "* * * about to fetch '$URL/$SRCDIR/$FILE?rev=$REVISION$SUFFIX&cache_busting_value=$time'"
 	echo "* * * fetching into $FETCHFILE"
