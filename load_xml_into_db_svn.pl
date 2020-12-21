@@ -32,7 +32,7 @@ if ($dbh->{Active}) {
 
 	my $ObserverCommits = FreshPorts::ObserverCommits->new($dbh);
 
-	my $Munger = FreshPorts::XML_Munge->new($dbh);
+	my $Munger = FreshPorts::XML_Munge_svn->new($dbh);
 
 	$Munger->add_observer($ObserverCommits);
 
