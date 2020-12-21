@@ -1,4 +1,8 @@
 #!/bin/sh
+
+
+# NOTE I am sure this script is not generally used any more.
+#      The work is now done by check_git.sh
 #
 # $Id: freebsd-git.sh,v 1.9 2011-08-15 16:31:56 dan Exp $
 #
@@ -38,11 +42,11 @@ OUTPUT="${MSGDIR}/recent"
 ${LOGGER} -t ${LOGGERTAG} "$0 invoked, using XML='${XML}' and OUTPUT='${OUTPUT}'"
 
 PATHNAME=$1
-FILE=`basename ${PATHNAME}` 
+FILE=$(basename ${PATHNAME}) 
 
 # should we start processing by commit-hash, we might need these two lines.
 #PROCESS_ID=${$}
-#FILE=`date +%Y.%m.%d.%H.%M.%S`.$PROCESS_ID.${COMMIT_HASH}.txt
+#FILE=$(date +%Y.%m.%d.%H.%M.%S).$PROCESS_ID.${COMMIT_HASH}.txt
 
 #
 # convert the raw file to XML
@@ -73,9 +77,9 @@ fi
 # load the XML into the database
 #
 
-${LOGGER} -t ${LOGGERTAG} "$0 loading that XML into the database via load_xml_into_db_git.pl"
+${LOGGER} -t ${LOGGERTAG} "$0 loading that XML into the database via load_xml_into_db.pl"
 
-/usr/local/bin/perl ${SCRIPTDIR}/load_xml_into_db_git.pl ${XML}/${FILE}.xml ${OUTPUT}/${FILE}.loading 2>${OUTPUT}/$FILE.errors
+/usr/local/bin/perl ${SCRIPTDIR}/load_xml_into_db.pl ${XML}/${FILE}.xml ${OUTPUT}/${FILE}.loading 2>${OUTPUT}/$FILE.errors
 RESULT=$?
 
 if [ -f ${OUTPUT}/$FILE.errors ]

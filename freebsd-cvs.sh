@@ -9,7 +9,6 @@
 #
 # Takes a file name as a parameter
 #
-LOGGERTAG="freebsd-cvs.sh"
 
 if [ $# -ne 1 ]
 then
@@ -25,31 +24,31 @@ fi
 
 . config.sh
 
-${LOGGER} -t ${LOGGERTAG} $0 has started
+echo $0 has started
 
 if [ $OFFLINE = 1 ]
 then
 	exit 0
 fi
 
-XML="${MSGDIR}/recent"
-OUTPUT="${MSGDIR}/recent"
+XML="/var/db/ingress_svn/message-queues/spooling"
 
-${LOGGER} -t ${LOGGERTAG} "$0 invoked, using XML='${XML}' and OUTPUT='${OUTPUT}'"
+echo "$0 invoked, using XML='${XML}'"
 
 PATHNAME=$1
 
-FILE=`basename ${PATHNAME}` 
+FILE=$(basename ${PATHNAME}) 
 
 #
 # convert the raw file to XML
 #
-${LOGGER} -t ${LOGGERTAG} "$0 converting to XML via process_mail.pl"
-${LOGGER} -t ${LOGGERTAG} /usr/local/bin/perl ${SCRIPTDIR}/process_mail.pl from ${PATHNAME} into ${XML}/${FILE}.xml errors to ${XML}/${FILE}.errors
+echo "$0 converting to XML via process_mail.pl"
+echo /usr/local/bin/perl ${SCRIPTDIR}/process_mail.pl from ${PATHNAME} into ${XML}/${FILE}.xml errors to ${XML}/${FILE}.errors
 
-/usr/local/bin/perl ${SCRIPTDIR}/process_mail.pl < ${PATHNAME} >    \
-       ${XML}/${FILE}.xml 2>${XML}/${FILE}.errors
+/usr/local/bin/perl ${SCRIPTDIR}/process_mail.pl < ${PATHNAME} > ${XML}/${FILE}.xml 2>${XML}/${FILE}.errors
 RESULT=$?
+
+
 
 if [ -f ${XML}/${FILE}.errors ]
 then
@@ -62,27 +61,6 @@ then
    fi
 fi
 
-#
-# load the XML into the database
-#
-
-${LOGGER} -t ${LOGGERTAG} "$0 loading that XML into the database via load_xml_into_db_svn.pl"
-
-/usr/local/bin/perl ${SCRIPTDIR}/load_xml_into_db_svn.pl ${XML}/${FILE}.xml > ${OUTPUT}/${FILE}.loading 2>${OUTPUT}/$FILE.errors
-RESULT=$?
-
-if [ -f ${OUTPUT}/$FILE.errors ]
-then
-#  found errors
-   if [ -s ${OUTPUT}/$FILE.errors ]
-   then
-      # do nothing, leave that file there.
-   else
-      rm ${OUTPUT}/$FILE.errors
-   fi
-fi
-
-${LOGGER} -t ${LOGGERTAG} "$0 finished"
-
+echo "$0 finished"
 
 exit $RESULT
