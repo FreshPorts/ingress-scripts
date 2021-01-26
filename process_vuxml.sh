@@ -53,7 +53,7 @@ then
 	VULNFILE="${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}/security/vuxml/vuln.xml"
 	
 	${LOGGER} -t ${LOGGERTAG} "process_vuxml.pl begins on ${VULNFILE}"
-	/usr/local/bin/perl ./process_vuxml.pl < ${VULNFILE} >> ${LOGFILE}
+	/usr/local/bin/perl ./process_vuxml.pl --filename=${VULNFILE} >> ${LOGFILE}
 	if [ $? -eq 0 ]
 	then
 	  ${LOGGER} -t ${LOGGERTAG} "process_vuxml.pl finishes normally"
