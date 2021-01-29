@@ -26,7 +26,7 @@ use Getopt::Long;
 
 use FreshPorts::database;
 use FreshPorts::vuxml;
-use FreshPorts::vuxml_parsing_via_dom;
+use FreshPorts::vuxml_parsing;
 use FreshPorts::vuxml_mark_commits;
 
 my $filename;
@@ -87,9 +87,9 @@ MAIN:
 
                 if ($updateRequired) {
                     if ($fh->open(\$node->toString(), '<')) {
-                        my $p = FreshPorts::vuxml_parsing_via_dom->new(Stream        => $fh,
-                                                                       DBHandle      => $dbh,
-                                                                       UpdateInPlace => 1);
+                        my $p = FreshPorts::vuxml_parsing->new(Stream        => $fh,
+                                                               DBHandle      => $dbh,
+                                                               UpdateInPlace => 1);
 
                         $p->parse_xml($csum);
 
