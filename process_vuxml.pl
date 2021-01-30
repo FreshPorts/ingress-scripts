@@ -21,7 +21,7 @@ use XML::DOM::XPath;
 use Encode;
 use Digest::SHA qw(sha256_hex);
 use autodie qw(:default);
-use IO::File;
+use IO::String;
 use Getopt::Long;
 
 use FreshPorts::database;
@@ -30,6 +30,11 @@ use FreshPorts::vuxml_parsing;
 use FreshPorts::vuxml_mark_commits;
 
 my $filename;
+my $dryrun;
+my $showchecksums;
+my $printnodes;
+
+my $nodeString;
 
 # From https://perldoc.perl.org/perlunifaq.html#What-is-a-%22wide-character%22%3f
 # to handle: Wide character in print at /usr/local/lib/perl5/site_perl/FreshPorts/vuxml_parsing.pm line 234, <> chunk 1.\n
@@ -40,13 +45,26 @@ binmode STDOUT, ":encoding(UTF-8)";
 
 
 # Reads vuln.xml on stdin * NOT ANY MORE
-GetOptions ('filename:s' => \$filename);
+GetOptions ('filename:s'     => \$filename,
+            'dryrun!'        => \$dryrun,
+            'showchecksums!' => \$showchecksums,
+            'printnodes!'    => \$printnodes);
 
-print $filename;
+if ($dryrun) {
+  print "this is a dry run\n";
+}
+
+if ($showchecksums) {
+  print "checksums will be displayed\n";
+}
+
+if ($printnodes) {
+  print "nodes will be displayed\n";
+}
 
 my $start = time;
 
-print 'process_vuxml.pl finishes' . "\n";
+print 'process_vuxml.pl starts' . "\n";
 
 
 MAIN:
@@ -60,48 +78,74 @@ MAIN:
     my $dbh;
     $dbh = FreshPorts::Database::GetDBHandle();
     if ($dbh->{Active}) {
-        my $fh = IO::File->new();
+        my $fh = IO::String->new();
         my $vuxml = FreshPorts::vuxml->new( $dbh );
           
         eval {
             for my $node ($doc->findnodes('/vuxml/vuln'))
             {
+                if ($dryrun && !$showchecksums) {
+                    print '.';
+                }
                 my $vid  = $node->getAttributeNode('vid')->getValue();
                 my $csum = sha256_hex(Encode::encode_utf8($node->toString));
-                print  $vid . " " . $csum . "\n";
-
+                
                 # fetch the checksum from the database
                 my $checksum = $vuxml->FetchChecksumByVID($vid);
 
                 my $updateRequired = 1;
                 if (defined($checksum)) {
 
-                    if ($csum eq $checksum && 1) {
+                    if ($csum eq $checksum) {
+                        # comment out the next line to always update
                         $updateRequired = 0;
                     }
 
-                    print "vuln check: $vid = '$csum' '$checksum'\n";
+                    if ($showchecksums) {
+                        print "vuln check: $vid = '$csum'";
+                        if ($updateRequired) {
+                            print " '$checksum'";
+                        }
+                        print "\n";
+                    }
                 } else {
-                    print "vuln check: $vid = '$csum' not found\n";
+                    if ($showchecksums) {
+                        print "vuln check: $vid = '$csum' not found\n";
+                    }
+                }
+                
+                if ($updateRequired && $dryrun) {
+                     # add after the .
+                     if (!$showchecksums) {
+                         print "\n";
+                     }
+                     print "\n$vid would have been updated because of checksum\n\n";
                 }
 
-                if ($updateRequired) {
-                    if ($fh->open(\$node->toString(), '<')) {
+                if ($updateRequired && !$dryrun) {
+                    $nodeString = $node->toString();
+                    if ($printnodes) {
+                        print $nodeString . "\n";
+                    }
+                    if ($fh->open($nodeString)) {
                         my $p = FreshPorts::vuxml_parsing->new(Stream        => $fh,
                                                                DBHandle      => $dbh,
                                                                UpdateInPlace => 1);
 
+                        # always pass in the checksum from our calculation
                         $p->parse_xml($csum);
 
                         if ($p->database_updated()) {
-                            print "yes, the database was updated\n";
+                            print "yes, the database was updated for $vid\n";
                         } else {
-                            print "no, the database was NOT updated\n";
+                            print "no, the database was NOT updated for $vid\n";
                             next;
                         }
 
                         $fh->close;
-                    } # if ($fh->open
+                    } else {
+                        die "fh->open failed";
+                    }# if ($fh->open
 
                     # process $vulns{$v} via vuxml_processing
 
@@ -113,6 +157,9 @@ MAIN:
 
                     print 'invoking ClearCachedEntries' . "\n";
                     $CommitMarker->ClearCachedEntries($vid);
+                    
+                    # for debugging
+                    #last;
                     
                 } # if ($updateRequired)
             } # for my $node
