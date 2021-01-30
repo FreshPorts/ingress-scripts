@@ -33,8 +33,10 @@ my $filename;
 my $dryrun;
 my $showchecksums;
 my $printnodes;
+my $showreasons;
 
 my $nodeString;
+my $NumUpdates = 0;
 
 # From https://perldoc.perl.org/perlunifaq.html#What-is-a-%22wide-character%22%3f
 # to handle: Wide character in print at /usr/local/lib/perl5/site_perl/FreshPorts/vuxml_parsing.pm line 234, <> chunk 1.\n
@@ -48,7 +50,8 @@ binmode STDOUT, ":encoding(UTF-8)";
 GetOptions ('filename:s'     => \$filename,
             'dryrun!'        => \$dryrun,
             'showchecksums!' => \$showchecksums,
-            'printnodes!'    => \$printnodes);
+            'printnodes!'    => \$printnodes,
+            'showreasons!'   => \$showreasons);
 
 if ($dryrun) {
   print "this is a dry run\n";
@@ -60,6 +63,10 @@ if ($showchecksums) {
 
 if ($printnodes) {
   print "nodes will be displayed\n";
+}
+
+if ($showreasons) {
+  print "reasons will be displayed\n";
 }
 
 my $start = time;
@@ -108,10 +115,20 @@ MAIN:
                         }
                         print "\n";
                     }
+                    if ($updateRequired && $showreasons) {
+                        print "$vid will be updated because of checksum differences\n";
+                    }
                 } else {
                     if ($showchecksums) {
                         print "vuln check: $vid = '$csum' not found\n";
                     }
+                    if ($showreasons) {
+                        print "$vid will be updated because is it not in the database\n";
+                    }
+                }
+                
+                if ($updateRequired) {
+                    $NumUpdates++; 
                 }
                 
                 if ($updateRequired && $dryrun) {
@@ -186,6 +203,11 @@ my $end = time();
 
 print "Total time: " . ($end - $start) . " seconds\n";
 
+print "Number of updates: $NumUpdates\n";
+
+if ($dryrun) {
+  print "this was a dry run\n";
+}
 
 #
 # That's All Folks!
