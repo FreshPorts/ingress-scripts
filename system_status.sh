@@ -12,7 +12,7 @@ COMMITS=$(/usr/local/bin/sudo /usr/local/bin/svstat /var/service/freshports)
 # count of messages in the incoming queue
 COUNT=$(/bin/ls /var/db/ingress/message-queues/incoming/ | /usr/bin/wc -l)
 
-PROCESSED=$(/bin/ls /var/db/freshports/message-queues/recent/*.txt.raw | /usr/bin/wc -l)
+PROCESSED=$(/bin/ls /var/db/freshports/message-queues/recent/*.txt | /usr/bin/wc -l)
 
 echo '<p>Number of queued commits: '  $COUNT      '</p>' >> ${SPOOL}
 echo '<p>Commits processed today:  '  $PROCESSED  '</p>' >> ${SPOOL}
