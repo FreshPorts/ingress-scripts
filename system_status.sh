@@ -7,15 +7,19 @@
 SPOOL="/var/db/freshports/cache/spooling/$0.$$.tmp"
 
 # is commit processing enabled?
-COMMITS=$(/usr/local/bin/sudo /usr/local/bin/svstat /var/service/freshports)
+COMMITS=$(/usr/sbin/service ingress status)
+COMMITS_SVN=$(/usr/sbin/service ingress_svn status)
+PROCESSING=$(/usr/sbin/service freshports status)
 
 # count of messages in the incoming queue
 COUNT=$(/bin/ls /var/db/ingress/message-queues/incoming/ | /usr/bin/wc -l)
 
 PROCESSED=$(/bin/ls /var/db/freshports/message-queues/recent/*.txt | /usr/bin/wc -l)
 
-echo '<p>Number of queued commits: '  $COUNT      '</p>' >> ${SPOOL}
-echo '<p>Commits processed today:  '  $PROCESSED  '</p>' >> ${SPOOL}
-echo '<p>Commit processing status: '  $COMMITS    '</p>' >> ${SPOOL}
+echo '<p>Number of queued commits:   '  $COUNT       '</p>' >> ${SPOOL}
+echo '<p>Commits processed today:    '  $PROCESSED   '</p>' >> ${SPOOL}
+echo '<p>git commit checking status: '  $COMMITS     '</p>' >> ${SPOOL}
+echo '<p>svn commit checking status: '  $COMMITS_SVN '</p>' >> ${SPOOL}
+echo '<p>xml processing status:      '  $PROCESSING  '</p>' >> ${SPOOL}
 
 /bin/mv ${SPOOL} /var/db/freshports/cache/html/backend-status.html
