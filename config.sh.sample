@@ -72,8 +72,12 @@ FRESHPORTS_JAIL_BASE_DIR="${BASEDIR}/ports-jail"
 FRESHPORTS_JAIL_MASTER_PORT_SCRIPT="/make-master-port-test.sh"
 FRESHPORTS_JAIL_USER="freshports"
 
+#
 # these are relative to FRESHPORTS_JAIL_BASE_DIR
-PORTSDIRBASE="/var/db/repos/"
+#
+
+# best without a trailing slash
+PORTSDIRBASE="/var/db/repos"
 # note: this works on HEAD only
 # and is relative to ${FRESHPORTS_JAIL_BASE_DIR}
 PORTSDIR="${PORTSDIRBASE}/PORTS-head"
