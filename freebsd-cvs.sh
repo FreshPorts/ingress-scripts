@@ -19,7 +19,9 @@ fi
 
 if [ ! -f config.sh ]
 then
-	echo "config.sh not found by freebsd-cvs.sh..."
+	echo "config.sh not found by $0"
+	 # We can't user $LOGGER here beacuse that is defined within config.sh
+	logger "config.sh not found by $0."
 	exit 1
 fi
 
