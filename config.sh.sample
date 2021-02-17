@@ -84,8 +84,9 @@ FRESHPORTS_JAIL_BASE_DIR="${BASEDIR}/ports-jail"
 FRESHPORTS_JAIL_MASTER_PORT_SCRIPT="/make-master-port-test.sh"
 FRESHPORTS_JAIL_USER="freshports"
 
+# do not include a trailing slash
 # these are relative to FRESHPORTS_JAIL_BASE_DIR
-PORTSDIRBASE="/var/db/repos/"
+PORTSDIRBASE="/var/db/repos"
 
 
 # note: this works on HEAD only
@@ -116,11 +117,16 @@ PGSSLMODE=verify-full
 
 BASEDIR_PACKAGER="/var/db/freshports/packagesite"
 
+# used by check_git.sh
+#REPOS_TO_CHECK_GIT="doc ports ports-quarterly src"
+REPOS_TO_CHECK_GIT="doc src"
+
 convert_repo_label_to_directory(){
   repo=$1
   
   case $repo in
      src) dir='freebsd';;
+     src-stable-12) dir='freebsd-stable-12';;
      doc) dir='freebsd-doc';;
      ports) dir='freebsd-ports';;
      ports-quarterly) dir='freebsd-ports-quarterly';;
