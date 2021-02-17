@@ -30,13 +30,19 @@ sub SendNotice($) {
 # This pattern is usually a simple suffix, used as a glob with ls.
 #
 my %queues = (
-	incoming => {
+	ingress_incoming => {
 		'/var/db/ingress/message-queues/incoming'  => '*.txt'
 		}, 
-	retry => {
+	ingress_svn_incoming => {
+		'/var/db/ingress_svn/message-queues/incoming'  => '*.txt'
+		}, 
+	ingress_svn_spooling => {
+		'/var/db/ingress_svn/message-queues/spooling'  => ''
+		}, 
+	freshports_retry => {
 		'/var/db/freshports/message-queues/retry'  => '*.txt'
 		}, 
-	recent => {
+	freshports_recent => {
 		'/var/db/freshports/message-queues/recent' => '*.xml'
 		},
 );
@@ -68,7 +74,7 @@ for my $queue ( keys %queues ) {
 		if ($pattern ne '') {
 			$Command .= " -name \"$pattern\"";
 		}
-		$Command .= ' -maxdepth 1 | wc -l';
+		$Command .= ' -maxdepth 1 -mmin +5 | wc -l';
 
 		if ($Debug) { print $Command . "\n"; }
 
