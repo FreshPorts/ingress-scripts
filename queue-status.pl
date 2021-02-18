@@ -24,7 +24,6 @@ sub SendNotice($) {
 }
 
 #
-# Three queues is the usual
 # this is a hash, one entry for each queue.
 # For each queue, we have a directory name on disk, and the the pattern of the file we search for.
 # This pattern is usually a simple suffix, used as a glob with ls.
@@ -47,7 +46,8 @@ my %queues = (
 		},
 );
 
-my %report_non_zero = ('retry' => 1, 'incoming' => 1);
+
+my %report_non_zero = ('ingress_incoming' => 1, 'ingress_svn_incoming' => 1, 'ingress_svn_spooling' => 1, 'freshports_retry' => 1);
 
 my $Interval = '10 minutes';
 
@@ -83,7 +83,7 @@ for my $queue ( keys %queues ) {
 		$Count = FreshPorts::Utilities::trim($Count);
 		$msg .= " $queue: $Count ";
 
-		if ($queue = 'incoming' && $Count && defined($report_non_zero{$queue})) {
+		if (($queue eq 'ingress_incoming' || $queue eq 'ingress_svn_incoming') && $Count && defined($report_non_zero{$queue})) {
 			if (!defined($CountRecent)) {
 				$CountRecent = FreshPorts::Utilities::CommitCountPeriod($dbh, $Interval);
 			}
