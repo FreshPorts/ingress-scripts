@@ -1,4 +1,3 @@
-#!/usr/local/bin/perl -w
 #
 # $Id: queue-status.pl,v 1.3 2012/10/17 18:10:22 dan Exp $
 #
@@ -54,10 +53,6 @@ my $Interval = '10 minutes';
 my $send_report = 0;
 my $msg         = '';
 
-my $CountRecent;
-
-undef($CountRecent);
-
 my $dbh = FreshPorts::Database::GetDBHandle();
 
 $msg .= "SITE: $FreshPorts::Config::FreshPortsURL ";
@@ -74,6 +69,7 @@ for my $queue ( keys %queues ) {
 		if ($pattern ne '') {
 			$Command .= " -name \"$pattern\"";
 		}
+		# look for stuff in this dir older than 5 minutes
 		$Command .= ' -maxdepth 1 -mmin +5 | wc -l';
 
 		if ($Debug) { print $Command . "\n"; }
@@ -83,13 +79,9 @@ for my $queue ( keys %queues ) {
 		$Count = FreshPorts::Utilities::trim($Count);
 		$msg .= " $queue: $Count ";
 
-		if (($queue eq 'ingress_incoming' || $queue eq 'ingress_svn_incoming') && $Count && defined($report_non_zero{$queue})) {
-			if (!defined($CountRecent)) {
-				$CountRecent = FreshPorts::Utilities::CommitCountPeriod($dbh, $Interval);
-			}
-			if ($Count > $CountRecent) {
-				$send_report = 1;
-			}
+		# report any non-zero counts
+		if ($Count && defined($report_non_zero{$queue})) {
+			$send_report = 1;
 		}
 	}
 }
