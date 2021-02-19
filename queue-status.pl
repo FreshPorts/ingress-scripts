@@ -1,3 +1,4 @@
+#!/usr/local/bin/perl
 #
 # $Id: queue-status.pl,v 1.3 2012/10/17 18:10:22 dan Exp $
 #
@@ -7,7 +8,6 @@
 use strict;
 
 use FreshPorts::config;
-use FreshPorts::database;
 use FreshPorts::utilities;
 
 my $Debug = 0;
@@ -53,10 +53,8 @@ my $Interval = '10 minutes';
 my $send_report = 0;
 my $msg         = '';
 
-my $dbh = FreshPorts::Database::GetDBHandle();
-
 $msg .= "SITE: $FreshPorts::Config::FreshPortsURL ";
-for my $queue ( keys %queues ) {
+for my $queue ( sort keys %queues ) {
 	if ($Debug) {print $queue ."\n";}
 	for my $directory ( keys %{ $queues{$queue} } ) {
 		if ($Debug) { print " * $directory \n"; }
@@ -70,7 +68,7 @@ for my $queue ( keys %queues ) {
 			$Command .= " -name \"$pattern\"";
 		}
 		# look for stuff in this dir older than 5 minutes
-		$Command .= ' -maxdepth 1 -mmin +5 | wc -l';
+		$Command .= ' -mindepth 1 -maxdepth 1 -mmin +5 | wc -l';
 
 		if ($Debug) { print $Command . "\n"; }
 
@@ -91,10 +89,8 @@ $msg .= " ";
 if ($send_report) {
 #	Sys::Syslog::syslog('notice', 'There is a problem with the FreshPorts queues');
 	SendNotice($msg);
-	$dbh->disconnect();
 	exit(1)
 } else {
 	print 'Queues are OK. ';
 	print $msg;
-	$dbh->disconnect();
 }
