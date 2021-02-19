@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/local/bin/perl -w
 #
 # $Id: queue-status.pl,v 1.3 2012/10/17 18:10:22 dan Exp $
 #
@@ -29,7 +29,7 @@ sub SendNotice($) {
 #
 my %queues = (
 	ingress_incoming => {
-		'/var/db/ingress/message-queues/incoming'  => '*.txt'
+		'/var/db/ingress/message-queues/incoming'  => '*.xml'
 		}, 
 	ingress_svn_incoming => {
 		'/var/db/ingress_svn/message-queues/incoming'  => '*.txt'
