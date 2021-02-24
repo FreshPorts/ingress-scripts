@@ -8,7 +8,6 @@
 use strict;
 
 use FreshPorts::config;
-use FreshPorts::database;
 use FreshPorts::utilities;
 
 my $Debug = 0;
@@ -24,7 +23,6 @@ sub SendNotice($) {
 }
 
 #
-# Three queues is the usual
 # this is a hash, one entry for each queue.
 # For each queue, we have a directory name on disk, and the the pattern of the file we search for.
 # This pattern is usually a simple suffix, used as a glob with ls.
@@ -52,10 +50,8 @@ my $CountRecent;
 
 undef($CountRecent);
 
-my $dbh = FreshPorts::Database::GetDBHandle();
-
 $msg .= "SITE: $FreshPorts::Config::FreshPortsURL ";
-for my $queue ( keys %queues ) {
+for my $queue ( sort keys %queues ) {
 	if ($Debug) {print $queue ."\n";}
 	for my $directory ( keys %{ $queues{$queue} } ) {
 		if ($Debug) { print " * $directory \n"; }
@@ -68,7 +64,8 @@ for my $queue ( keys %queues ) {
 		if ($pattern ne '') {
 			$Command .= " -name \"$pattern\"";
 		}
-		$Command .= ' -maxdepth 1 | wc -l';
+		# look for stuff in this dir older than 5 minutes
+		$Command .= ' -mindepth 1 -maxdepth 1 -mmin +5 | wc -l';
 
 		if ($Debug) { print $Command . "\n"; }
 
@@ -77,13 +74,9 @@ for my $queue ( keys %queues ) {
 		$Count = FreshPorts::Utilities::trim($Count);
 		$msg .= " $queue: $Count ";
 
-		if ($queue = 'incoming' && $Count && defined($report_non_zero{$queue})) {
-			if (!defined($CountRecent)) {
-				$CountRecent = FreshPorts::Utilities::CommitCountPeriod($dbh, $Interval);
-			}
-			if ($Count > $CountRecent) {
-				$send_report = 1;
-			}
+		# report any non-zero counts
+		if ($Count && defined($report_non_zero{$queue})) {
+			$send_report = 1;
 		}
 	}
 }
@@ -93,10 +86,8 @@ $msg .= " ";
 if ($send_report) {
 #	Sys::Syslog::syslog('notice', 'There is a problem with the FreshPorts queues');
 	SendNotice($msg);
-	$dbh->disconnect();
 	exit(1)
 } else {
 	print 'Queues are OK. ';
 	print $msg;
-	$dbh->disconnect();
 }
