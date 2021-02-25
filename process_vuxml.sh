@@ -47,13 +47,16 @@ then
 	touch ${VUXMLMUTEX}
 	rm ${VUXMLFLAGFILE}
 	${LOGGER} -t ${LOGGERTAG} "vuxml processing begins"
-	echo $(date) "${LOGGERTAG}"  "vuxml processing begins"                  >> ${LOGFILE}
+	echo $(date) "${LOGGERTAG}"  "vuxml processing begins"                      >> ${LOGFILE}
 	
 	# define the vuln file we are going to operate on
 	VULNFILE="${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}/security/vuxml/vuln.xml"
 	
 	${LOGGER} -t ${LOGGERTAG} "process_vuxml.pl begins on ${VULNFILE}"
-	/usr/local/bin/perl ./process_vuxml.pl < ${VULNFILE} >> ${LOGFILE}
+	echo $(date) "process_vuxml.pl begins on ${VULNFILE}"                       >> ${LOGFILE}
+	${LOGGER} -t ${LOGGERTAG} "there is often a delay before the next message"
+	echo $(date) "there is often a delay before the next message"               >> ${LOGFILE}
+	/usr/local/bin/perl ./process_vuxml.pl --filename=${VULNFILE} --showreasons >> ${LOGFILE}
 	if [ $? -eq 0 ]
 	then
 	  ${LOGGER} -t ${LOGGERTAG} "process_vuxml.pl finishes normally"
