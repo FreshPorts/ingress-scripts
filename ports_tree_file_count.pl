@@ -6,11 +6,11 @@
 #
 
 use strict;
-use FreshPorts::constants;
 use FreshPorts::config;
+use FreshPorts::constants;
 
 # this is hardcoded to HEAD for now
-my $Command = "/usr/bin/find $FreshPorts::Config::RepoDir/$FreshPorts::Constants::Repo_Ports | /usr/bin/wc -l > $FreshPorts::Config::PortsTreeCount";
+my $Command = "/usr/bin/find $FreshPorts::Config::RepoDir/$FreshPorts::Constants::Repo_Dir_Name_Ports | /usr/bin/wc -l > $FreshPorts::Config::PortsTreeCount";
 
 # print $Command;
 
