@@ -109,7 +109,8 @@ PSQL=/usr/local/bin/psql
 DB=freshports.org
 HOST='localhost'
 DBUSER='reading'
-# password goes in ~/.pgpass
+DBUSER_REPORTING='reporting_dev_git'
+# password goes in ~freshports/.pgpass
 
 # used for psql connections to the database
 # see https://www.postgresql.org/docs/12/libpq-envars.html
