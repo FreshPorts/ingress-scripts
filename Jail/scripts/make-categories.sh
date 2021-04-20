@@ -15,10 +15,8 @@ REPO_PATH=$1
 
 cd ${REPO_PATH}
 
-# the exec strips the leading ./ from the filename
-# the sort, sorts
-# the tr converts newlines to spaces
-# the awk will trim leading and trailing space or tab characters and also squeeze sequences of tabs and spaces into a single space.
-# https://unix.stackexchange.com/questions/102008/how-do-i-trim-leading-and-trailing-whitespace-from-each-line-of-some-output
+# -s to sort
+# -f * in case we have a -foo file
+# type -d because we want only directories
 
-find . -regex '.*/[a-z].*' -maxdepth 1 -exec sh -c "echo {} | sed 's|^\./||'" \; | sort | tr '\n' ' ' | awk '{$1=$1};1'
+find -s -f * -type d -regex '[a-z].*' -maxdepth 0 | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/ /g'
