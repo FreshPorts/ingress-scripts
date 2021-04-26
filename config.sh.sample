@@ -91,7 +91,8 @@ PORTSDIRBASE="/var/db/repos"
 
 # note: this works on HEAD only
 # and is relative to ${FRESHPORTS_JAIL_BASE_DIR}
-PORTSDIR="${PORTSDIRBASE}/PORTS-head"
+# This next line contains the repo name on disk (i.e. directory)
+PORTSDIR="${PORTSDIRBASE}/ports"
 ADMINEMAIL="dan@langille.org"
 
 if [ -e 'OFFLINE' ]
@@ -120,16 +121,16 @@ BASEDIR_PACKAGER="/var/db/freshports/packagesite"
 
 # used by check_git.sh
 #REPOS_TO_CHECK_GIT="doc ports ports-quarterly src"
-REPOS_TO_CHECK_GIT="doc src"
+REPOS_TO_CHECK_GIT="doc ports src"
 
 convert_repo_label_to_directory(){
   repo=$1
   
   case $repo in
-     src) dir='freebsd';;
+     src) dir='src';;
      src-stable-12) dir='freebsd-stable-12';;
-     doc) dir='freebsd-doc';;
-     ports) dir='freebsd-ports';;
+     doc) dir='doc';;
+     ports) dir='ports';;
      ports-quarterly) dir='freebsd-ports-quarterly';;
      *) dir='';;
   esac
