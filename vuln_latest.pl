@@ -66,16 +66,16 @@ ORDER BY coalesce(V.date_modified, V.date_entry, V.date_discovery) desc, lower(n
 		$sth->execute ||
 			FreshPorts::Utilities::ReportError('warning', "Could not execute SQL statement\n--$query--\n... maybe invalid?", 1);
 
-		print FILE '<TABLE WIDTH="100%">' . "\n";
+		print FILE '<table class="fullwidth">' . "\n";
 		while ($row = $sth->fetchrow_hashref()) {
-			print FILE '<TR><TD align="left"><A HREF="' . $FreshPorts::Constants::VUXML_URL . $row->{vid} . '.html">' . $row->{port} . '</a>';
+			print FILE '<tr><td align="left"><a href="' . $FreshPorts::Constants::VUXML_URL . $row->{vid} . '.html">' . $row->{port} . '</a>';
 			if (!$row->{new}) {
 				print FILE '<sup>*</sup>';
 			}
-			print FILE '</TD>' . 
-			     '<TD nowrap ALIGN="right">' . $row->{date_formatted} . '</TD></TR>' . "\n";
+			print FILE '</td>' . 
+			     '<td nowrap align="right">' . $row->{date_formatted} . '</td></tr>' . "\n";
 		}
-		print FILE '</TABLE>' . "\n";
+		print FILE '</table>' . "\n";
 		
 		$query = "
   SELECT count(DISTINCT CLPV.port_id) AS ports,
