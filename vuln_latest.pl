@@ -68,12 +68,12 @@ ORDER BY coalesce(V.date_modified, V.date_entry, V.date_discovery) desc, lower(n
 
 		print FILE '<table class="fullwidth">' . "\n";
 		while ($row = $sth->fetchrow_hashref()) {
-			print FILE '<tr><td align="left"><a href="' . $FreshPorts::Constants::VUXML_URL . $row->{vid} . '.html">' . $row->{port} . '</a>';
+			print FILE '<tr><td><a href="' . $FreshPorts::Constants::VUXML_URL . $row->{vid} . '.html">' . $row->{port} . '</a>';
 			if (!$row->{new}) {
 				print FILE '<sup>*</sup>';
 			}
 			print FILE '</td>' . 
-			     '<td nowrap align="right">' . $row->{date_formatted} . '</td></tr>' . "\n";
+			     '<td>' . $row->{date_formatted} . '</td></tr>' . "\n";
 		}
 		print FILE '</table>' . "\n";
 		
@@ -90,9 +90,9 @@ ORDER BY coalesce(V.date_modified, V.date_entry, V.date_discovery) desc, lower(n
 			FreshPorts::Utilities::ReportError('warning', "Could not execute SQL statement\n--$query--\n... maybe invalid?", 1);
 		$row = $sth->fetchrow_hashref();
 		if ($row->{vulns}) {
-			print FILE '<p align="center">' . $row->{vulns} . ' vulnerabilities affecting ' . $row->{ports} . ' ports have been reported in the past ' . $ReportInterval . '</p>';
+			print FILE '<p>' . $row->{vulns} . ' vulnerabilities affecting ' . $row->{ports} . ' ports have been reported in the past ' . $ReportInterval . '</p>';
 		} else {
-			print FILE '<p align="center">No vulnerabilities have been reported in the past ' . $ReportInterval . '</p>';
+			print FILE '<p>No vulnerabilities have been reported in the past ' . $ReportInterval . '</p>';
 		}
 
 		$sth->finish();
