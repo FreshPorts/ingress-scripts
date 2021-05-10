@@ -73,7 +73,7 @@ do {
 		if (-f $flag) {
 			$JobFound =1;
 			FreshPorts::Utilities::Report('notice', "$flag exists.  About to run $script");
-			`$FreshPorts::Config::scriptpath/$script`;
+			`$FreshPorts::Config::ScriptDir/$script`;
 			FreshPorts::Utilities::Report('notice', "Finished running $script");
 		} else {
 			FreshPorts::Utilities::Report('notice', "flag '$flag' not set.  no work for $script");

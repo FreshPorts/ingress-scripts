@@ -54,7 +54,7 @@ print "\$FreshPorts::Config::mkdir_pkg                             = '$FreshPort
 print "\$FreshPorts::Config::password                              = '$FreshPorts::Config::password'\n";
 print "\$FreshPorts::Config::path_to_tree                          = '$FreshPorts::Config::path_to_tree'\n";
 print "\$FreshPorts::Config::ports_prefix                          = '$FreshPorts::Config::ports_prefix'\n";
-print "\$FreshPorts::Config::scriptpath                            = '$FreshPorts::Config::scriptpath'\n";
+print "\$FreshPorts::Config::ScriptDir                             = '$FreshPorts::Config::ScriptDir'\n";
 print "\$FreshPorts::Config::user                                  = '$FreshPorts::Config::user'\n";
 
 # This isn't relevant on git
