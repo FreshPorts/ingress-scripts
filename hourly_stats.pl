@@ -87,29 +87,29 @@ sub CreateHourlySummary() {
 
 		print FILE '<BR>Calculated hourly:<BR>';
 
-		print FILE '<TABLE WIDTH="100%">' . "\n";
-		print FILE '<TR><TD><A HREF="/categories.php" TITLE="Number of ports in the database">Port count</A></TD> <TD ALIGN="right">'      . $Stats{new}       . '</TD></TR>' . "\n";
+		print FILE '<TABLE>' . "\n";
+		print FILE '<TR><TD><A HREF="/categories.php" TITLE="Number of ports in the database">Port count</A></TD> <TD>'      . $Stats{new}       . '</TD></TR>' . "\n";
 
-		print FILE '<TR><TD><A HREF="/ports-broken.php" TITLE="Broken ports">Broken</A></TD>     <TD ALIGN="right">'    . $Stats{broken}    . '</TD></TR>' . "\n";
-		print FILE '<TR><TD><A HREF="/ports-deprecated.php" TITLE="Ports that have been deprecated">Deprecated</A></TD>     <TD ALIGN="right">'    . $Stats{deprecated}    . '</TD></TR>' . "\n";
-		print FILE '<TR><TD><A HREF="/ports-ignore.php" TITLE="Ports that you should ignore">Ignore</A></TD>     <TD ALIGN="right">'    . $Stats{ignore}    . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-broken.php" TITLE="Broken ports">Broken</A></TD>     <TD>'    . $Stats{broken}    . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-deprecated.php" TITLE="Ports that have been deprecated">Deprecated</A></TD>     <TD>'    . $Stats{deprecated}    . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-ignore.php" TITLE="Ports that you should ignore">Ignore</A></TD>     <TD>'    . $Stats{ignore}    . '</TD></TR>' . "\n";
 
-		print FILE '<TR><TD><A HREF="/ports-forbidden.php" TITLE="Ports that are forbidden">Forbidden</A></TD>  <TD ALIGN="right">' . $Stats{forbidden} . '</TD></TR>' . "\n";
-		print FILE '<TR><TD><A HREF="/ports-restricted.php" TITLE="Ports that are restricted">Restricted</A></TD>  <TD ALIGN="right">' . $Stats{restricted} . '</TD></TR>' . "\n";
-		print FILE '<TR><TD><A HREF="/ports-no-cdrom.php" TITLE="Ports that are marked as NO CDROM">No CDROM</A></TD>  <TD ALIGN="right">' . $Stats{no_cdrom} . '</TD></TR>' . "\n";
-		print FILE '<TR><TD><A HREF="/ports-vulnerable.php" TITLE="Ports that vulnerable to exploitation">Vulnerable</A></TD>  <TD ALIGN="right">' . $Stats{vulnerable} . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-forbidden.php" TITLE="Ports that are forbidden">Forbidden</A></TD>  <TD>' . $Stats{forbidden} . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-restricted.php" TITLE="Ports that are restricted">Restricted</A></TD>  <TD>' . $Stats{restricted} . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-no-cdrom.php" TITLE="Ports that are marked as NO CDROM">No CDROM</A></TD>  <TD>' . $Stats{no_cdrom} . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-vulnerable.php" TITLE="Ports that vulnerable to exploitation">Vulnerable</A></TD>  <TD>' . $Stats{vulnerable} . '</TD></TR>' . "\n";
 
-		print FILE '<TR><TD><A HREF="/ports-expired.php" TITLE="Ports that have expired">Expired</A></TD>  <TD ALIGN="right">' . $Stats{expired} . '</TD></TR>' . "\n";
-		print FILE '<TR><TD><A HREF="/ports-expiration-date.php" TITLE="Ports that have an expiration date set">Set to expire</A></TD>  <TD ALIGN="right">' . $Stats{expiration} . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-expired.php" TITLE="Ports that have expired">Expired</A></TD>  <TD>' . $Stats{expired} . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-expiration-date.php" TITLE="Ports that have an expiration date set">Set to expire</A></TD>  <TD>' . $Stats{expiration} . '</TD></TR>' . "\n";
 
-		print FILE '<TR><TD><A HREF="/ports-interactive.php" TITLE="Ports that require interaction during installation">Interactive</A></TD>  <TD ALIGN="right">' . $Stats{interactive} . '</TD></TR>' . "\n";
-		print FILE '<TR><TD><A HREF="/ports-new.php?interval=today" TITLE="Ports added in the last 24 hours">new 24 hours</A></TD>    <TD ALIGN="right">'     . $Stats{today}     . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-interactive.php" TITLE="Ports that require interaction during installation">Interactive</A></TD>  <TD>' . $Stats{interactive} . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-new.php?interval=today" TITLE="Ports added in the last 24 hours">new 24 hours</A></TD>    <TD>'     . $Stats{today}     . '</TD></TR>' . "\n";
 
-		print FILE '<TR><TD><A HREF="/ports-new.php?interval=yesterday" TITLE="Ports added in the last 48 hours">new 48 hours</A></TD><TD ALIGN="right">'     . $Stats{yesterday} . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-new.php?interval=yesterday" TITLE="Ports added in the last 48 hours">new 48 hours</A></TD><TD>'     . $Stats{yesterday} . '</TD></TR>' . "\n";
 
-		print FILE '<TR><TD><A HREF="/ports-new.php?interval=week" TITLE="Ports added in the last 7 days">new 7 days</A></TD><TD ALIGN="right">'            . $Stats{week}      . '</TD></TR>' . "\n";
-		print FILE '<TR><TD><A HREF="/ports-new.php?interval=fortnight" TITLE="Ports added in the last 14 days">new fortnight</A></TD><TD ALIGN="right">'         . $Stats{fortnight} . '</TD></TR>' . "\n";
-		print FILE '<TR><TD><A HREF="/ports-new.php?interval=month" TITLE="Ports added in the last month">new month</A></TD><TD ALIGN="right">'             . $Stats{month}     . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-new.php?interval=week" TITLE="Ports added in the last 7 days">new 7 days</A></TD><TD>'            . $Stats{week}      . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-new.php?interval=fortnight" TITLE="Ports added in the last 14 days">new fortnight</A></TD><TD>'         . $Stats{fortnight} . '</TD></TR>' . "\n";
+		print FILE '<TR><TD><A HREF="/ports-new.php?interval=month" TITLE="Ports added in the last month">new month</A></TD><TD>'             . $Stats{month}     . '</TD></TR>' . "\n";
 		print FILE '</TABLE>' . "\n";
 
 		print "closing file\n";
