@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (c) 2001-2006 DVL Software
+# Copyright (c) 2001-2021 DVL Software
 #
 
 
@@ -8,7 +8,6 @@ SPOOL="/var/db/freshports/cache/spooling/$0.$$.tmp"
 
 # is commit processing enabled?
 COMMITS=$(/usr/sbin/service ingress status)
-COMMITS_SVN=$(/usr/sbin/service ingress_svn status)
 PROCESSING=$(/usr/sbin/service freshports status)
 
 # count of messages in the incoming queue
@@ -19,7 +18,6 @@ PROCESSED=$(/bin/ls /var/db/freshports/message-queues/recent/*.xml | /usr/bin/wc
 echo '<p>Number of queued commits:   '  $COUNT       '</p>' >> ${SPOOL}
 echo '<p>Commits processed today:    '  $PROCESSED   '</p>' >> ${SPOOL}
 echo '<p>git commit checking status: '  $COMMITS     '</p>' >> ${SPOOL}
-echo '<p>svn commit checking status: '  $COMMITS_SVN '</p>' >> ${SPOOL}
 echo '<p>xml processing status:      '  $PROCESSING  '</p>' >> ${SPOOL}
 
 /bin/mv ${SPOOL} /var/db/freshports/cache/html/backend-status.html
