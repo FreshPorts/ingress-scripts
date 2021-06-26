@@ -18,5 +18,7 @@ cd ${REPO_PATH}
 # -s to sort
 # -f * in case we have a -foo file
 # type -d because we want only directories
+# xargs happens to concatentate things rather well
+# if we get so many catgories that this becomes an issue for xargs, see previous commit.
 
-find -s -f * -type d -regex '[a-z].*' -maxdepth 0 | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/ /g'
+find -s -f * -type d -regex '[a-z].*' -maxdepth 0 | xargs
