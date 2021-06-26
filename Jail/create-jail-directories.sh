@@ -34,6 +34,7 @@ none                            ${JAILBASE}/dev              devfs   rw         
 
 echo "Put the following in sudoers
 freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /cat-descr.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-apply-slist.sh *
 freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-category-comment.sh *
 freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-flavors-package-names.sh *
 freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-generate-plist.sh *
