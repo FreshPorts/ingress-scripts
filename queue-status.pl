@@ -28,17 +28,17 @@ sub SendNotice($) {
 # This pattern is usually a simple suffix, used as a glob with ls.
 #
 my %queues = (
-	ingress_incoming => {
+	ingress_incoming  => {
 		'/var/db/ingress/message-queues/incoming'  => '*.xml'
 		}, 
-	ingress_svn_incoming => {
-		'/var/db/ingress_svn/message-queues/incoming'  => '*.txt'
+	ingress_spooling  => {
+		'/var/db/ingress/message-queues/spooling'  => ''
 		}, 
-	ingress_svn_spooling => {
-		'/var/db/ingress_svn/message-queues/spooling'  => ''
+	freshports_errors => {
+		'/var/db/freshports/message-queues/recent' => '*.errors'
 		}, 
-	freshports_retry => {
-		'/var/db/freshports/message-queues/retry'  => '*.txt'
+	freshports_retry  => {
+		'/var/db/freshports/message-queues/retry'  => '*.xml'
 		}, 
 	freshports_recent => {
 		'/var/db/freshports/message-queues/recent' => '*.xml'
@@ -46,7 +46,7 @@ my %queues = (
 );
 
 
-my %report_non_zero = ('ingress_incoming' => 1, 'ingress_svn_incoming' => 1, 'ingress_svn_spooling' => 1, 'freshports_retry' => 1);
+my %report_non_zero = ('ingress_incoming' => 1, 'ingress_spooling' => 1, 'freshports_errors' => 1, 'freshports_retry' => 1);
 
 my $Interval = '10 minutes';
 
