@@ -64,7 +64,7 @@ sub CompileWatchNotifyList($;$;$;$;$;$) {
 	my $PortCount = shift;
 	my $LastSent  = shift;
 	my $Announce  = shift;
-	my $dbh = shift;
+	my $dbh       = shift;
 	my $row;
 	my $sth;
 	my $sql;
@@ -197,12 +197,12 @@ sub CompileWatchNotifyList($;$;$;$;$;$) {
 }
 
 sub AddToLogs($;$;$;$;$;$) {
-	my $report_id   = shift;
-	my $Frequency	= shift;
-	my $NumMsgs		= shift;
-	my $NumCommits	= shift;
-	my $NumPorts	= shift;
-	my $dbh			= shift;
+	my $report_id  = shift;
+	my $Frequency  = shift;
+	my $NumMsgs    = shift;
+	my $NumCommits = shift;
+	my $NumPorts   = shift;
+	my $dbh        = shift;
 
 	my $sql;
 	my $sth;
