@@ -43,7 +43,7 @@ select R.name, to_char(RLL.last_sent, 'YYYY-MM-DD HH:MI') as last_sent
  where RLL.frequency = '" . $href->{frequency} . "' and (RLL.last_sent < now() - interval '" . $href->{interval} . "') order by R.name";
     
 
-    print $sql . "\n";
+#    print $sql . "\n";
 
     my $sth = $dbh->prepare($sql);
     $sth->execute || die "Could not execute SQL $sql ... maybe invalid";
