@@ -71,6 +71,7 @@ UPDATINGFLAGFILE="${BASEDIR}/signals/refresh_updating"
 
 CHECKGITFILE="${INGRESS_BASEDIR}/signals/check_git"
 
+CHECKPORTSCATEGORIESFILE="${BASEDIR}/signals/check_port_categories"
 PORTSFREEZEFILE="${BASEDIR}/signals/PortsFreezeIsOn"
 
 VUXMLFLAGFILE="${BASEDIR}/signals/vuxml"
