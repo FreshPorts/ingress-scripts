@@ -1,10 +1,13 @@
 #!/bin/sh
 #
+# Sometimes the pkg-message file is in the ports tree, but is not ready for
+# public consumption until after `make configure`. For example, files/pkg-message-in
+#
 # This extracts the pkgmessage file for a given port for which the output of
 # `make -V PKGMESSAGE` does not point to a file in the repo. In that case, we
-# run `apply-slist` and see if that generates the file.
+# run `make configure` and see if that generates the file.
 #
-# sudo /usr/sbin/chroot -u USER JAIL /make-apply-slist.sh REPO_PATH PORT PKGMESSAGE
+# sudo /usr/sbin/chroot -u USER JAIL /make-pkg-message-in.sh REPO_PATH PORT PKGMESSAGE
 #
 # where USER       - user as which to execute the commands.  e.g. dan
 #       JAIL       - path to the jail created with the create-jail-directories.sh command. e.g. /usr/jail/FreshPorts
@@ -21,8 +24,7 @@ PKGMESSAGE=$3
 
 cd ${REPO_PATH}/${PORT}
 
-mkdir work
-${MAKE} apply-slist PORTSDIR=${REPO_PATH} OPTIONSFILE=${LOCALBASE} -f ${REPO_PATH}/${PORT}/Makefile > /dev/null
+${MAKE} make configure -DNO_DIALOG  PORTSDIR=${REPO_PATH} OPTIONSFILE=${LOCALBASE} -f ${REPO_PATH}/${PORT}/Makefile > /dev/null
 if [ $? == 0 ]
 then
   if [ -r $PKGMESSAGE ]
@@ -31,3 +33,10 @@ then
   fi
   ${MAKE} clean > /dev/null
 fi
+
+# clean, and also remove the options file.
+# [root@mydev:/usr/ports/x11/nvidia-hybrid-graphics] # make -V OPTIONS_FILE 
+# /var/db/ports/x11_nvidia-hybrid-graphics/options
+#
+
+${MAKE} clean    > /dev/null
