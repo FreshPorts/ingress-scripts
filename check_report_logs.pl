@@ -16,7 +16,7 @@ my @Reports = (
     },
     {
         frequency => 'F',
-        interval  => '15 days',
+        interval  => '18 days',
     },
     {
         frequency => 'M',
