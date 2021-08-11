@@ -13,7 +13,7 @@
 #
 # example output:
 #
-# [dan@devgit-ingress01:/usr/ports/ports] $ find -s -f * -type d -regex '[a-z].*' -maxdepth 0 | xargs
+# [dan@devgit-ingress01:/usr/ports] $ find -s -f * -type d -regex '[a-z].*' -maxdepth 0 | xargs
 # accessibility arabic archivers astro audio base benchmarks biology cad chinese comms converters databases 
 # deskutils devel dns editors emulators finance french ftp games german graphics hebrew hungarian irc japanese
 # java korean lang mail math misc multimedia net net-im net-mgmt net-p2p news polish ports-mgmt portuguese print
