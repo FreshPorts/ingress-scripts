@@ -1,7 +1,6 @@
 #!/bin/sh
 
 JAILBASE=$1
-PORTSBASE=$2
 
 mkdir -p ${JAILBASE}/usr/ports    \
          ${JAILBASE}/usr/share/mk \
@@ -31,18 +30,19 @@ echo "
 none                            ${JAILBASE}/dev              devfs   rw                      0       0
 "
 
+# any sudoers commands are usually controlled by ansible
 
 echo "Put the following in sudoers
-freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /cat-descr.sh *
-freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-apply-slist.sh *
-freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-category-comment.sh *
-freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-flavors-package-names.sh *
-freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-generate-plist.sh *
-freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-master-port-test.sh *
-freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-master-sites-all.sh *
-freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-port.sh *
-freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /make-showconfig.sh *
-freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${PORTSBASE} /realpath.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${JAILBASE} /cat-descr.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${JAILBASE} /make-category-comment.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${JAILBASE} /make-flavors-package-names.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${JAILBASE} /make-generate-plist.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${JAILBASE} /make-master-port-test.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${JAILBASE} /make-master-sites-all.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${JAILBASE} /make-pkg-message.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${JAILBASE} /make-port.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${JAILBASE} /make-showconfig.sh *
+freshports      ALL=(ALL) NOPASSWD:/usr/sbin/chroot -u freshports ${JAILBASE} /realpath.sh *
 "
 
 echo This entry is required in scripts/config.sh:
