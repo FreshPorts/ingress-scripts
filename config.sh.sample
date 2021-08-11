@@ -81,19 +81,15 @@ WWWENPORTSCATEGORIES="${BASEDIR}/signals/www.en.ports.categories"
 CACHE_NEEDS_REFRESH="${BASEDIR}/signals/cache_needs_refresh"
 
 # scripts for the jail
-FRESHPORTS_JAIL_BASE_DIR="${BASEDIR}/ports-jail"
+FRESHPORTS_JAIL_NAME="freshports"
+FRESHPORTS_JAIL_BASE_DIR="/jails/$FRESHPORTS_JAIL_NAME"
 FRESHPORTS_JAIL_MASTER_PORT_SCRIPT="/make-master-port-test.sh"
-FRESHPORTS_JAIL_USER="freshports"
 
-# do not include a trailing slash
-# these are relative to FRESHPORTS_JAIL_BASE_DIR
-PORTSDIRBASE="/var/db/repos"
-
-
-# note: this works on HEAD only
-# and is relative to ${FRESHPORTS_JAIL_BASE_DIR}
+# Do not include a trailing slash
+# This is relative to FRESHPORTS_JAIL_BASE_DIR
 # This next line contains the repo name on disk (i.e. directory)
-PORTSDIR="${PORTSDIRBASE}/ports"
+PORTSDIR="/usr/ports"
+
 ADMINEMAIL="dan@langille.org"
 
 if [ -e 'OFFLINE' ]

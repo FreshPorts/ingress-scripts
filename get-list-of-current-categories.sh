@@ -13,7 +13,7 @@
 #
 # example output:
 #
-# [dan@devgit-ingress01:/var/db/ingress/repos/ports] $ find -s -f * -type d -regex '[a-z].*' -maxdepth 0 | xargs
+# [dan@devgit-ingress01:/usr/ports/ports] $ find -s -f * -type d -regex '[a-z].*' -maxdepth 0 | xargs
 # accessibility arabic archivers astro audio base benchmarks biology cad chinese comms converters databases 
 # deskutils devel dns editors emulators finance french ftp games german graphics hebrew hungarian irc japanese
 # java korean lang mail math misc multimedia net net-im net-mgmt net-p2p news polish ports-mgmt portuguese print
@@ -38,7 +38,7 @@
 #
 # There is also this method:
 #
-# $ make PORTSDIR=/var/db/freshports/ports-jail/var/db/repos/ports -DCATEGORIES -f Mk/bsd.port.mk -V VALID_CATEGORIES
+# $ make -DCATEGORIES -f Mk/bsd.port.mk -V VALID_CATEGORIES
 # accessibility afterstep arabic archivers astro audio  benchmarks biology cad chinese comms converters  databases
 # deskutils devel dns docs  editors education elisp emulators enlightenment finance french ftp  games geography german
 # gnome gnustep graphics  hamradio haskell hebrew hungarian irc japanese java  kde  kld korean  lang linux lisp 
