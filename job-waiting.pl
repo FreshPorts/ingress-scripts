@@ -36,6 +36,7 @@ my %Jobs_freshports = (
 	$FreshPorts::Config::NewReposReadyForImport   => 'import_packagesite.py',
 	$FreshPorts::Config::NewRepoImported          => 'UpdatePackagesFromRawPackages.py',
 	$FreshPorts::Config::UpdatingFileFlag         => 'process_updating.sh',
+	$FreshPorts::Config::PortsToRefresh           => 'refresh-ports.sh',
 	$FreshPorts::Config::VuXMLFileFlag            => 'process_vuxml.sh',
 	$FreshPorts::Config::WWWENPortsCategoriesFlag => 'process_www_en_ports_categories.sh',
 	$FreshPorts::Config::CheckPortsCategoriesFlag => 'missing-port-categories.sh',
