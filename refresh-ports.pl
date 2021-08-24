@@ -72,9 +72,14 @@ while (@row=$sth->fetchrow_array) {
 	# we are creating an anonymous hash
 	#
 	push @PORTS, {%Port};
+
 }
- 
-my $port    = FreshPorts::Port->new($dbh);
+
+# 
+# For this, we are refreshing strictly from files, and not processing a commit.
+# We shall assume 'git' because the code needs a value.
+#
+my $port    = FreshPorts::Port->new($dbh, 'git');
 my $element = FreshPorts::Element->new($dbh);
 
 foreach $porttorefresh (@PORTS) {
