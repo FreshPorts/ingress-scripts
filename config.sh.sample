@@ -69,7 +69,11 @@ MOVEDFLAGFILE="${BASEDIR}/signals/refresh_moved"
 
 UPDATINGFLAGFILE="${BASEDIR}/signals/refresh_updating"
 
+# The file for checking git for commits
 CHECKGITFILE="${INGRESS_BASEDIR}/signals/check_git"
+
+# The file for processing the ports_to_refresh table
+PORTSTOREFRESHFLAG="${BASEDIR}/signals/ports_to_refresh"
 
 CHECKPORTSCATEGORIESFILE="${BASEDIR}/signals/check_port_categories"
 PORTSFREEZEFILE="${BASEDIR}/signals/PortsFreezeIsOn"
@@ -114,7 +118,7 @@ DBUSER_REPORTING='reporting_dev_git'
 # see https://www.postgresql.org/docs/12/libpq-envars.html
 PGSSLMODE=verify-full
 
-BASEDIR_PACKAGER="/var/db/freshports/packagesite"
+BASEDIR_PACKAGER="${BASEDIR}/packagesite"
 
 # used by check_git.sh
 #REPOS_TO_CHECK_GIT="doc ports ports-quarterly src"
