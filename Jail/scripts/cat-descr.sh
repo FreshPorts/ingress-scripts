@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# This extracts the cotnents of the given file, assuming it is a description file.  e.g. /usr/ports/sysutils/bacula-server/pkg-descr
+# This extracts the contents of the given file, assuming it is a description file.  e.g. /usr/ports/sysutils/bacula-server/pkg-descr
 #
 # expected usage: sudo /usr/sbin/chroot -u USER JAIL /cat-descr.sh FULL_PATH_TO_FILE
 #
