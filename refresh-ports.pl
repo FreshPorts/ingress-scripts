@@ -89,7 +89,7 @@ foreach $porttorefresh (@PORTS) {
 	my $category_name = $porttorefresh->{category};
 	my $port_name     = $porttorefresh->{port};
 
-	Sys::Syslog::syslog('warning', "found $category_name/$port_name");
+	Sys::Syslog::syslog('warning', "refresh-ports.pl found $category_name/$port_name");
 	
 	my $refreshed = 0;
 
