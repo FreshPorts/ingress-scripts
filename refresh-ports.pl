@@ -14,6 +14,7 @@ use DBI;
 use FreshPorts::database;
 use FreshPorts::utilities;
 use FreshPorts::system_status;
+use Getopt::Long;
 
 my $dbh;
 
@@ -24,9 +25,21 @@ my $sql;
 my $sth;
 my @row;
 
-FreshPorts::Utilities::InitSyslog();
+my $dryrun = 'n';
+my $debug  = 'n';
+my $limit  = 0;
+my $offset = 0;
 
-Sys::Syslog::syslog('warning', "refresh-ports.pl starts");
+if (!GetOptions('debug=s' => \$debug, 'dryrun=s' => \$dryrun, 'limit=i' => \$limit, 'offset=i' => \$offset)) {
+	exit;
+}
+
+if ($dryrun && $dryrun ne 'y' && $dryrun ne 'n') {
+	print("--dryrun must be y or n\n");
+	exit;
+}
+
+print("refresh-ports.pl starts");
 
 #
 # see if the system is online.
@@ -48,14 +61,28 @@ FreshPorts::Branches::SetBranchInDB($dbh, $currentBranch);
 # get a list of ports to update
 #
 
-$sql = "select PTR.port_id, categories.name as category, element.name as port
+$sql = "SET CLIENT_ENCODING TO 'ISO-8859-1'; select PTR.port_id, categories.name as category, element.name as port
         from ports_to_refresh PTR, ports P, categories, element
         where PTR.port_id   = P.id 
           and P.category_id = categories.id 
           and P.element_id  = element.id
         order by category, port";
 
-print "sql = $sql\n";
+
+if ($limit) {
+	$sql .= "\n        LIMIT $limit OFFSET $offset\n";
+}
+
+if ($debug eq 'y') {
+	print "\$dryrun='$dryrun'\n";
+	print "\$limit='$limit'\n";
+	print "\$offset='$offset'\n";
+	print "sql = $sql\n";
+}
+
+if ($dryrun eq 'y') {
+	exit;
+}
 
 $sth = $dbh->prepare($sql);
 $sth->execute ||
@@ -89,7 +116,7 @@ foreach $porttorefresh (@PORTS) {
 	my $category_name = $porttorefresh->{category};
 	my $port_name     = $porttorefresh->{port};
 
-	Sys::Syslog::syslog('warning', "refresh-ports.pl found $category_name/$port_name");
+	print("refresh-ports.pl found $category_name/$port_name");
 	
 	my $refreshed = 0;
 
@@ -102,11 +129,11 @@ foreach $porttorefresh (@PORTS) {
 				#
 				# this port is deleted but needs refresh.
 				#
-				print "that port has been deleted and will not be refreshed\n";
+				print("that port has been deleted and will not be refreshed");
 				$result = 0;
 			} else {
 				$result = $port->RefreshFromFiles($FreshPorts::Constants::HEAD, 1, 0); # needs refresh, don't refresh
-				print "refresh attempt done ($result)\n";
+				print("refresh attempt done ($result)");
 			}
 		} else {
 			FreshPorts::Utilities::ReportError('warning', "Could not retrieve element ($port_id, $category_name, $port_name)", 1);
@@ -120,7 +147,7 @@ foreach $porttorefresh (@PORTS) {
 			
 			$refreshed = 1;
 		} else {
-			print "update result is $result ******************************************\n";
+			print("update result is $result ******************************************");
 			$dbh->rollback();
 		}
 	} else {
@@ -143,4 +170,4 @@ $sth->finish();
 
 $dbh->disconnect();
 
-Sys::Syslog::syslog('warning', "refresh-ports.pl finishes");
+print("refresh-ports.pl finishes");
