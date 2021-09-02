@@ -38,4 +38,4 @@ fi
 # /var/db/ports/x11_nvidia-hybrid-graphics/options
 #
 
-${MAKE} distclean rmconfig-recursive > /dev/null 2>&1
+${MAKE} clean rmconfig-recursive > /dev/null 2>&1
