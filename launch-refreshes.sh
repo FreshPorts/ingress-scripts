@@ -3,6 +3,11 @@
 # remember to turn off the freshports service before running this script
 #
 #  sudo service freshports stop
+#  cd /jails/freshports/usr/ports
+#  sudo git checkout main
+#  sudo git pull
+#  goal: git status -> Your branch is up to date with 'origin/main'
+#
 
 ROWS=838
 LIMIT=40
