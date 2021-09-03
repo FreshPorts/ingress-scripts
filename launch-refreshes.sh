@@ -9,8 +9,8 @@
 #  goal: git status -> Your branch is up to date with 'origin/main'
 #
 
-ROWS=838
-LIMIT=40
+ROWS=30000
+LIMIT=2500
 
 OFFSETS=$(seq 0 1000 30000)
 OFFSETS=$(seq 0 33   1007)
