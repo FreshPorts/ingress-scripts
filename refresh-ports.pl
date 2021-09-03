@@ -39,7 +39,7 @@ if ($dryrun && $dryrun ne 'y' && $dryrun ne 'n') {
 	exit;
 }
 
-print("refresh-ports.pl starts");
+print("refresh-ports.pl starts\n");
 
 #
 # see if the system is online.
@@ -116,7 +116,7 @@ foreach $porttorefresh (@PORTS) {
 	my $category_name = $porttorefresh->{category};
 	my $port_name     = $porttorefresh->{port};
 
-	print("refresh-ports.pl found $category_name/$port_name");
+	print("refresh-ports.pl found $category_name/$port_name\n");
 	
 	my $refreshed = 0;
 
@@ -129,11 +129,11 @@ foreach $porttorefresh (@PORTS) {
 				#
 				# this port is deleted but needs refresh.
 				#
-				print("that port has been deleted and will not be refreshed");
+				print("that port has been deleted and will not be refreshed\n");
 				$result = 0;
 			} else {
 				$result = $port->RefreshFromFiles($FreshPorts::Constants::HEAD, 1, 0); # needs refresh, don't refresh
-				print("refresh attempt done ($result)");
+				print("refresh attempt done ($result)\n");
 			}
 		} else {
 			FreshPorts::Utilities::ReportError('warning', "Could not retrieve element ($port_id, $category_name, $port_name)", 1);
@@ -147,7 +147,7 @@ foreach $porttorefresh (@PORTS) {
 			
 			$refreshed = 1;
 		} else {
-			print("update result is $result ******************************************");
+			print("update result is $result ******************************************\n");
 			$dbh->rollback();
 		}
 	} else {
@@ -170,4 +170,4 @@ $sth->finish();
 
 $dbh->disconnect();
 
-print("refresh-ports.pl finishes");
+print("refresh-ports.pl finishes\n");
