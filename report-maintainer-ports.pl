@@ -23,18 +23,18 @@ my $sql;
 my $sth;
 my @row;
 my $Bcc;
-my $NumMsgs	= 0;
-my $NumCommits	= 0;
-my $NumPorts    = 0;
+my $NumMsgs    = 0;
+my $NumCommits = 0;
+my $NumPorts   = 0;
 
-my $FormatDate	= "%W, %b %e";
-my $FormatTime	= "%H:%i";
+my $FormatDate = "%W, %b %e";
+my $FormatTime = "%H:%i";
 
-my $ReportID	= $FreshPorts::ReportConstants::MaintainerPorts;
+my $ReportID   = $FreshPorts::ReportConstants::MaintainerPorts;
 
 $Text::Wrap::columns = 82;
 
-sub SendWatchNoticePersonal($;$) {
+sub SendListOfCommitsToMaintainers($;$) {
 
 	my $To            = shift;
 	my $BodyIn        = shift;
@@ -56,7 +56,18 @@ $FreshPorts::ReportConstants::Footer
 
 	my $CC = '';
 
-	FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, \%Headers);
+	# print
+	print "\$From    = '$From'\n";
+	print "\$To      = '$To'\n";
+	print "\$CC      = '$CC'\n";
+	print "\$Subject = '$From'\n";
+	print "\$Body    = '$Body'\n";
+	if ($FreshPorts::Config::ReportDebugging) {
+		print "NOT SENDING EMAIL.. in DEBUG mode\n";
+	} else {
+		# send
+		FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, \%Headers);
+	}
 }
 
 
@@ -80,24 +91,26 @@ sub CompileMaintinerList($;$;$;$;$;$) {
 	#               and users.id                      = 1
 
 	$sql = "
-  select null           as watch_list_id,
-         null        as watch_list_name,
-         users.id               as user_id, 
-         users.email            as email, 
-         categories.name        as category, 
-         element.name           as port, 
+  select null                    as watch_list_id,
+         null                    as watch_list_name,
+         users.id                as user_id, 
+         users.email             as email, 
+         categories.name         as category, 
+         element.name            as port, 
          to_char(commit_log.commit_date + SystemTimeAdjust(), 'DD Mon YYYY') as commit_date,
-         commit_log.description as commit_message,
-         commit_log.committer   as comitter,
-         commit_log.id          as commit_log_id,
-         commit_log.svn_revision as revision
+         commit_log.description  as commit_message,
+         commit_log.committer    as comitter,
+         commit_log.id           as commit_log_id,
+         commit_log.svn_revision as revision,
+         repo.repo_hostname      as repo_hostname
     from commit_log, 
          users, 
          ports, 
          categories, 
          element, 
          commit_log_ports, 
-         report_subscriptions
+         report_subscriptions,
+         repo
    where commit_log.date_added            >= '$LastSent'
      and commit_log.id                     = commit_log_ports.commit_log_id 
      and ports.maintainer                  ilike users.email
@@ -108,8 +121,9 @@ sub CompileMaintinerList($;$;$;$;$;$) {
      and ports.element_id                  = element.id 
      and users.id                          = report_subscriptions.user_id
      and report_subscriptions.report_id    = $ReportID
+     and commit_log.repo_id                = repo.id
 order by user_id, category, port, commit_date";
-#AND USERS.ID = 1
+# AND USERS.ID = 1
 
 	if ($FreshPorts::Config::ReportDebugging)	{
 		print "sql is $sql\n";
@@ -170,14 +184,10 @@ order by user_id, category, port, commit_date";
 		print "LastUserID = '$LastUserID' and id = '$row->{user_id}'\n";
 		if ($LastUserID != $row->{user_id}) {
 			$NumMsgs++;
-			if ($FreshPorts::Config::ReportDebugging) {
-				print "NOT SENDING EMAIL.. in DEBUG mode\n";
-			} else {
-				print "Freq = $FrequencyLong\n";
-				print "To   = $To\n";
-				print "Body = \n$Body\n";
-				SendWatchNoticePersonal($To, $Body);
-			}
+			print "Freq = $FrequencyLong\n";
+			print "To   = $To\n";
+
+			SendListOfCommitsToMaintainers($To, $Body);
 
 			$Body       = $BodyHeader;
 			$LastUserID = $row->{user_id};
@@ -190,7 +200,10 @@ order by user_id, category, port, commit_date";
 		# and wrap the description of the change.
 		$Body .= $wrapper->wrap($row->{commit_message} . "\n");
 		$Body .=      "  $row->{commit_date} - $row->{comitter}\n\n";
-		$Body .=      "  $FreshPorts::Config::SVN_Repository/changeset/ports/$row->{revision}\n";
+
+		# link is similar to: https://cgit.freebsd.org/ports/commit/?id=b7f4b10d819799d36e7c2e44c041c92ab5cc0931
+		$Body .=      "  https://$row->{repo_hostname}/ports/commit/?id=$row->{revision}\n";
+
 		$Body .=      "  $FreshPorts::Config::FreshPortsURL" . $row->{category} . '/' . $row->{port} . "/\n\n\n";
 		$Body .=      " ___________________________________________________\n\n";
 	}
@@ -200,24 +213,19 @@ order by user_id, category, port, commit_date";
 	# if we got at least one, send out email
 	if (defined($LastUserID)) {
 		$NumMsgs++;
-		if ($FreshPorts::Config::ReportDebugging) {
-			print "NOT SENDING EMAIL.. in DEBUG mode\n";
-		} else {
-			print "Freq = $FrequencyLong\n";
-			print "To   = $To\n";
-			print "Body = \n$Body\n";
-			SendWatchNoticePersonal($To, $Body);
-		}
+		print "Freq = $FrequencyLong\n";
+		print "To   = $To\n";
+		SendListOfCommitsToMaintainers($To, $Body);
 	}
 }
 
 sub AddToLogs($;$;$;$;$;$) {
-	my $Report_ID   = shift;
-	my $Frequency	= shift;
-	my $NumMsgs		= shift;
-	my $NumCommits	= shift;
-	my $NumPorts	= shift;
-	my $dbh			= shift;
+	my $Report_ID  = shift;
+	my $Frequency  = shift;
+	my $NumMsgs    = shift;
+	my $NumCommits = shift;
+	my $NumPorts   = shift;
+	my $dbh        = shift;
 
 	my $sql;
 	my @row;
@@ -336,6 +344,9 @@ if (($#ARGV+1) == 1) {
 			$dbh->disconnect();
 
 			print "message sent to users\n";
+			if ($FreshPorts::Config::ReportDebugging) {
+				print "but not really, because \$FreshPorts::Config::ReportDebugging is set\n";
+			}
 		}
 	} else {
 		print "$Frequency as mail out frequency is not known to me.\n";
