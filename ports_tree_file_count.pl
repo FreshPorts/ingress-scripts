@@ -10,7 +10,7 @@ use FreshPorts::config;
 use FreshPorts::constants;
 
 # this is hardcoded to HEAD for now
-my $Command = "/usr/bin/find $FreshPorts::Config::PortsDir | /usr/bin/wc -l > $FreshPorts::Config::PortsTreeCount";
+my $Command = "/usr/bin/find $FreshPorts::Config::JailBaseDir/$FreshPorts::Config::PortsDir -type f | /usr/bin/wc -l > $FreshPorts::Config::PortsTreeCount";
 
 # print $Command;
 
