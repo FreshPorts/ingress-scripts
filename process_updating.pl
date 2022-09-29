@@ -242,8 +242,6 @@ sub ClearCacheFiles($) {
 	my $updated_port;
 	my $i = 0;
 
-return;
-
 	$sql = '
 INSERT INTO cache_clearing_ports(port_id, category, port)
 SELECT P.id,
