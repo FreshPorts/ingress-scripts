@@ -22,12 +22,13 @@ use FreshPorts::db_utils;
 use FreshPorts::database;
 use FreshPorts::utilities;
 use FreshPorts::config;
-use FreshPorts::caching;
 
 use DBI;
 
 FreshPorts::Utilities::InitSyslog();
 
+print "I will be using this directory for ports: ";
+print "$FreshPorts::Config::JailBaseDir$FreshPorts::Config::PortsDir\n";
 
 &main;
 
@@ -94,11 +95,15 @@ sub parsefile ($) {
 			for (my $j = $i + 1; $j < scalar @lines; $j++) {
 				my $line = $lines[$j];
 				last if ($line =~ m/^\d{8}:/);
-				last if ($line =~ m/^\$FreeBSD:/);	# last line of file
-				if ($line =~ m/\s+AFFECTS:\s+(.*)$/){
+				last if ($line =~ m/^\$FreeBSD:/);	# last line of file, at one time.
+
+				# sometime after 20220629, entries started using 'AFFECTS: users of'
+				# the code still works  with that format
+				if ($line =~ m/\s*AFFECTS:\s+(.*)$/){
 					$affects   = $1;
 					$InAffects = 1;
-				} elsif ($line =~ m/\s+AUTHOR:\s+(.*)$/) {
+					print "found this: 'AFFECTS: $affects'\n";
+				} elsif ($line =~ m/\s*AUTHOR:\s+(.*)$/) {
 					$author    = $1;
 					$InAffects = 0;
 				} elsif ($InAffects) {
@@ -133,8 +138,8 @@ sub parsefile ($) {
 						# suggested by mat@ for parsing
 						# affect ports that look like shell
 						# globs
-						# XXX which ports tree are we using?  Let's use PORTS-head for now
-						chdir "$FreshPorts::Config::path_to_tree/PORTS-head";
+						# go into this directory to get the glob function to work
+						chdir "$FreshPorts::Config::JailBaseDir/$FreshPorts::Config::PortsDir";
 						push @ports, glob $part;
 					} else {
 						push @ports, $part;
@@ -237,15 +242,18 @@ sub ClearCacheFiles($) {
 	my $updated_port;
 	my $i = 0;
 
+return;
+
 	$sql = '
-SELECT C.name AS category,
+INSERT INTO cache_clearing_ports(port_id, category, port)
+SELECT P.id,
+       C.name AS category,
        E.name AS port
  FROM element E, categories C, ports P 
     JOIN (SELECT DISTINCT port_id
             FROM ports_updating_ports_xref) as tmp on P.id = tmp.port_id
            WHERE E.id = P.element_id
-             AND C.id = P.category_id
-        ORDER BY 1, 2';
+             AND C.id = P.category_id';
 
 	print "sql is $sql\n";
 
@@ -253,12 +261,9 @@ SELECT C.name AS category,
 	$sth->execute ||
 		die "Could not execute SQL $sql ... maybe invalid?";
 
-	my $Caching = FreshPorts::Caching->new($dbh);
-    while ($updated_port = $sth->fetchrow_hashref()) {
-        $i++;
-        	print "clearing for " . $updated_port->{category} . '/' . $updated_port->{port} . "\n";
-		$Caching->RemovePortFromCache($updated_port->{category}, $updated_port->{port});
-	}
+	# after populating the cache_clearing_ports table, we notify.
+	$sth = $dbh->prepare("notify port_updated");
+	$sth->execute ||
+		die "Could not execute SQL $sql ... maybe invalid?";
 
-    return $i;
 }
