@@ -36,7 +36,7 @@ if [ -r ${PORTSTOREFRESHFLAG} ]
 then
 	${LOGGER} -t ${LOGGERTAG} "found, now processing"
 	rm ${PORTSTOREFRESHFLAG}
-	/usr/local/bin/perl ./refresh-ports.pl > /var/log/freshports/refreshing.log
+	/usr/local/bin/perl ./refresh-ports.pl > ${DIRLOG}/refreshing.log
 else
 	${LOGGER} -t ${LOGGERTAG} "not found"
 fi
