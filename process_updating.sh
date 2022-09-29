@@ -41,7 +41,7 @@ if [ -r ${UPDATINGFLAGFILE} ]
 then
 	rm ${UPDATINGFLAGFILE}
 	logger -p local3.notice -t FreshPorts "about to run: /usr/local/bin/perl ./process_updating.pl < ${FRESHPORTS_JAIL_BASE_DIR}/${PORTSDIR}/UPDATING"
-	/usr/local/bin/perl ./process_updating.pl < ${FRESHPORTS_JAIL_BASE_DIR}/${PORTSDIR}/UPDATING
+	/usr/local/bin/perl ./process_updating.pl < ${FRESHPORTS_JAIL_BASE_DIR}/${PORTSDIR}/UPDATING > ${DIRLOG}/process_updating.log
 else
     logger -p local3.notice -t FreshPorts $0 invokved but ${UPDATINGFLAGFILE} was not set.
 fi
