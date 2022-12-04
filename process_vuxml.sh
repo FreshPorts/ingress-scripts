@@ -4,15 +4,6 @@
 #
 # Copyright (c) 2003-2005 DVL Software Limited
 #
-# Check to see if the switch is set, and if so, load the
-# security/vuxml/vuln.xml file into the database
-#
-#  3-59/7  *   *   *   *  cd $DIR && ./process_vuxml.sh >> /dev/null
-#
-# where $DIR is the directory in which this file exists.
-#
-# file switch, set by commit processing script
-# That file 
 
 LOGGERTAG="process_vuxml.sh"
 
