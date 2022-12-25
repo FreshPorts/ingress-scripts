@@ -51,9 +51,9 @@ Cheers
 --
 
 You are receiving this message as part of the service
-you joined at https://www.FreshPorts.org/ but if you no longer
+you joined at https://www.freshports.org/ but if you no longer
 wish to receive such messages, please go to
-https://www.FreshPorts.org/report-subscriptions.php
+https://www.freshports.org/report-subscriptions.php
 
 If a problem occurs, please send details, including the email
 address in question, to postmaster\@freshports.org

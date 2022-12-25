@@ -161,8 +161,8 @@ order by user_id, category, port, commit_date";
 	
 	my $BodyHeader = '';
 	$BodyHeader .= $Announce . "\n"; 
-	$BodyHeader .= "Port count: " . sprintf("%5u", $PortCount) . " https://www.FreshPorts.org/categories.php\n";
-	$BodyHeader .= " New ports: " . sprintf("%5u", $NewPorts)  . " https://www.FreshPorts.org/ports-new.php?interval=$Interval\n\n";
+	$BodyHeader .= "Port count: " . sprintf("%5u", $PortCount) . " https://www.freshports.org/categories.php\n";
+	$BodyHeader .= " New ports: " . sprintf("%5u", $NewPorts)  . " https://www.freshports.org/ports-new.php?interval=$Interval\n\n";
 
 	my $wrapper = Text::Wrapper->new(columns => 72, body_start => '  ');
 
