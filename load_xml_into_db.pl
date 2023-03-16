@@ -83,8 +83,7 @@ if ($dbh->{Active}) {
 	if ($source eq 'subversion') {
 
 		print "invoking XML_Munge_svn because this is a subversion commit\n";
-		use FreshPorts::xml_munge_svn;
-		$Munger = FreshPorts::XML_Munge_svn->new($dbh);
+		die('we do not do subversion any more');
 
 	} elsif ($source eq 'git') {
 

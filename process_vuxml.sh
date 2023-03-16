@@ -55,15 +55,6 @@ then
 	  ${LOGGER} -t ${LOGGERTAG} "FATAL process_vuxml.pl finished with an error: $?"
 	fi
 
-	${LOGGER} -t ${LOGGERTAG} "vuxml_ident.pl begins on ${VULNFILE}"
-	/usr/local/bin/perl ./vuxml_ident.pl ${VULNFILE} > ${HTMLROOT}/vuxml_revision
-	if [ $? -eq 0 ]
-	then
-	  ${LOGGER} -t ${LOGGERTAG} "vuxml_ident.pl finishes normally"
-	else
-	  ${LOGGER} -t ${LOGGERTAG} "FATAL vuxml_ident.pl finished with an error: $?"
-	fi
-
 	${LOGGER} -t ${LOGGERTAG} "vuln_latest.pl begins"
 	/usr/local/bin/perl ./vuln_latest.pl >> ${LOGFILE}
 	if [ $? -eq 0 ]
