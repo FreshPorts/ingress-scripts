@@ -99,11 +99,11 @@ sub parsefile ($) {
 
 				# sometime after 20220629, entries started using 'AFFECTS: users of'
 				# the code still works  with that format
-				if ($line =~ m/\s*AFFECTS:\s+(.*)$/){
+				if ($line =~ m/\s*AFFECTS:\s+(.*)$/i){
 					$affects   = $1;
 					$InAffects = 1;
 					print "found this: 'AFFECTS: $affects'\n";
-				} elsif ($line =~ m/\s*AUTHOR:\s+(.*)$/) {
+				} elsif ($line =~ m/\s*AUTHOR:\s+(.*)$/i) {
 					$author    = $1;
 					$InAffects = 0;
 				} elsif ($InAffects) {
@@ -122,6 +122,7 @@ sub parsefile ($) {
 				}
 			}
 
+			print 'We have this for $affects: ' . $affects . "\n";
 			# lets deal with port names
 			my @ports;
 			my @affects_match = split(/,?\s+/, $affects);
