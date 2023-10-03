@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/local/bin/perl -w
 #
 # $Id: process_vuxml.pl,v 1.6 2013-01-16 15:37:57 dan Exp $
 #

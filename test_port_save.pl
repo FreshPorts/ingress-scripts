@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/local/bin/perl -w
 #
 # $Id: test_port_save.pl,v 1.5 2001-12-22 04:30:43 dan Exp $
 #
