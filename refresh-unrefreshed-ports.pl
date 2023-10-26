@@ -164,7 +164,7 @@ foreach $porttorefresh (@PORTS) {
 			$dbh->commit();
 			
 			print "removing from cache: $port->{category}/$port->{name}\n";
-			$Caching->RemovePortFromCache($port->{category}, $port->{name});
+			$Caching->RemovePortFromCache($commit_log_ports->{port_id}, $port->{category}, $port->{name});
 
 			#
 			# save that date away for later use
