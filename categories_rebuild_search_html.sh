@@ -15,8 +15,17 @@ export PGUSER=$DBUSER
 
 SPOOL_FILE=$(mktemp ${SPOOLINGDIR}/categories.XXXXXX)
 
+cat << EOF > ${SPOOL_FILE}
+             <OPTION VALUE=""<?php if ($category == '') echo ' SELECTED'?>></OPTION>
+EOF
+
+#
+# we need a blank entry as a default value
+#
 psql -t --output=${SPOOL_FILE} <<EOF
-select '            <OPTION VALUE="'  || name || '"<?php if (\$category == ''' || name || ''') echo '' SELECTED''?>>' || name || '</OPTION>' from categories order by name;
+select '            <OPTION VALUE=""<?php if (\$category == '''') echo '' SELECTED''?>></OPTION>'
+UNION
+select '            <OPTION VALUE="'  || name || '"<?php if (\$category == ''' || name || ''') echo '' SELECTED''?>>' || name || '</OPTION>' from categories order by 1;
 EOF
 
 if [ $? -ne 0 ]
