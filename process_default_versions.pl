@@ -15,6 +15,7 @@ use strict;
 use FreshPorts::branches;
 use FreshPorts::port;
 use DBI;
+use FreshPorts::config;
 use FreshPorts::database;
 use FreshPorts::utilities;
 use FreshPorts::system_status;
@@ -42,6 +43,12 @@ if ($dryrun && $dryrun ne 'y' && $dryrun ne 'n') {
 }
 
 print("$0 starts\n");
+
+#
+# We remove this script when we start so we don't error out and start looping
+# It seems the easiest way.
+#
+unlink $FreshPorts::Config::CheckPortsCategoriesFlag;
 
 #
 # see if the system is online.
