@@ -48,7 +48,8 @@ print("$0 starts\n");
 # We remove this script when we start so we don't error out and start looping
 # It seems the easiest way.
 #
-unlink $FreshPorts::Config::CheckPortsCategoriesFlag;
+print("removing $FreshPorts::Config::DefaultVersionsFlag\n");
+unlink $FreshPorts::Config::DefaultVersionsFlag;
 
 #
 # see if the system is online.
@@ -114,7 +115,7 @@ foreach my $category_port (values %FreshPorts::Constants::PortsAffectedByDefault
 	$port->{id} = $port_id;
 	if ($port->FetchByID()) {
 		$port->RefreshFromFiles($FreshPorts::Constants::HEAD, 0, 0, '');
-		$port->save();
+		$port->save($FreshPorts::Constants::HEAD);
 	} else {
 		FreshPorts::Utilities::ReportError('warning', "Could not Fetch port ($category_port)", 1);
 	}
