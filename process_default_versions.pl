@@ -6,7 +6,10 @@
 #
 
 # When Mk/bsd.default-versions.mk changes, invoke this script
-# It will take care of any required updates
+# It will take care of any required updates.
+#
+# NOTE this script assumes HEAD.
+# so does special_processing_files::Eat which sets this file up for execution.
 #
 # re: https://github.com/FreshPorts/freshports/issues/509
 #
