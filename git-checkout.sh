@@ -6,6 +6,14 @@
 #
 # This script used to checkout a given commit via a git working copy
 
+if [ ! -f config.sh ]
+then
+	echo "config.sh not found by test-master-port.sh..."
+	exit 1
+fi
+
+. config.sh
+
 echo "num of params = $#"
 if  [ $# -ne 2 ];
 then echo error invoking script $0 : usage $0 GITDIR REVISION \(e.g. $0 /usr/ports 1234\)
@@ -17,11 +25,11 @@ else
     # we may not need this cd...
     cd ${GITDIR}
     
-    # we need to a do a /usr/local/bin/git fetch
+    # we need to a do a git fetch
     # we may not have this commit
-    echo /usr/local/bin/git fetch
-    /usr/local/bin/git fetch
-    echo "/usr/local/bin/git checkout ${REVISION}"
-    /usr/local/bin/git checkout ${REVISION}
+    echo ${GIT} fetch
+    ${GIT} fetch
+    echo "${GIT} checkout ${REVISION}"
+    ${GIT} checkout ${REVISION}
     exit $?
 fi
