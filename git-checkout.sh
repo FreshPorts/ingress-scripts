@@ -17,11 +17,11 @@ else
     # we may not need this cd...
     cd ${GITDIR}
     
-    # we need to a do a git fetch
+    # we need to a do a /usr/local/bin/git fetch
     # we may not have this commit
-    echo git fetch
-    git fetch
-    echo "git checkout ${REVISION}"
-    git checkout ${REVISION}
+    echo /usr/local/bin/git fetch
+    /usr/local/bin/git fetch
+    echo "/usr/local/bin/git checkout ${REVISION}"
+    /usr/local/bin/git checkout ${REVISION}
     exit $?
 fi
