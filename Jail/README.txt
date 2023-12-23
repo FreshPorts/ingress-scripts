@@ -1,6 +1,9 @@
 FreshPorts now uses a jexec and a FreeBSD jail strategy for extracting information from the ports tree.
 
-To install the scripts into the jail, issue the following command:
+On non-dev jails, the scripts which are required in the jail are installed
+by the package p5-freshports-scripts.
+
+On dev environments, to install the scripts into the jail, issue the following command:
 
 ./copy-scripts-into-jail.sh /jails/freshports/
 
