@@ -4,8 +4,9 @@
 #
 # Copyright (c) 1999-2021 DVL Software
 #
-# This script is invoked by the fp-freshports.sh script
-# usually located in /var/services/freshports
+# This script is invoked by the helper_scripts/check_for_git_commits.sh script
+# usually located in /usr/local/libexec/freshports.
+# Look in /usr/local/etc/periodic/everythreeminutes/215.fp_check_git_for_commits for more information
 #
 
 use strict;
