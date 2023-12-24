@@ -74,7 +74,7 @@ if (($#ARGV+1) == 2) {
    }
 
    print "msgbody = \n" . $msgbody;
-   if ($msgbody != '') {
+   if ($msgbody ne '') {
       SendNotice($StartDate, $EndDate, $msgbody);
    }
 
