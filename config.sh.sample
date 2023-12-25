@@ -145,3 +145,9 @@ logfile(){
   timestamp=$(date "+%Y.%m.%d %H:%M:%S") 
   echo ${timestamp} ${LOGGERTAG} $msg
 }
+
+logfatal(){
+  msg=$1
+  
+  ${LOGGER} $msg - check ${LOGGERTAG} logs for more detail
+}
