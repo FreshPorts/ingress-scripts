@@ -66,7 +66,6 @@ SPOOLINGDIR="${CACHINGROOT}/spooling"
 MOVEDFLAGFILE="${BASEDIR}/signals/refresh_moved"
 
 # What file do we set for /usr/ports/UPDATING?
-
 UPDATINGFLAGFILE="${BASEDIR}/signals/refresh_updating"
 
 # The file for checking git for commits
