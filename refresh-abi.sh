@@ -15,7 +15,7 @@ delete=$(mktemp ${SPOOLINGDIR}/abi-delete.XXXXXX)
 add=$(mktemp    ${SPOOLINGDIR}/abi-add.XXXXXX)
 
 ./current-list-of-valid-abi.sh > $valid
-./delete-depcreated-abi.sh     > $delete
-./add-new-abi.sh               > $add
+./delete-depcreated-abi.sh     < $valid > $delete
+./add-new-abi.sh               < $valid > $add
 
-rm $valid $delete $add
+#rm $valid $delete $add

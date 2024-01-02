@@ -1,6 +1,7 @@
 #!/bin/sh
 
-ABI=$(./current_list_of_valid_abi.sh)
+#ABI=$(./current_list_of_valid_abi.sh)
+ABI=$(cat)
 
 in_list=''
 #echo $ABI
