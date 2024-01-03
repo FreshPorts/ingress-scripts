@@ -10,6 +10,8 @@ fi
 
 . config.sh
 
+$LOGGER $0 starts
+
 export PGDATABASE=$DB
 export PGHOST=$HOST
 export PGUSER=$DBUSER_ABI
@@ -35,7 +37,7 @@ echo                                    >> $sql
 
 # and we end
 echo                                    >> $sql
-echo 'ROLLBACK;'                          >>  $sql
+echo 'COMMIT;'                          >> $sql
 
 # run the SQL
 psql -f $sql 
@@ -49,4 +51,7 @@ then
   rm $valid $sql
 else
   # raise an error, somewhere, somehow
+  $LOGGER $0 fatal error - see sql at $sql
 fi
+
+$LOGGER $0 finishes
