@@ -111,11 +111,13 @@ DB=freshports.org
 HOST='localhost'
 DBUSER='reading'
 DBUSER_REPORTING='reporting_dev_git'
+DBUSER_ABI='abi_maintainer_dev'
 # password goes in ~freshports/.pgpass
 
 # used for psql connections to the database
 # see https://www.postgresql.org/docs/12/libpq-envars.html
-PGSSLMODE=verify-full
+export PGSSLMODE=verify-full
+export PGSSLROOTCERT=/usr/local/etc/ssl/cert.pem
 
 BASEDIR_PACKAGER="${BASEDIR}/packagesite"
 
