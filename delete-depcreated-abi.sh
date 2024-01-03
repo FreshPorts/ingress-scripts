@@ -18,6 +18,6 @@ done
 
 #echo $in_list
 
-query="DELETE FROM abi where name not in (${in_list})"
+query="DELETE FROM abi where name not in (${in_list});"
 
 echo $query
