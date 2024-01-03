@@ -1,0 +1,44 @@
+#!/usr/local/bin/perl -w
+#
+# $Id: purge_old_password_tokens.pl,v 1.1 2010-09-17 14:31:02 dan Exp $
+#
+# Copyright (c) 2001-2006 DVL Software
+#
+
+use strict;
+
+use FreshPorts::database; 
+use DBI;
+
+require Sys::Syslog;
+require FreshPorts::config;
+
+
+my $dbh = FreshPorts::Database::GetDBHandle();
+
+my $sql;
+my $sth;
+my $row;
+my $rowcount;
+
+#
+# get a list of unrefreshed ports which have been in the db more than 10 minutes
+#
+
+$sql = "SELECT user_password_reset_purge() as rowcount";
+$sth = $dbh->prepare($sql);
+$sth->execute ||
+        die "Could not execute SQL $sql ... maybe invalid?";
+
+$row=$sth->fetchrow_hashref();
+
+$rowcount = $row->{rowcount};
+
+$sth->finish();
+
+$dbh->commit();
+
+$dbh->disconnect();
+
+FreshPorts::Utilities::InitSyslog();
+Sys::Syslog::syslog('notice', "number of expired password tokens purged: " . $rowcount);

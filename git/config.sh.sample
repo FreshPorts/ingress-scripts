@@ -1,0 +1,154 @@
+#!/bin/sh
+#
+# $Id: config.sh.sample,v 1.11 2012-12-29 21:51:51 dan Exp $
+#
+
+LOGGER="/usr/bin/logger -p local3.info"
+
+# this must always be defined and functional.
+FRESHPORTS_FREEBSD_CVS_URL="https://www.freebsd.org/cgi/cvsweb.cgi"
+FRESHPORTS_FREEBSD_SVN_URL="https://svn.freebsd.org"
+
+FETCH="/usr/bin/fetch"
+FETCH_OPTIONS="-qo"
+
+# At one time, this was where the website was installed.
+# Do not include a trailing slash
+# This is usually the home directory of the freshports user
+BASEDIR="/var/db/freshports"
+
+# The home directory of the ingress user
+INGRESS_BASEDIR="/var/db/ingress"
+INGRESS_PORTS_DIR_BASE="$INGRESS_BASEDIR/repos"
+INGRESS_MSGDIR="${INGRESS_BASEDIR}/message-queues"
+INGRESS_SPOOLINGDIR="${INGRESS_MSGDIR}/spooling"
+
+#
+# the directory where logs go.  used mainly for notifications
+# and outputs of vuxml processing
+#
+DIRLOG="/var/log/freshports"
+
+# git log, when manipulating the git repo, logs go here:
+GITLOG="${DIRLOG}/git.log"
+GIT="/usr/local/bin/git"
+
+# what is the URL for this website?
+# MUST have a trailing /
+WEBSITEURL="http://WEBSITE_URL"
+
+#
+# where do I find files such as load_xml_into_db.pl
+#
+SCRIPTDIR="/usr/local/libexec/freshports"
+
+#
+# Where does the msg directory start?
+# This directory should contain the files
+# created by ${SCRIPTDIR}/procmail/create_dirs.sh
+# and be the value which supplied to that script.
+#
+MSGDIR="${BASEDIR}/message-queues"
+
+DYNAMICROOT="${BASEDIR}/cache"
+CACHINGROOT="${DYNAMICROOT}"
+HTMLROOT="${DYNAMICROOT}/html"
+
+# used by cache-refresh.sh
+CACHEDIR="${CACHINGROOT}"
+NEWSCACHEDIR="${CACHINGROOT}/news"
+
+# used by cache-refresh.sh & process_www_en_ports_categories.sh
+SPOOLINGDIR="${CACHINGROOT}/spooling"
+
+# What file do we set for /usr/ports/MOVED?
+
+MOVEDFLAGFILE="${BASEDIR}/signals/refresh_moved"
+
+# What file do we set for /usr/ports/UPDATING?
+UPDATINGFLAGFILE="${BASEDIR}/signals/refresh_updating"
+
+# The file for checking git for commits
+CHECKGITFILE="${INGRESS_BASEDIR}/signals/check_git"
+
+# The file for processing the ports_to_refresh table
+PORTSTOREFRESHFLAG="${BASEDIR}/signals/ports_to_refresh"
+
+CHECKPORTSCATEGORIESFILE="${BASEDIR}/signals/check_port_categories"
+PORTSFREEZEFILE="${BASEDIR}/signals/PortsFreezeIsOn"
+
+VUXMLFLAGFILE="${BASEDIR}/signals/vuxml"
+VUXMLMUTEX="${BASEDIR}/signals/vuxml_mutex"
+WWWENPORTSCATEGORIES="${BASEDIR}/signals/www.en.ports.categories"
+
+CACHE_NEEDS_REFRESH="${BASEDIR}/signals/cache_needs_refresh"
+
+# scripts for the jail
+FRESHPORTS_JAIL_NAME="freshports"
+FRESHPORTS_JAIL_BASE_DIR="/jails/$FRESHPORTS_JAIL_NAME"
+FRESHPORTS_JAIL_MASTER_PORT_SCRIPT="/make-master-port-test.sh"
+
+# Do not include a trailing slash
+# This is relative to FRESHPORTS_JAIL_BASE_DIR
+# This next line contains the repo name on disk (i.e. directory)
+PORTSDIR="/usr/ports"
+
+ADMINEMAIL="dan@langille.org"
+
+if [ -e 'OFFLINE' ]
+then
+	OFFLINE=1;
+else
+	OFFLINE=0;
+fi
+
+#
+# we provide readonly access to shell scripts
+# no updates are performed
+#
+PSQL=/usr/local/bin/psql
+DB=freshports.org
+HOST='localhost'
+DBUSER='reading'
+DBUSER_REPORTING='reporting_dev_git'
+DBUSER_ABI='abi_maintainer_dev'
+# password goes in ~freshports/.pgpass
+
+# used for psql connections to the database
+# see https://www.postgresql.org/docs/12/libpq-envars.html
+export PGSSLMODE=verify-full
+export PGSSLROOTCERT=/usr/local/etc/ssl/cert.pem
+
+BASEDIR_PACKAGER="${BASEDIR}/packagesite"
+
+# used by check_git.sh
+#REPOS_TO_CHECK_GIT="doc ports ports-quarterly src"
+REPOS_TO_CHECK_GIT="doc ports src"
+
+convert_repo_label_to_directory(){
+  repo=$1
+  
+  case $repo in
+     src) dir='src';;
+     src-stable-12) dir='freebsd-stable-12';;
+     doc) dir='doc';;
+     ports) dir='ports';;
+     ports-quarterly) dir='freebsd-ports-quarterly';;
+     *) dir='';;
+  esac
+
+  echo $dir
+}
+
+logfile(){
+  msg=$1
+  
+  timestamp=$(date "+%Y.%m.%d %H:%M:%S") 
+  echo ${timestamp} ${LOGGERTAG} $msg
+}
+
+logfatal(){
+  msg=$1
+  
+  ${LOGGER} $msg - check ${LOGGERTAG} logs for more detail
+}

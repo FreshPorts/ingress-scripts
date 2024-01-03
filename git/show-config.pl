@@ -1,0 +1,67 @@
+#!/usr/local/bin/perl -w
+
+require FreshPorts::config;
+require FreshPorts::branches;
+
+use Data::Dumper;
+
+print "\$FreshPorts::Config::BaseDir                               = '$FreshPorts::Config::BaseDir'\n";
+print "\$FreshPorts::Config::CVS_Repository                        = '$FreshPorts::Config::CVS_Repository'\n";
+print "\$FreshPorts::Config::CachingRoot                           = '$FreshPorts::Config::CachingRoot'\n";
+print "\$FreshPorts::Config::CommitterNotify                       = '$FreshPorts::Config::CommitterNotify'\n";
+print "\$FreshPorts::Config::DB_Root_Prefix_DOC                    = '$FreshPorts::Config::DB_Root_Prefix_DOC'\n";
+print "\$FreshPorts::Config::DB_Root_Prefix_PORTS                  = '$FreshPorts::Config::DB_Root_Prefix_PORTS'\n";
+print "\$FreshPorts::Config::DB_Root_Prefix_SRC                    = '$FreshPorts::Config::DB_Root_Prefix_SRC'\n";
+print "\$FreshPorts::Config::DailySummaryDir                       = '$FreshPorts::Config::DailySummaryDir'\n";
+print "\$FreshPorts::Config::Debug_FetchBeforeSavingPort           = '$FreshPorts::Config::Debug_FetchBeforeSavingPort'\n";
+print "\$FreshPorts::Config::DynamicDir                            = '$FreshPorts::Config::DynamicDir'\n";
+print "\$FreshPorts::Config::Fetch_Retry_Limit                     = '$FreshPorts::Config::Fetch_Retry_Limit'\n";
+print "\$FreshPorts::Config::Fetch_Sleep_Time                      = '$FreshPorts::Config::Fetch_Sleep_Time'\n";
+print "\$FreshPorts::Config::FlagDir                               = '$FreshPorts::Config::FlagDir'\n";
+print "\$FreshPorts::Config::HourlySummaryDir                      = '$FreshPorts::Config::HourlySummaryDir'\n";
+print "\$FreshPorts::Config::JailBaseDir                           = '$FreshPorts::Config::JailBaseDir'\n";
+print "\$FreshPorts::Config::JailCategoryDescrptionScript          = '$FreshPorts::Config::JailCategoryDescrptionScript'\n";
+print "\$FreshPorts::Config::JailDescr                             = '$FreshPorts::Config::JailDescr'\n";
+print "\$FreshPorts::Config::JailDescrAndHomePage                  = '$FreshPorts::Config::JailDescrAndHomePage'\n";
+print "\$FreshPorts::Config::JailMasterSitesScript                 = '$FreshPorts::Config::JailMasterSitesScript'\n";
+print "\$FreshPorts::Config::JailPortScript                        = '$FreshPorts::Config::JailPortScript'\n";
+print "\$FreshPorts::Config::JailRealPath                          = '$FreshPorts::Config::JailRealPath'\n";
+print "\$FreshPorts::Config::JailShowConfigScript                  = '$FreshPorts::Config::JailShowConfigScript'\n";
+print "\$FreshPorts::Config::JailName                              = '$FreshPorts::Config::JailName'\n";
+print "\$FreshPorts::Config::JobWaiting                            = '$FreshPorts::Config::JobWaiting'\n";
+print "\$FreshPorts::Config::MovedFileFlag                         = '$FreshPorts::Config::MovedFileFlag'\n";
+print "\$FreshPorts::Config::NotifyAdmin                           = '$FreshPorts::Config::NotifyAdmin'\n";
+print "\$FreshPorts::Config::PortsFreezeFile                       = '$FreshPorts::Config::PortsFreezeFile'\n";
+print "\$FreshPorts::Config::PortsTreeCount                        = '$FreshPorts::Config::PortsTreeCount'\n";
+print "\$FreshPorts::Config::Ports_Default_Directory               = '$FreshPorts::Config::Ports_Default_Directory'\n";
+print "\$FreshPorts::Config::QueueBaseDir                          = '$FreshPorts::Config::QueueBaseDir'\n";
+print "\$FreshPorts::Config::RefreshCachFileFlag                   = '$FreshPorts::Config::RefreshCachFileFlag'\n";
+print "\$FreshPorts::Config::Repo_DOC                              = '$FreshPorts::Config::Repo_DOC'\n";
+print "\$FreshPorts::Config::Repo_PORTS                            = '$FreshPorts::Config::Repo_PORTS'\n";
+print "\$FreshPorts::Config::Repo_SRC                              = '$FreshPorts::Config::Repo_SRC'\n";
+print "\$FreshPorts::Config::SVN_Repository                        = '$FreshPorts::Config::SVN_Repository'\n";
+print "\$FreshPorts::Config::SystemOwnerEmail                      = '$FreshPorts::Config::SystemOwnerEmail'\n";
+print "\$FreshPorts::Config::TMP                                   = '$FreshPorts::Config::TMP'\n";
+print "\$FreshPorts::Config::UpdatingFileFlag                      = '$FreshPorts::Config::UpdatingFileFlag'\n";
+print "\$FreshPorts::Config::VuXMLFileFlag                         = '$FreshPorts::Config::VuXMLFileFlag'\n";
+print "\$FreshPorts::Config::WWWENPortsCategoriesFlag              = '$FreshPorts::Config::WWWENPortsCategoriesFlag'\n";
+print "\$FreshPorts::Config::dbname                                = '$FreshPorts::Config::dbname'\n";
+print "\$FreshPorts::Config::email_server                          = '$FreshPorts::Config::email_server'\n";
+print "\$FreshPorts::Config::email_port                            = '$FreshPorts::Config::email_port'\n";
+print "\$FreshPorts::Config::host                                  = '$FreshPorts::Config::host'\n";
+print "\$FreshPorts::Config::mkdir_pkg                             = '$FreshPorts::Config::mkdir_pkg'\n";
+print "\$FreshPorts::Config::password                              = '$FreshPorts::Config::password'\n";
+print "\$FreshPorts::Config::path_to_tree                          = '$FreshPorts::Config::path_to_tree'\n";
+print "\$FreshPorts::Config::ports_prefix                          = '$FreshPorts::Config::ports_prefix'\n";
+print "\$FreshPorts::Config::ScriptDir                             = '$FreshPorts::Config::ScriptDir'\n";
+print "\$FreshPorts::Config::user                                  = '$FreshPorts::Config::user'\n";
+
+# This isn't relevant on git
+#print "FreshPorts::Branches::GetPathToRepoForBranchCHROOT('master', 'head')  = '" . FreshPorts::Branches::GetPathToRepoForBranchCHROOT('master', 'head') . "'\n";
+
+print "\$FreshPorts::Constants::GitRepos:\n";
+print Dumper(\%FreshPorts::Constants::GitRepos);
+
+
+print "\$FreshPorts::Constants::RepoLabelsToGitRepoNames:\n";
+print Dumper(\%FreshPorts::Constants::RepoLabelsToGitRepoNames);
