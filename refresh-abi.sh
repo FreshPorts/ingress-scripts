@@ -10,12 +10,43 @@ fi
 
 . config.sh
 
+export PGDATABASE=$DB
+export PGHOST=$HOST
+export PGUSER=$DBUSER_ABI
+
+# see also PGSSLMODE and PGSSLROOTCERT in config.sh
+
+
 valid=$(mktemp  ${SPOOLINGDIR}/abi-valid.XXXXXX)
-delete=$(mktemp ${SPOOLINGDIR}/abi-delete.XXXXXX)
-add=$(mktemp    ${SPOOLINGDIR}/abi-add.XXXXXX)
+sql=$(mktemp ${SPOOLINGDIR}/abi-sel.XXXXXX)
 
+# fetch and extract the list of valid ABI
 ./current-list-of-valid-abi.sh > $valid
-./delete-depcreated-abi.sh     < $valid > $delete
-./add-new-abi.sh               < $valid > $add
 
-#rm $valid $delete $add
+# build the SQL commands
+echo 'BEGIN;'                           >  $sql
+
+# ABI to be deleted
+./delete-depcreated-abi.sh     < $valid >> $sql
+
+# ABI to be added
+echo                                    >> $sql
+./add-new-abi.sh               < $valid >> $sql
+
+# and we end
+echo                                    >> $sql
+echo 'ROLLBACK;'                          >>  $sql
+
+# run the SQL
+psql -f $sql 
+
+
+# if all good, remove the files. If not, leave the files
+# the output of this script will be saved and an error flagged
+if [ $? == 0 ]
+then
+  # commit taken
+  rm $valid $sql
+else
+  # raise an error, somewhere, somehow
+fi
