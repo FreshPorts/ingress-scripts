@@ -33,6 +33,9 @@ DIRLOG="/var/log/freshports"
 GITLOG="${DIRLOG}/git.log"
 GIT="/usr/local/bin/git"
 
+# When the abi are refreshed, this is where it logs
+ABILOG="${DIRLOG}/abi.log"
+
 # what is the URL for this website?
 # MUST have a trailing /
 WEBSITEURL="http://WEBSITE_URL"
