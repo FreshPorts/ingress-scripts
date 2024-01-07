@@ -65,7 +65,6 @@ NEWSCACHEDIR="${CACHINGROOT}/news"
 SPOOLINGDIR="${CACHINGROOT}/spooling"
 
 # What file do we set for /usr/ports/MOVED?
-
 MOVEDFLAGFILE="${BASEDIR}/signals/refresh_moved"
 
 # What file do we set for /usr/ports/UPDATING?
