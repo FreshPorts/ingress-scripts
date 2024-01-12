@@ -55,16 +55,18 @@ then
   # DELETE 0
   # INSERT 0 0
   # COMMIT
-  
-  if [ "$(grep -c 'DELETE 0' $log)" != "1" ] || [ "$(grep -c 'INSERT 0 0' $log)" != "1" ]
-  then
-     # put this in the logs of the job we're running, probably /var/log/daily.log
-     $LOGGER $(date)
-     $LOGGER $(cat $log)
 
-     # and to the logs on disk for later review
-     echo $(date) >> ${ABILOG}
-     cat ${log}   >> ${ABILOG}
+  # put this in the log
+  $LOGGER $(date)
+  $LOGGER $(cat $log)
+
+  # and to the logs on disk for later review
+  echo $(date) >> ${ABILOG}
+  cat ${log}   >> ${ABILOG}
+
+  if [ "$(grep -c 'DELETE 0' $log)" != "1" ] || [ "$(grep -c 'INSERT 0 0' $log)" != "1" ]
+    # things changed - placeholder for future actions
+  then
   else
     $LOGGER $0 nothing to change
   fi
