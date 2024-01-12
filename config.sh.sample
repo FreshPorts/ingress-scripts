@@ -83,8 +83,6 @@ VUXMLFLAGFILE="${BASEDIR}/signals/vuxml"
 VUXMLMUTEX="${BASEDIR}/signals/vuxml_mutex"
 WWWENPORTSCATEGORIES="${BASEDIR}/signals/www.en.ports.categories"
 
-CACHE_NEEDS_REFRESH="${BASEDIR}/signals/cache_needs_refresh"
-
 # scripts for the jail
 FRESHPORTS_JAIL_NAME="freshports"
 FRESHPORTS_JAIL_BASE_DIR="/jails/$FRESHPORTS_JAIL_NAME"
