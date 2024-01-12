@@ -47,7 +47,7 @@ if (!$SystemStatus->Online()) {
 }
 
 if (($#ARGV+1) == 2) {
-   print "there are 2 arguments\n";
+#   print "there are 2 arguments\n";
 
    my $StartDate = $ARGV[0];
    my $EndDate   = $ARGV[1];
@@ -61,7 +61,7 @@ if (($#ARGV+1) == 2) {
               where date_trunc('day', firstlogin) between '$StartDate' and '$EndDate'
               order by id";
 
-   print "sql is $sql\n";
+#   print "sql is $sql\n";
 
    my $sth = $dbh->prepare($sql);
    $sth->execute ||
@@ -73,7 +73,7 @@ if (($#ARGV+1) == 2) {
       $msgbody .= $row[0] . " : " . $row[1] . " : " . $row[2] . " : " . $row[3] . " : " . $row[4] . "\n";
    }
 
-   print "msgbody = \n" . $msgbody;
+#   print "msgbody = '" . $msgbody . "'\n";
    if ($msgbody ne '') {
       SendNotice($StartDate, $EndDate, $msgbody);
    }
