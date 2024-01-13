@@ -10,7 +10,7 @@ fi
 
 . config.sh
 
-$LOGGER $0 starts
+$LOGGER -t $0[$$] starts
 
 export PGDATABASE=$DB
 export PGHOST=$HOST
@@ -57,8 +57,8 @@ then
   # COMMIT
 
   # put this in the log
-  $LOGGER $(date)
-  $LOGGER $(cat $log)
+  $LOGGER -t $0[$$] on $(date) we found:
+  $LOGGER -t $0[$$] $(cat $log)
 
   # and to the logs on disk for later review
   echo $(date) >> ${ABILOG}
@@ -68,13 +68,13 @@ then
     # things changed - placeholder for future actions
   then
   else
-    $LOGGER $0 nothing to change
+    $LOGGER -t $0[$$] nothing to change
   fi
   
   rm $valid $sql $log
 else
   # raise an error, somewhere, somehow
-  $LOGGER $0 fatal error - see sql at $sql
+  $LOGGER -t $0[$$] fatal error - see sql at $sql
 fi
 
-$LOGGER $0 finishes
+$LOGGER -t $0[$$] finishes
