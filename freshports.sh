@@ -23,8 +23,8 @@ then
 	touch ${SCRIPTDIR}/OFFLINE
 	rm -f ${CONFIGDIR}/vhosts.conf
 	ln -s ${CONFIGDIR}/vhosts.conf.offline ${CONFIGDIR}/vhosts.conf
-	sudo apachectl graceful
-	sudo svc -d /var/service/fp-listen
+	sudo service nginx stop
+	sudo service fp_listen stop
 fi
 
 if [ "$1" = "start" ]
@@ -32,6 +32,6 @@ then
 	rm -f ${SCRIPTDIR}/OFFLINE
 	rm -f ${CONFIGDIR}/vhosts.conf
 	ln -s ${CONFIGDIR}/vhosts.conf.online ${CONFIGDIR}/vhosts.conf
-	sudo apachectl graceful
-	sudo svc -u /var/service/fp-listen
+	sudo service nginx stop
+	sudo service fp_listen start
 fi
