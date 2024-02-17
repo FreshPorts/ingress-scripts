@@ -39,4 +39,5 @@ then
   rm ${TMPFILE}
 fi
 
-rm $CHECKPORTSCATEGORIESFILE
+# remove our signal file
+rm -f $CHECKPORTSCATEGORIESFILE
