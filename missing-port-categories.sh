@@ -23,7 +23,7 @@ fi
 $LOGGER -t $LOGGERTAG Checking for ports without ports_categories entries
 $LOGGER -t $LOGGERTAG      ${PSQL} -h ${HOST} -q --pset t -d ${DB} --user ${DBUSER} -c "${QUERYCOUNT} ${QUERYBASE}" 
 ROWCOUNT=$(${PSQL} -h ${HOST} -q --pset t -d ${DB} --user ${DBUSER} -c "${QUERYCOUNT} ${QUERYBASE}" | tr -d ' ')
-$LOGGER -t $LOGGERTAG $ROWCOUNT found
+$LOGGER -t $LOGGERTAG found this many invalid entries: $ROWCOUNT
 if [ ${ROWCOUNT} -ne 0 ]
 then
   TMPFILE="/tmp/missing-ports.$$"
