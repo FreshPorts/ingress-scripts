@@ -68,6 +68,9 @@ if ($username eq 'freshports') {
 	
 FreshPorts::Utilities::Report('notice', "checking jobs for $username");
 
+#
+# we should put a max loop in here. Loop 100 times, then stop
+#
 my $JobFound;
 do {
 	$JobFound = 0;
