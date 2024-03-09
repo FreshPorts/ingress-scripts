@@ -72,6 +72,9 @@ FreshPorts::Utilities::Report('notice', "checking jobs for $username");
 # we should put a max loop in here. Loop 100 times, then stop
 #
 my $JobFound;
+my $NumLoops = 0;
+
+
 do {
 	$JobFound = 0;
 	# one job might create another, so we keeping looping until they are all cleared.
@@ -81,8 +84,25 @@ do {
 			FreshPorts::Utilities::Report('notice', "$flag exists.  About to run $script");
 			`$FreshPorts::Config::ScriptDir/$script`;
 			FreshPorts::Utilities::Report('notice', "Finished running $script");
+			if ($script eq 'UpdatePackagesFromRawPackages.py') {
+				 # after importing packages, we need to send out notices
+				 #
+				 FreshPorts::Utilities::Report('notice', 'Beacuse this is ' . $script . ', report-notification-packages.pl will now be run');
+				 `$FreshPorts::Config::ScriptDir/report-notification-packages.pl`;
+				 FreshPorts::Utilities::Report('notice', 'report-notification-packages.pl has finished running');
+			}
 		} else {
 			FreshPorts::Utilities::Report('notice', "flag '$flag' not set.  no work for $script");
 		}
 	}
-} until (!$JobFound);
+
+	$NumLoops++;
+
+	# If we're going throught there more than N times, a script has forgotten to remove a flag
+	# or is erroring out.
+
+} until (!$JobFound || $NumLoops > 5);
+
+if ($JobFound) {
+	FreshPorts::Utilities::Report('err', "job-waiting.pl seems to be looping. Best check the logs.");
+}
