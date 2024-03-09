@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2001-2006 DVL Software
 #
+#
+# This report is invoked after each package repo import.
+# By their nature, a package repo covers only one ABI.
+# Thus, this script  will process data only for a single ABI.
+#
 
 use strict;
 
@@ -23,9 +28,13 @@ my $sql;
 my $sth;
 my @row;
 my $Bcc;
-my $NumMsgs	= 0;
-my $NumCommits	= 0;
-my $NumPorts    = 0;
+my $abi_id;
+my $Package_Set;
+my $NumMsgs       = 0;
+my $NumPorts      = 0;
+my $NumUsers      = 0;
+my $NumWatchLists = 0;
+
 
 my $FormatDate	= "%W, %b %e";
 my $FormatTime	= "%H:%i";
@@ -43,7 +52,7 @@ sub SendWatchNoticePersonal($;$;$;$;$) {
 	my $BodyIn        = shift;
 
 	my $From    = 'FreshPorts Watch Daemon <FreshPorts-Watch@FreshPorts.org>';
-	my $Subject = "FreshPorts $ABI notification - $WatchListName";
+	my $Subject = "FreshPorts Notification $ABI" . '::' . "$Set : $WatchListName";
 
 	my $Body    = "
 $BodyIn
@@ -76,6 +85,7 @@ sub CompileWatchNotifyList($;$) {
 	my $row;
 	my $sth;
 	my $sql;
+	
 
 	#
 	# get a list of ports to update
@@ -91,6 +101,7 @@ sub CompileWatchNotifyList($;$) {
          C.name         as category, 
          E.name         as port, 
          abi.name       as abi,
+         abi.id         as abi_id,
          PN.package_set as set,
          PN.action,
          PN.version_previous,
@@ -103,7 +114,7 @@ sub CompileWatchNotifyList($;$) {
 		 JOIN watch_list WL                on WL.id = WLE.watch_list_id
 		 JOIN users U                      on U.id  = WL.user_id and length(U.email) > 0 and U.emailbouncecount = 0 
 		 JOIN report_subscriptions RS      on U.id  = RS.user_id and RS.report_id = 7
-		 JOIN report_subscriptions_abi RSA on RSA.abi_id = PN.abi_id AND PN.package_set = RSA.package_set
+		 JOIN report_subscriptions_abi RSA on RSA.abi_id = PN.abi_id AND PN.package_set = RSA.package_set AND RS.user_id = RSA.user_id and RSA.watch_list_id = WL.id
 		 JOIN abi                          on abi.id = PN.abi_id
 		 
 order by watch_list_id, watch_list_name, user_id, category, port;
@@ -117,43 +128,57 @@ order by watch_list_id, watch_list_name, user_id, category, port;
 			die "Could not execute SQL $sql ... maybe invalid?";
 
 	my $LastWatchListID;
+	my $LastUserID;
 	my $Body;
 	my $To;
 	my $WatchListName;
 	my $ABI;
 	my $Set;
-	my $CommitLogID = 0;
 
 	undef($LastWatchListID);
 
 	my $BodyHeader = '';
-	$BodyHeader .= $Announce . "\n"; 
+	$BodyHeader .= $Announce . "\n\n\n";
+	$BodyHeader .= "This report can contain three types of actions in this report:\n";
+	$BodyHeader .= " * insert - package added to repo, was not present in previous build.\n";
+	$BodyHeader .= " * delete - package not found in this repo build.\n";
+	$BodyHeader .= " * update - new version of package available in this repo build.\n\n\n";
 
 	my $wrapper = Text::Wrapper->new(columns => 72, body_start => '  ');
 
 	$Body = $BodyHeader;
 	while ($row = $sth->fetchrow_hashref()) {
-		print "now processing $row->{abi}: $row->{email}: $row->{category}/$row->{port}\n";
 		$NumPorts++;
-#		if ($CommitLogID ne $row->{commit_log_id}) {
-#			$NumCommits++;
-#			$CommitLogID = $row->{commit_log_id};
-#		}
+		print "now processing $row->{abi}: $row->{email}: $row->{category}/$row->{port}\n";
 
 		# make sure that the first time through, we have a value
 		if (!defined($LastWatchListID)) {
 			$LastWatchListID = $row->{watch_list_id};
+			$LastUserID      = $row->{user_id};
 			$To              = $row->{email};
 			$WatchListName   = $row->{watch_list_name};
 			$ABI             = $row->{abi};
 			$Set             = $row->{set};
+
+			$NumUsers++;			
+			$NumWatchLists++;
+
+			# these two are defined outside this function, and used for stats
+			$Package_Set     = $row->{set};
+			$abi_id          = $row->{abi_id};
 			
-			$Body .= "new packages on $ABI -> $Set\n\n"
+			$Body .= "new packages on $ABI" . '::' . "$Set\n\n"
+		}
+		
+		if ($LastUserID != $row->{user_id}) {
+			$LastUserID = $row->{user_id};
+			$NumUsers++;
 		}
 
 		print "LastWatchListID = '$LastWatchListID' and id = '$row->{watch_list_id}'\n";
 		if ($LastWatchListID != $row->{watch_list_id}) {
 			$NumMsgs++;
+			$NumWatchLists++;
 			if ($FreshPorts::Config::ReportDebugging) {
 				print "NOT SENDING EMAIL.. in DEBUG mode\n";
 			} else {
@@ -176,18 +201,21 @@ order by watch_list_id, watch_list_name, user_id, category, port;
 		# get the category and port
 		$Body .= $row->{category} . '/' . $row->{port} . "\n";
 
-		# and wrap the description of the change.
-#		$Body .= $row->{abi} . "\n";
-		$Body .= "  $row->{action}:";
+		if ($row->{action} eq 'insert') {
+			$Body .= "  added to repo:\n";
+			$Body .= "          version: $row->{version_current}\n";
+		}
 		if ($row->{action} eq 'delete') {
-			$Body .= " old version: $row->{version_previous}\n";
+			$Body .= "  no longer available in repo:\n";
+			$Body .= "          previous version: $row->{version_previous}\n";
 		}
 		if ($row->{action} eq 'update') {
-			$Body .= " new version: $row->{version_current}\n";
+			$Body .= "  updated:\n";
+			$Body .= "          new version: $row->{version_current}\n";
 			# this spacing lines it up with the above line.
 			$Body .= "          old version: $row->{version_previous}\n";
 		}
-		$Body .=      "  $FreshPorts::Config::FreshPortsURL" . $row->{category} . '/' . $row->{port} . "/\n\n\n";
+		$Body .= "  $FreshPorts::Config::FreshPortsURL" . $row->{category} . '/' . $row->{port} . "/\n\n\n";
 	}
 
 	#print "* * * * Body = $Body\n";
@@ -207,30 +235,23 @@ order by watch_list_id, watch_list_name, user_id, category, port;
 	}
 }
 
-sub AddToLogs($;$;$;$;$;$) {
-	my $Report_ID  = shift;
-	my $ABI        = shift;
-	my $NumMsgs    = shift;
-	my $NumCommits = shift;
-	my $NumPorts   = shift;
-	my $dbh        = shift;
+sub AddToLogs($;$;$;$;$;$;$) {
+	my $abi_id        = shift;
+	my $Package_Set   = shift;
+	my $NumMsgs       = shift;
+	my $NumPorts      = shift;
+	my $NumUsers      = shift;
+	my $NumWatchLists = shift;
+	my $dbh           = shift;
 
 	my $sql;
 	my @row;
 
-	$sql = "select id from report_frequency where frequency = '$ABI'";
+	$sql = "insert into report_log_package_notifications (abi_id, package_set, num_emails, num_ports, num_users, num_watch_lists)
+									values (?, ?, ?, ?, ?, ?)";
 	$sth = $dbh->prepare($sql);
-	$sth->execute ||
-		die "Could not execute SQL $sql ... maybe invalid?";
-
-	@row=$sth->fetchrow_array;
-	my $frequency_id = $row[0];
-# There is no frequency for ABI reports.
-#	$sql = "insert into report_log (report_id, frequency_id, email_count, commit_count, port_count)
-#									values ($Report_ID, '$frequency_id', $NumMsgs, $NumCommits, $NumPorts)";
-#	$sth = $dbh->prepare($sql);
-#	$sth->execute ||
-#           die "Could not execute SQL $sql ... maybe invalid?";
+	$sth->execute($abi_id, $Package_Set, $NumMsgs, $NumPorts, $NumUsers, $NumWatchLists) ||
+           die "Could not execute SQL $sql ... maybe invalid?";
 }
 
 #
@@ -271,7 +292,7 @@ if ($dbh->{Active}) {
 	CompileWatchNotifyList($TextAnnounce, $dbh);
 
 	if (!$FreshPorts::Config::ReportDebugging) {
-#		AddToLogs($ReportID, $Frequency, $NumMsgs, $NumCommits, $NumPorts, $dbh);
+		AddToLogs($abi_id, $Package_Set, $NumMsgs, $NumPorts, $NumUsers, $NumWatchLists, $dbh);
 	}
 
 	$dbh->commit();
