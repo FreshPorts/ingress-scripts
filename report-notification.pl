@@ -42,7 +42,7 @@ sub SendWatchNoticePersonal($;$;$;$) {
 	my $BodyIn        = shift;
 
 	my $From    = 'FreshPorts Watch Daemon <FreshPorts-Watch@FreshPorts.org>';
-	my $Subject = "FreshPorts $FrequencyLong notification - $WatchListName";
+	my $Subject = "FreshPorts Notification: $FrequencyLong : $WatchListName";
 
 	my $Body    = "
 $BodyIn
