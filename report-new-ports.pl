@@ -37,7 +37,7 @@ sub SendWatchNoticePersonal($;$;$) {
 	my $Body          = shift;
 
 	my $From         = 'FreshPorts Watch Daemon <FreshPorts-Watch@FreshPorts.org>';
-	my $Subject      = "FreshPorts $FrequencyLong new ports";
+	my $Subject      = "FreshPorts Notification: $FrequencyLong new ports";
 	my %ExtraHeaders = (
 		'Auto-Submitted'        => 'auto-generated',
 		'Precedence'            => 'bulk',
