@@ -299,6 +299,11 @@ if ($dbh->{Active}) {
 	$dbh->disconnect();
 
 	print "message sent to users\n";
+
+	# remove the flag which started this.
+	# job-waiting.pl invoked UpdatePackagesFromRawPackages.py, which then called us.
+	# not sure this is the right place, but here we go.
+	unlink($FreshPorts::Config::NewRepoImported);
 }
 
 print "finish " . `date "+%Y-%m-%d %H:%M:%S"`;
