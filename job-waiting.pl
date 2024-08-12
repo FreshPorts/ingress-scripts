@@ -87,7 +87,7 @@ do {
 			if ($script eq 'UpdatePackagesFromRawPackages.py') {
 				 # after importing packages, we need to send out notices
 				 #
-				 FreshPorts::Utilities::Report('notice', 'Beacuse this is ' . $script . ', report-notification-packages.pl will now be run');
+				 FreshPorts::Utilities::Report('notice', 'Because this is ' . $script . ', report-notification-packages.pl will now be run');
 				 `$FreshPorts::Config::ScriptDir/report-notification-packages.pl`;
 				 FreshPorts::Utilities::Report('notice', 'report-notification-packages.pl has finished running');
 			}
