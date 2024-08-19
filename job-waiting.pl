@@ -35,7 +35,6 @@ my %Jobs_ingress = (
 my %Jobs_freshports = (
 	$FreshPorts::Config::MovedFileFlag            => 'process_moved.sh',
 	$FreshPorts::Config::NewReposReadyForImport   => 'import_packagesite.py',
-	$FreshPorts::Config::NewRepoImported          => 'UpdatePackagesFromRawPackages.py',
 	$FreshPorts::Config::UpdatingFileFlag         => 'process_updating.sh',
 	$FreshPorts::Config::PortsToRefresh           => 'refresh-ports.sh',
 	$FreshPorts::Config::VuXMLFileFlag            => 'process_vuxml.sh',
@@ -81,16 +80,17 @@ do {
 	while (my ($flag, $script) = each %Jobs) {
 		if (-f $flag) {
 			$JobFound =1;
-			FreshPorts::Utilities::Report('notice', "$flag exists.  About to run $script");
-			`$FreshPorts::Config::ScriptDir/$script`;
-			FreshPorts::Utilities::Report('notice', "Finished running $script");
-			if ($script eq 'UpdatePackagesFromRawPackages.py') {
-				 # after importing packages, we need to send out notices
-				 #
-				 FreshPorts::Utilities::Report('notice', 'Because this is ' . $script . ', report-notification-packages.pl will now be run');
-				 `$FreshPorts::Config::ScriptDir/report-notification-packages.pl`;
-				 FreshPorts::Utilities::Report('notice', 'report-notification-packages.pl has finished running');
+			FreshPorts::Utilities::Report('notice', "$flag exists.  About to run $script via system()");
+			# this must be >> so that each run is appended to the log, which is rotated at midnight
+			FreshPorts::Utilities::Report('notice', "details are: $FreshPorts::Config::ScriptDir/$script >> $FreshPorts::Config::LogJobsWaiting");
+			system("$FreshPorts::Config::ScriptDir/$script >> $FreshPorts::Config::LogJobsWaiting");
+			if ($? == 0) {
+				# all ok
+				FreshPorts::Utilities::ReportError('notice', "$script finished with exit status '$?' and '$!'");
+			} else {
+				FreshPorts::Utilities::ReportError('notice', "$script failed with exit status '$?' and '$!'");
 			}
+			FreshPorts::Utilities::Report('notice', "Finished running $script");
 		} else {
 			FreshPorts::Utilities::Report('notice', "flag '$flag' not set.  no work for $script");
 		}
@@ -104,5 +104,5 @@ do {
 } until (!$JobFound || $NumLoops > 5);
 
 if ($JobFound) {
-	FreshPorts::Utilities::Report('err', "job-waiting.pl seems to be looping. Best check the logs.");
+	FreshPorts::Utilities::Report('err', "job-waiting.pl seems to be looping. Whatever flag is not being removed, that script may be silenting failing. Best check the logs.");
 }

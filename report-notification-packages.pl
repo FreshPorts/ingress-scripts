@@ -195,7 +195,7 @@ order by watch_list_id, watch_list_name, user_id, category, port;
 			$WatchListName   = $row->{watch_list_name};
 			$ABI             = $row->{abi};
 			$Set             = $row->{set};
-			$Body .= "new packages on $ABI -> $Set\n\n"
+			$Body .= "Package changes on $ABI" . '::' . "$Set\n\n"
 		}
 
 		# get the category and port
@@ -291,19 +291,18 @@ if ($dbh->{Active}) {
 
 	CompileWatchNotifyList($TextAnnounce, $dbh);
 
-	if (!$FreshPorts::Config::ReportDebugging) {
+	# if data is found, CompileWatchNotifyList() will have assigned a value to $abi_id
+	if (!$FreshPorts::Config::ReportDebugging && defined($abi_id)) {
 		AddToLogs($abi_id, $Package_Set, $NumMsgs, $NumPorts, $NumUsers, $NumWatchLists, $dbh);
 	}
-
+	
+	if (!defined($abi_id)) {
+		print "nothing was founnd to announce\n";
+	}
 	$dbh->commit();
 	$dbh->disconnect();
 
 	print "message sent to users\n";
-
-	# remove the flag which started this.
-	# job-waiting.pl invoked UpdatePackagesFromRawPackages.py, which then called us.
-	# not sure this is the right place, but here we go.
-	unlink($FreshPorts::Config::NewRepoImported);
 }
 
 print "finish " . `date "+%Y-%m-%d %H:%M:%S"`;
