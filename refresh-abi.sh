@@ -12,6 +12,9 @@ fi
 
 $LOGGER -t $0[$$] starts
 
+#
+# save these values for use by psql via environment variables. The password is stored in ~/.pgpass
+#
 export PGDATABASE=$DB
 export PGHOST=$HOST
 export PGUSER=$DBUSER_ABI
