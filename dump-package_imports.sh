@@ -5,6 +5,27 @@
 # Typically, this script is invoked by /usr/local/etc/periodics/hourly/990.refresh_package_imports_page
 #
 
+if [ $# -ne 1 ]
+then
+   echo "$0 : usage $0 (name|date)"
+   exit 1
+fi
+
+# we accept only two values: name, date
+case $1 in
+  name)
+    SORT_BY='name, package_set'
+    ;;
+  date)
+    SORT_BY='repo_date desc nulls last, name, package_set'
+    ;;
+  *)
+    echo "$0 : usage $0 (name|date)"
+    exit 1
+esac
+
+
+
 if [ ! -f config.sh ]
 then
 	echo "config.sh not found by $0"
@@ -34,7 +55,8 @@ data=$(mktemp ${SPOOLINGDIR}/packages_last_checked-data.XXXXXX)
 
 # fetch and extract the contents of packages_last_checked
 # data to be fetched
-echo 'select abi.name, PLC.* from packages_last_checked PLC join abi on plc.abi_id = abi.id order by repo_date desc nulls last, name, package_set;' >> $sql
+echo 'select abi.name, PLC.* from packages_last_checked PLC join abi on plc.abi_id = abi.id order by ' >> $sql
+echo "$SORT_BY;" >> $sql
 
 # run the SQL
 psql -f $sql >> $data
