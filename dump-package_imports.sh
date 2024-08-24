@@ -34,7 +34,7 @@ data=$(mktemp ${SPOOLINGDIR}/packages_last_checked-data.XXXXXX)
 
 # fetch and extract the contents of packages_last_checked
 # data to be fetched
-echo 'select abi.name, PLC.* from packages_last_checked PLC join abi on plc.abi_id = abi.id order by processed_date desc nulls last, name, package_set;' >> $sql
+echo 'select abi.name, PLC.* from packages_last_checked PLC join abi on plc.abi_id = abi.id order by repo_date desc nulls last, name, package_set;' >> $sql
 
 # run the SQL
 psql -f $sql >> $data
