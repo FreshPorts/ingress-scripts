@@ -28,7 +28,7 @@ sub SendNotice($;$;$) {
      'X-FreshPorts-NewUsers' => "$StartDate to $EndDate"
    );
 
-   my $Body = "The following users were added in this period:
+   my $Body = "The following users were added ($FreshPorts::Config::FreshPortsURL) in this period:
 
 $msgbody --
 
