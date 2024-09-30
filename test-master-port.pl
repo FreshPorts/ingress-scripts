@@ -35,14 +35,14 @@ sub CheckMasterPorts($) {
 	my $row;
 
 	# quote everything going to the database
-	$sql = "SELECT master_port FROM ports_active WHERE name = 'bacula9-client'";
+	$sql = "SELECT master_port FROM ports_active WHERE name = 'bacula15-client'";
 	$sth = $dbh->prepare($sql);
 	if (!$sth->execute())  {
 		FreshPorts::Utilities::ReportError('warning', "Could not execute sql: $sql", 1);
 	}
 	$row = $sth->fetchrow_hashref();
-	if ($row->{'master_port'} ne 'sysutils/bacula9-server') {
-		FreshPorts::Utilities::ReportErrorEmail('ERR', "The master port for bacula9-client is not sysutils/bacula9-server", 1, 0);
+	if ($row->{'master_port'} ne 'sysutils/bacula15-server') {
+		FreshPorts::Utilities::ReportErrorEmail('ERR', "The master port for bacula15-client is not sysutils/bacula15-server", 1, 0);
 	}
 }
 
