@@ -3,6 +3,9 @@
 # Copyright (c) 2001-2021 DVL Software
 #
 
+#
+# This script does not check for OFFLINE because it does not access the database
+#
 
 SPOOL="/var/db/freshports/cache/spooling/$0.$$.tmp"
 

@@ -34,6 +34,11 @@ fi
 
 . config.sh
 
+if [ $OFFLINE = 1 ]
+then
+	exit 0
+fi
+
 $LOGGER -t $0[$$] starts
 
 #

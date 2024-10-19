@@ -6,6 +6,11 @@
 
 . /usr/local/etc/freshports/config.sh
 
+if [ $OFFLINE = 1 ]
+then
+	exit 0
+fi
+
 #
 # save these values for use by psql via environment variables. The password is stored in ~/.pgpass
 #

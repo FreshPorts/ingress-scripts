@@ -12,6 +12,16 @@ use DBI;
 
 require Sys::Syslog;
 require FreshPorts::config;
+use FreshPorts::system_status;
+
+#
+# see if the system is online.
+# If not, exit.
+#
+my $SystemStatus = FreshPorts::SystemStatus->new();
+if (!$SystemStatus->Online()) {
+	exit 0;
+}
 
 
 my $dbh = FreshPorts::Database::GetDBHandle();

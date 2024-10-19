@@ -12,6 +12,12 @@ fi
 
 $LOGGER -t $0[$$] starts
 
+if [ $OFFLINE = 1 ]
+then
+	$LOGGER -t $0[$$] exist because system is offline
+	exit 0
+fi
+
 #
 # save these values for use by psql via environment variables. The password is stored in ~/.pgpass
 #

@@ -97,13 +97,16 @@ sub parsefile ($) {
 				last if ($line =~ m/^\d{8}:/);
 				last if ($line =~ m/^\$FreeBSD:/);	# last line of file, at one time.
 
-				# sometime after 20220629, entries started using 'AFFECTS: users of'
-				# the code still works  with that format
-				if ($line =~ m/\s*AFFECTS:\s+(.*)$/i){
+				# Sometime after 20220629, entries started using 'AFFECTS: users of'.
+				# The code still works with that format,
+				# On 2024-09-06, the \s* replaced \s+ because of https://cgit.freebsd.org/ports/commit/?id=c27d2322b009732adbdc4211c38e1ff66dedf987
+				# AUTHORS was also updated similarly.
+				#
+				if ($line =~ m/\s*AFFECTS:\s*(.*)$/i){
 					$affects   = $1;
 					$InAffects = 1;
 					print "found this: 'AFFECTS: $affects'\n";
-				} elsif ($line =~ m/\s*AUTHOR:\s+(.*)$/i) {
+				} elsif ($line =~ m/\s*AUTHOR:\s*(.*)$/i) {
 					$author    = $1;
 					$InAffects = 0;
 				} elsif ($InAffects) {
@@ -111,7 +114,7 @@ sub parsefile ($) {
 					# sometimes there is no AUTHOR, and we have a blank line instead
 					if ($line =~ m/\S+/) { # if the line contains something not-whitespace
 						# grab the non-whitespace
-						$line =~ m/^\s+(.*)$/;
+						$line =~ m/^\s*(.*)$/;
 						# line it up under the AFFECTS: banner
 						$affects .= "\n         " . $1;
 					} else {

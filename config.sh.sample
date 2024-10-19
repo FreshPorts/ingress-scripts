@@ -17,6 +17,9 @@ FETCH_OPTIONS="-qo"
 # This is usually the home directory of the freshports user
 BASEDIR="/var/db/freshports"
 
+# if this file exists, scripts should not run.
+OFFLINE_SIGNAL="${BASEDIR}/OFFLINE"
+
 # The home directory of the ingress user
 INGRESS_BASEDIR="/var/db/ingress"
 INGRESS_PORTS_DIR_BASE="$INGRESS_BASEDIR/repos"
@@ -95,7 +98,7 @@ PORTSDIR="/usr/ports"
 
 ADMINEMAIL="dan@langille.org"
 
-if [ -e 'OFFLINE' ]
+if [ -e ${OFFLINE_SIGNAL} ]
 then
 	OFFLINE=1;
 else
