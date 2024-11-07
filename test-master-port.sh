@@ -5,7 +5,7 @@
 
 if [ ! -f config.sh ]
 then
-	echo "config.sh not found by test-master-port.sh..."
+	echo "config.sh not found by $0"
 	exit 1
 fi
 

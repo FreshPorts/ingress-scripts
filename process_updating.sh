@@ -18,8 +18,8 @@ logger -p local3.notice -t FreshPorts $0 is starting
 
 if [ ! -f config.sh ]
 then
-	logger -p local3.notice -t FreshPorts "config.sh not found by process_updating.sh..."
-	echo "config.sh not found by process_updating.sh..."
+	logger -p local3.notice -t FreshPorts "config.sh not found by $0"
+	echo "config.sh not found by $0"
 	exit 1
 fi
 
