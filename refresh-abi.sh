@@ -14,7 +14,7 @@ $LOGGER -t $0[$$] starts
 
 if [ $OFFLINE = 1 ]
 then
-	$LOGGER -t $0[$$] exist because system is offline
+	$LOGGER -t $0[$$] exits because system is offline
 	exit 0
 fi
 
