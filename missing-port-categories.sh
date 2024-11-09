@@ -18,6 +18,7 @@ fi
 
 if [ $OFFLINE = 1 ]
 then
+	$LOGGER -t $LOGGERTAG exit now because the system is OFFLINE
 	exit 0
 fi
 

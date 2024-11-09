@@ -60,10 +60,14 @@ fi
 
 . ${CONFIG}
 
-if [ $OFFLINE = 1 ]
-then
-	exit 0
-fi
+# we purposely do not check OFFLINE
+# if we have taken everything offline for testing, we still want to get a list of current categories
+# This touches disk only, not the database.
+
+#if [ $OFFLINE = 1 ]
+#then
+#	exit 0
+#fi
 
 cd ${FRESHPORTS_JAIL_BASE_DIR}/${PORTSDIR}
 /usr/bin/find -s -f * -type d -regex '[a-z].*' -maxdepth 0 | /usr/bin/xargs
