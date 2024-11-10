@@ -27,6 +27,13 @@ FreshPorts::Utilities::InitSyslog();
 
 Sys::Syslog::syslog('warning', "running job-waiting.pl");
 
+my $SystemStatus = FreshPorts::SystemStatus->new();
+if (!$SystemStatus->Online()) {
+	Sys::Syslog::syslog('warning', "$0 stopping now: system is offline");
+	exit 0;
+}
+
+
 
 my %Jobs_ingress = (
 	$FreshPorts::Config::CheckGit                 => 'check_git.sh',
