@@ -83,6 +83,8 @@ MAIN:
     my $parser = new XML::DOM::Parser;
     my $doc = $parser->parsefile ($filename);
     
+    print "There, the parsefile has completed\n";
+    
     my $dbh;
     $dbh = FreshPorts::Database::GetDBHandle();
     if ($dbh->{Active}) {
@@ -183,6 +185,9 @@ MAIN:
                 } # if ($updateRequired)
             } # for my $node
         }; # eval
+
+        # added after seeing it at https://metacpan.org/dist/XML-DOM/view/lib/XML/DOM/Parser.pod
+        $doc->dispose;
 
         print 'finished with eval()' . "\n";
 
