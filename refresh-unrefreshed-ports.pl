@@ -99,6 +99,9 @@ while (@row=$sth->fetchrow_array) {
 	#
 	push @PORTS, {%Port};
 }
+
+$sth->finish();
+
  
 my $port				= FreshPorts::Port->new($dbh);
 my $element				= FreshPorts::Element->new($dbh);

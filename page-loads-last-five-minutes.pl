@@ -27,11 +27,11 @@ if (!$SystemStatus->Online()) {
 	exit 0;
 }
 
-   $dbh = FreshPorts::Database::GetDBHandle();
-   if (!$dbh) {
-      print "0\n";
-   }
-   my $sql = "
+$dbh = FreshPorts::Database::GetDBHandle();
+if (!$dbh) {
+ print "0\n";
+}
+my $sql = "
    SELECT COUNT(*)
      FROM page_load_detail
     WHERE date >= current_date - interval '10 minutes'
@@ -39,15 +39,15 @@ if (!$SystemStatus->Online()) {
    
 #   print "sql is $sql\n";
 
-   my $sth = $dbh->prepare($sql);
-   $sth->execute ||
+my $sth = $dbh->prepare($sql);
+$sth->execute ||
            die "Could not execute SQL $sql ... maybe invalid?";
 
-   my $msgbody = '';
+my $msgbody = '';
 
-   if (@row = $sth->fetchrow_array) {
-     print $row[0] . "\n";
-   }
+if (@row = $sth->fetchrow_array) {
+ print $row[0] . "\n";
+}
 
 $sth->finish();
 

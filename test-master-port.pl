@@ -44,6 +44,7 @@ sub CheckMasterPorts($) {
 	if ($row->{'master_port'} ne 'sysutils/bacula15-server') {
 		FreshPorts::Utilities::ReportErrorEmail('ERR', "The master port for bacula15-client is not sysutils/bacula15-server", 1, 0);
 	}
+	$sth->finish();
 }
 
 #####

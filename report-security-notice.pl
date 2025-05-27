@@ -214,6 +214,8 @@ order by watch_list_id, watch_list_name, user_id, category, port, commit_date";
 		$Body .=      "  $row->{commit_date} - $row->{comitter}\n\n\n\n\n";
 	}
 
+	$sth->finish();
+
 	#print "* * * * Body = $Body\n";
 
 	# if we got at least one, send out email
@@ -249,12 +251,14 @@ sub AddToLogs($;$;$;$;$;$) {
 
 	@row=$sth->fetchrow_array;
 	my $frequency_id = $row[0];
+	$sth->finish();
 
 	$sql = "insert into report_log (report_id, frequency_id, email_count, commit_count, port_count)
 									values ($Report_ID, '$frequency_id', $NumMsgs, $NumCommits, $NumPorts)";
 	$sth = $dbh->prepare($sql);
 	$sth->execute ||
            die "Could not execute SQL $sql ... maybe invalid?";
+        $sth->finish();
 }
 
 print "into report-security-notice.pl\n";

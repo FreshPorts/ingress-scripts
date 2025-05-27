@@ -207,6 +207,8 @@ order by watch_list_id, watch_list_name, user_id, category, port, commit_date";
 		$Body .=      "  $FreshPorts::Config::FreshPortsURL" . $row->{category} . '/' . $row->{port} . "/\n\n\n";
 	}
 
+	$sth->finish();
+
 	#print "* * * * Body = $Body\n";
 
 	# if we got at least one, send out email
@@ -248,6 +250,7 @@ sub AddToLogs($;$;$;$;$;$) {
 	$sth = $dbh->prepare($sql);
 	$sth->execute ||
            die "Could not execute SQL $sql ... maybe invalid?";
+        $sth->finish();
 }
 
 #

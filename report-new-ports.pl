@@ -194,6 +194,7 @@ sub CompileWatchNotifyList($;$;$;$;$;$) {
 			SendWatchNoticePersonal($To, $FrequencyLong, $Body);
 		}
 	}
+	$sth->finish();
 }
 
 sub AddToLogs($;$;$;$;$;$) {
@@ -221,6 +222,7 @@ sub AddToLogs($;$;$;$;$;$) {
 	$sth = $dbh->prepare($sql);
 	$sth->execute ||
            die "Could not execute SQL $sql ... maybe invalid?";
+        $sth->finish();
 }
 
 #

@@ -78,6 +78,7 @@ if (($#ARGV+1) == 2) {
       SendNotice($StartDate, $EndDate, $msgbody);
    }
 
+   $sth->finish();
    $dbh->disconnect();
 } else {
    print "please specify a start date and an end date\n";

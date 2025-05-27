@@ -76,6 +76,7 @@ ORDER BY coalesce(V.date_modified, V.date_entry, V.date_discovery) desc, lower(n
 			     '<td>' . $row->{date_formatted} . '</td></tr>' . "\n";
 		}
 		print FILE '</table>' . "\n";
+		$sth->finish();
 		
 		$query = "
   SELECT count(DISTINCT CLPV.port_id) AS ports,

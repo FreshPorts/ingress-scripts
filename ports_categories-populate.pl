@@ -52,6 +52,8 @@ while ($row = $sth->fetchrow_hashref()) {
    $Categories{$row->{name}} = $row->{id};
 }
 
+$sth->finish();
+
 #
 # get a list of ports to update
 #

@@ -217,6 +217,8 @@ order by user_id, category, port, commit_date";
 		print "To   = $To\n";
 		SendListOfCommitsToMaintainers($To, $Body);
 	}
+
+	$sth->finish();
 }
 
 sub AddToLogs($;$;$;$;$;$) {
@@ -243,6 +245,7 @@ sub AddToLogs($;$;$;$;$;$) {
 	$sth = $dbh->prepare($sql);
 	$sth->execute ||
            die "Could not execute SQL $sql ... maybe invalid?";
+        $sth->finish();
 }
 
 #

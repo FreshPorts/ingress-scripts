@@ -101,6 +101,8 @@ while (@row=$sth->fetchrow_array) {
 	push @PORTS, {%Port};
 
 }
+$sth->finish();
+
 
 # 
 # For this, we are refreshing strictly from files, and not processing a commit.

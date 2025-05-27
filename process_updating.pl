@@ -237,6 +237,7 @@ sub EmptyUpdating($) {
 	if (!$sth->execute()) {
 		FreshPorts::Utilities::ReportError('warning', "Could not execute sql: $sql", 1);
 	}
+	$sth->finish();
 }
 
 sub ClearCacheFiles($) {
@@ -267,5 +268,5 @@ SELECT P.id,
 	$sth = $dbh->prepare("notify port_updated");
 	$sth->execute ||
 		die "Could not execute SQL $sql ... maybe invalid?";
-
+	$sth->finish();
 }

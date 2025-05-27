@@ -126,6 +126,7 @@ sub EmptyMoved($) {
 	if (!$sth->execute())  {
 		FreshPorts::Utilities::ReportError('warning', "Could not execute sql: $sql", 1);
 	}
+	$sth->finish();
 }
 
 sub ClearCacheFiles($) {
@@ -161,5 +162,7 @@ SELECT P.id   AS port_id,
 		$Caching->RemovePortFromCache($updated_port->{port_id}, $updated_port->{category}, $updated_port->{port});
 	}
 
-    return $i;
+	$sth->finish();
+
+	return $i;
 }

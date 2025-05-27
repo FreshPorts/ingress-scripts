@@ -77,5 +77,6 @@ foreach $porttorefresh (@PORTS) {
 		FreshPorts::Utilities::ReportError('warning', "Could not retrieve port ($port_id, $category_name, $port_name)", 1);
 	}
 }
+$sth->finish();
 $dbh->commit();
 $dbh->disconnect();
