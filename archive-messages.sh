@@ -40,4 +40,5 @@ YYYYMMDD=$(eval date -v-${DAYS}d "+%Y.%m.%d")
 DEST="${MSGDIR}/archive/${YYYY_MM}/${YYYY_MM_DD}/"
 mkdir -p ${DEST}
 
-find ${MSGDIR}/recent -type f -name ${YYYYMMDD}\* | xargs -n 1 -J {} mv {} ${DEST}
+# the -d 1 is so I can mkdir erorrs && mv stuff errors and keep them around
+find ${MSGDIR}/recent -type f -d 1 -name ${YYYYMMDD}\* | xargs -n 1 -J {} mv {} ${DEST}
