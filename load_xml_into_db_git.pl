@@ -46,3 +46,7 @@ if ($dbh->{Active}) {
 	$dbh->disconnect();
 	print "EOF\n";
 }
+
+END {
+   $dbh->disconnect();
+}
