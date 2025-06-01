@@ -130,4 +130,14 @@ $sth->finish();
 $dbh->commit();
 $dbh->disconnect();
 
+# Still trying to avoid:
+#
+# May 29 11:54:10 dvl-ingress01 freshports[34063]: DBI db handle 0x19ffb9332258 has 1 uncleared child handles during global destruction.
+# May 29 11:54:10 dvl-ingress01 freshports[34063]:     dbih_clearcom (dbh 0x19ffb9332258, com 0x19ffb90b6c80, imp DBD::Pg::db):
+# May 29 11:54:10 dvl-ingress01 freshports[34063]:        FLAGS 0x500111: COMSET Warn PrintError PrintWarn 
+# May 29 11:54:10 dvl-ingress01 freshports[34063]:        PARENT undef
+# May 29 11:54:10 dvl-ingress01 freshports[34063]:        KIDS 1 (0 Active)
+#
+undef $dbh;
+
 print("$0 finishes\n");

@@ -270,3 +270,9 @@ SELECT P.id,
 		die "Could not execute SQL $sql ... maybe invalid?";
 	$sth->finish();
 }
+
+sub DESTROY {
+	my $dbh = shift;
+
+        undef $dbh;
+}

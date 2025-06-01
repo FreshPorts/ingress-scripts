@@ -204,6 +204,9 @@ MAIN:
 
         $dbh->disconnect();
     } # if ($dbh->{Active}
+
+    undef $dbh;
+
 } # MAIN
 
 my $end = time();

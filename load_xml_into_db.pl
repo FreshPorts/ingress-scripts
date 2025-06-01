@@ -114,4 +114,5 @@ if ($dbh->{Active}) {
 
 END {
    $dbh->disconnect();
+   undef $dbh;
 }
