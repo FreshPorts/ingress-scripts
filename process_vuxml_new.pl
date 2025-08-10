@@ -142,7 +142,7 @@ sub remove_deleted_vids($)
         print "deleting missing vuxml\n";
         $dbh->commit();
 
-        print "missing vuxml have been deleted\n";
+        print "vuln not present in xml files have been deleted from the database.\n";
     };
     if ($@) {
         warn "Error during delete: $@";
@@ -346,7 +346,11 @@ remove_deleted_vids($dbh);
 my %VIDsToUpdate = get_list_of_modified_and_new_vids($dbh);
 
 print "invoking update_modified_vids()\n";
-update_modified_vids($dbh, $doc, \%VIDsToUpdate);
+if (%VIDsToUpdate) {
+    update_modified_vids($dbh, $doc, \%VIDsToUpdate);
+} else {
+    print "Nothing to update\n";
+}
 
 # added after seeing it at https://metacpan.org/dist/XML-DOM/view/lib/XML/DOM/Parser.pod
 $doc->dispose;
