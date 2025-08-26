@@ -30,8 +30,11 @@ sub SendNotice($;$;$) {
 
    my $Body = "The following users were added ($FreshPorts::Config::FreshPortsURL) in this period:
 
-$msgbody --
+$msgbody
 
+-- 
+
+The FreshPorts Daemon
 ";
 
    FreshPorts::email::SendMail($From, $To, $CC, $Subject, $Body, \%ExtraHeaders);
