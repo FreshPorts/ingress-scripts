@@ -2,7 +2,7 @@
 #
 # $Id: job-waiting.pl,v 1.3 2007-01-29 00:17:35 dan Exp $
 #
-# Copyright (c) 1999-2021 DVL Software
+# Copyright (c) 1999-2025 Dan Langille
 #
 # This script is invoked by the helper_scripts/check_for_git_commits.sh script
 # usually located in /usr/local/libexec/freshports.
@@ -13,7 +13,6 @@ use strict;
 
 use DBI;
 use FreshPorts::database;
-use FreshPorts::cache;
 use FreshPorts::commit_log_ports_ignore;
 use FreshPorts::system_status;
 use FreshPorts::utilities;
