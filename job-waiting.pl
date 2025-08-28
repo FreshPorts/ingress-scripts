@@ -4,9 +4,8 @@
 #
 # Copyright (c) 1999-2025 Dan Langille
 #
-# This script is invoked by the helper_scripts/check_for_git_commits.sh script
-# usually located in /usr/local/libexec/freshports.
-# Look in /usr/local/etc/periodic/everythreeminutes/215.fp_check_git_for_commits for more information
+# This script is invoked by the freshports.sh script
+# usually located in /usr/local/libexec/freshports-service/
 #
 
 use strict;
