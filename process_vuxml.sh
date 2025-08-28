@@ -33,6 +33,8 @@ fi
 
 LOGFILE=${DIRLOG}/vuxml.log
 
+echo $(date) "${LOGGERTAG}"  "vuxml starts" >> ${LOGFILE}
+${LOGGER} -t ${LOGGERTAG} "vuxml starts"
 if [ -r ${VUXMLFLAGFILE} ]
 then
 	touch ${VUXMLMUTEX}
