@@ -14,7 +14,6 @@
 # Calculate SHA256 checksum for the XML snippet and write out to an
 # index file.
 
-#use 5.10.1;
 use strict;
 use warnings;
 use XML::DOM::XPath;
@@ -23,7 +22,7 @@ use Digest::SHA qw(sha256_hex);
 use autodie qw(:default);
 use IO::String;
 use Getopt::Long;
-use File::Temp ();
+use File::Temp();
 
 # for debugging
 use Data::Dumper;
@@ -32,6 +31,13 @@ use FreshPorts::database;
 use FreshPorts::vuxml;
 use FreshPorts::vuxml_parsing;
 use FreshPorts::vuxml_mark_commits;
+
+# minimum number of imports we should expect. This attempts to catch
+# a failed import of the vuxml_import table.
+#
+use constant ExpectedCopy    => 5900;
+use constant ExpectedDelete  => 10;
+use constant ExpectedUpdates => 100;
 
 my $PSQL = "/usr/local/bin/psql";
 
@@ -52,27 +58,37 @@ sub populate_vuxml_import($;$)
     my $dbh = shift;
     my $doc = shift;
 
-    print "There, the parsefile has completed\n";
-
     # UNLINK = false is for debugging purposes
-    my $fh_vid    = File::Temp->new(UNLINK => 0, PERMS => 0644);
+    # create a file, looking like that, in the tmp dir, with those permissions.
+    my $fh_vid    = File::Temp->new(TEMPLATE => 'freshports_vuxml_processing_XXXXX', TMPDIR => 1, UNLINK => 0, PERMS => 0644);
     my $fname_vid = $fh_vid->filename;
     
     my $fh = IO::String->new();
-#   my $vuxml = FreshPorts::vuxml->new( $dbh );
-
 
     print "calculating the sha256 for each vuln\n";
     eval {
+        my $i = 0;
+        print "doing the findnodes() thing\n";
         for my $node ($doc->findnodes('/vuxml/vuln'))
         {
+            if ($i == 0) {
+                print "findnodes() has finished, iteration has started\n";
+            }
+            # this magic from https://stackoverflow.com/questions/22791304/progress-line-in-perl#22791628
+            $i++;
+            if ($i % 10 == 0) {
+                # Every 100 items, print a dot.
+                print ".";
+                STDOUT->flush();
+            }
+
             if ($dryrun && !$showchecksums) {
                 print '.';
             }
             my $vid = $node->getAttributeNode('vid')->getValue();
             my $cancelled = $node->getElementsByTagName('cancelled');
             if ($cancelled->getLength() > 0) {
-                print "cancelled is $vid - skipping that one for import\n";
+                print "\n$vid - cancelled: skipping that one for import\n";
                 next;
             }
 
@@ -87,7 +103,7 @@ sub populate_vuxml_import($;$)
 
     $fh_vid->close();
 
-    print 'finished with eval()' . "\n";
+    print 'finished with checksum eval()' . "\n";
 
     # if something went wrong in the eval, abort and don't do a commit
     if ($@) {
@@ -99,31 +115,49 @@ sub populate_vuxml_import($;$)
 
     my $file_path    = "$fname_vid";
     my $table_name   = "vuxml_import";
-    my $copy_sql     = "COPY $table_name FROM '$file_path' WITH (FORMAT TEXT, DELIMITER '\t', HEADER false)";
     my $truncate_sql = "TRUNCATE vuxml_import";
 
     # our goal is this:
-    # echo "\\\copy vuxml_import from '/tmp/vnhvGB2yN0' WITH (FORMAT TEXT, HEADER false);" | psql "sslmode=require host=pg01.int.unixathome.org user=commits_dvl dbname=freshports.dvl"
+    # echo "\\\copy vuxml_import from '/tmp/vnhvGB2yN0' WITH (FORMAT TEXT, HEADER false);" | $PSQL "sslmode=require host=pg01.int.unixathome.org user=commits_dvl dbname=freshports.dvl"
 
     # sslcertmode=disable avoids could not open certificate file “/root/.postgresql/postgresql.crt”: Permission denied
     my $psql_command = "$PSQL \"sslmode=$FreshPorts::Config::ssl_mode host=$FreshPorts::Config::host user=$FreshPorts::Config::user dbname=$FreshPorts::Config::dbname sslcertmode=disable\"";
     my $copy_command = "\\copy vuxml_import from '$file_path' WITH (FORMAT TEXT, HEADER false);";
 
-    print "\$copy_command='$copy_command\n";
-    print "\$psql_command='$psql_command\n";
+    print "\$copy_command='$copy_command'\n";
+    print "\$psql_command='$psql_command'\n";
 
     # save it to the database
     eval {
         $dbh->do($truncate_sql);
         print "committing truncate\n";
+        # we commit this here because the psql import which follows will deadlock.
         $dbh->commit();
 
 
         print "echo \"$copy_command\" | $psql_command";
         print "\n";
 
-        system("echo \"$copy_command;\" | $psql_command");
+        # need to check how many rows. Should be at least 5900
+
+        # use qx, similar to `backticks` - use chomp to remove the trailing whitespace
+        #chomp(my $output = qx/echo "$copy_command;" | $psql_command/);
+        chomp(my $output = qx|/usr/local/libexec/freshports/process_vuxml_import_temp_file.py --ifile=$file_path|);
         print "copy command has finished\n";
+        print "\$output is '$output'\n";
+
+        # grab the number of rows imported: https://stackoverflow.com/questions/3574906/how-to-extract-a-number-from-a-string-in-perl#3574959
+        my ($count) = $output =~ /(\d+)/;
+
+        print "Imported $count items\n";
+
+        if ($count < ExpectedCopy) {
+            $dbh->rollback(); # Rollback on error
+            # we do not return from this call
+            FreshPorts::Utilities::ReportError('err', "FATAL: we imported $count items, which is less than our expected minimum value of " . ExpectedCopy . "\n", 1);
+            # but just in case we do
+            die("bad number of vuxml_import");
+        }
     };
     if ($@) {
         warn "Error during COPY: $@";
@@ -134,12 +168,29 @@ sub populate_vuxml_import($;$)
 sub remove_deleted_vids($)
 {
     my $dbh = shift;
+    my @row;
+    my $RowsDeleted;
 
+    # returns the number of deleted rows. If more than 1000, rollback and abort
+    #
     my $DeleteMissingVuxml = "select DeleteMissingVuxml()";
     # invoke the stored procedure: DeleteMissingVuxml()
     eval {
-        $dbh->do($DeleteMissingVuxml);
+        my $sth = $dbh->prepare($DeleteMissingVuxml);
+        $sth->execute || FreshPorts::Utilities::ReportError('warning', "Could not execute SQL statement\n--$DeleteMissingVuxml--\n... maybe invalid?", 1);
         print "deleting missing vuxml\n";
+        @row = $sth->fetchrow_array();
+        $RowsDeleted = $row[0];
+        
+        if ($RowsDeleted > ExpectedDelete) {
+            $dbh->rollback(); # Rollback on error
+            # we do not return from this call
+            FreshPorts::Utilities::ReportError('err', "FATAL: we were deleting way too many rows from vuxml: $RowsDeleted items, which is more than our expected minimum value of " . ExpectedDelete . "\n", 1);
+            # but just in case we do
+            die("bad number of vuxml deleted");
+        }
+
+        # We commit because later we will be importing via psql and we don't want those two to deadlock
         $dbh->commit();
 
         print "vuln not present in xml files have been deleted from the database.\n";
@@ -174,7 +225,8 @@ sub get_list_of_modified_and_new_vids($)
         }
 
         $sth->finish();
-        $dbh->commit();
+        # let's let the calling process do this
+#        $dbh->commit();
 
         print "list of vulns to update has been obtained\n";
     };
@@ -196,9 +248,9 @@ sub update_modified_vids($;$;$)
     my $VIDsRef = shift;
 
 #    my $fh;
-	my %VIDsToUpdate = %{$VIDsRef};
-	my %ProcessedVIDs;
-	my $nodeString;
+    my %VIDsToUpdate = %{$VIDsRef};
+    my %ProcessedVIDs;
+    my $nodeString;
 
     # this code based on the existing process_vuxml.pl script
     my $fh = IO::String->new();
@@ -330,8 +382,12 @@ my $dbh = FreshPorts::Database::GetDBHandle() || die("FATAL: $0 could not get a 
 my $parser = new XML::DOM::Parser;
 my $doc = $parser->parsefile ($filename);
 
+print "There, the parsefile has completed\n";
+
 # save the incoming vuln.xml file to a staging database table
 populate_vuxml_import($dbh, $doc);
+
+#die("We are stopping here while debugging this code\n");
 
 remove_deleted_vids($dbh);
 
@@ -344,6 +400,19 @@ remove_deleted_vids($dbh);
 #
 
 my %VIDsToUpdate = get_list_of_modified_and_new_vids($dbh);
+
+my $NumberOfUpdates = keys %VIDsToUpdate;
+
+print "We have $NumberOfUpdates vuxml entries to add/update\n";
+
+if ($NumberOfUpdates > ExpectedUpdates) {
+    $dbh->rollback(); # Rollback on error
+    # we do not return from this call
+#    FreshPorts::Utilities::ReportError('err', "FATAL: we are about to update $NumberOfUpdates items, which is less than our expected minimum value of " . ExpectedUpdates . "\n", 1);
+#    # but just in case we do
+#    die("bad number of vuxml updates");
+}
+
 
 print "invoking update_modified_vids()\n";
 if (%VIDsToUpdate) {
