@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl -w
+#!/usr/local/bin/perl
 
 # Some history: originally we had load_xml_into_db.pl which did cvs commits.
 # Then it was converted to subversion. When git came along, we split into
@@ -73,6 +73,9 @@ my $ErrorFound = $Munger->process();
 
 my $source = $Munger->getSource();
 
+# let's undef this, just because we can - https://github.com/perl5-dbi/dbi/issues/171
+undef $Munger;
+
 print "That commit is of Type: '$source'\n";
 
 print "EOF\n";
@@ -106,6 +109,8 @@ if ($dbh->{Active}) {
 	print " now is the commit:\n";
 
 	$Munger->notify_observers($FreshPorts::Messages::TransactionCommitted);
+
+	undef $Munger;
 
 	$dbh->disconnect();
 	print "EOF\n";
