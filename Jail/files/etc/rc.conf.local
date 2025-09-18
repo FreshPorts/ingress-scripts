@@ -1,0 +1,6 @@
+# FreshPorts jails do not need much.
+# They are used main to extract information from the
+# git repository. e.g. make -V PORTVERSION
+#
+syslogd_enable="NO"
+cron_enable="NO"
