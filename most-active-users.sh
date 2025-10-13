@@ -18,6 +18,10 @@ export PGDATABASE=$DB
 export PGHOST=$HOST
 export PGUSER=$DBUSER
 
+TO_EMAIL="${ADMINEMAIL}"
+SUBJECT="FreshPorts -- most active users"
+
+
 SPOOL_FILE=$(mktemp ${SPOOLINGDIR}/most-active-users.XXXXXX)
 
 # use 'sslcertmode=disable' to avoid: could not open certificate file "/root/.postgresql/postgresql.crt": Permission denied
@@ -38,6 +42,11 @@ then
 	exit 1
 fi
 
+# this is for the logs (/var/log/daily.log)
 cat ${SPOOL_FILE}
+
+# this is for the email so I don't have to look at the logs
+cat ${SPOOL_FILE} | mail -s "$SUBJECT" "$TO_EMAIL"
+
 rm ${SPOOL_FILE}
 logger -p local3.notice -t FreshPorts $0 has completed.
