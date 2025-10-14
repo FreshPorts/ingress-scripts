@@ -24,9 +24,9 @@ fi
 
 $LOGGER -t $LOGGERTAG Checking for ports without ports_categories entries
 $LOGGER -t $LOGGERTAG      ${PSQL} -h ${HOST} -q --pset t -d ${DB} --user ${DBUSER} -c "${QUERYCOUNT} ${QUERYBASE}" 
-ROWCOUNT=$(${PSQL} -h ${HOST} -q --pset t -d ${DB} --user ${DBUSER} -c "${QUERYCOUNT} ${QUERYBASE}" | tr -d ' ')
+ROWCOUNT=$(${PSQL} -q --pset t "sslcertmode=disable host=${HOST} dbname=${DB} user=${DBUSER}" -c "${QUERYCOUNT} ${QUERYBASE}" | tr -d ' ')
 $LOGGER -t $LOGGERTAG found this many invalid entries: $ROWCOUNT
-if [ ${ROWCOUNT} -ne 0 ]
+if [ "${ROWCOUNT}" != "0" ]
 then
   TMPFILE="/tmp/missing-ports.$$"
   echo 'This is a list of ports that do not have entries in the ports_categories table' >> ${TMPFILE}
