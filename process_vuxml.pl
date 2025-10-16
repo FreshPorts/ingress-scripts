@@ -88,7 +88,8 @@ sub populate_vuxml_import($;$)
             my $vid = $node->getAttributeNode('vid')->getValue();
             my $cancelled = $node->getElementsByTagName('cancelled');
             if ($cancelled->getLength() > 0) {
-                print "\n$vid - cancelled: skipping that one for import\n";
+                #print "\n$vid - cancelled: skipping that one for import\n";
+                print 'C';
                 next;
             }
 
@@ -124,14 +125,12 @@ sub populate_vuxml_import($;$)
         # we commit this here because the psql import which follows will deadlock.
         $dbh->commit();
 
-
-        # need to check how many rows. Should be at least 5900
-
         # use qx, similar to `backticks` - use chomp to remove the trailing whitespace
         chomp(my $output = qx|/usr/local/libexec/freshports/process_vuxml_import_temp_file.py --ifile=$file_path|);
         print "copy command has finished\n";
         print "\$output is '$output'\n";
 
+        # need to check how many rows. Should be at least 5900
         # grab the number of rows imported: https://stackoverflow.com/questions/3574906/how-to-extract-a-number-from-a-string-in-perl#3574959
         my ($count) = $output =~ /(\d+)/;
 
