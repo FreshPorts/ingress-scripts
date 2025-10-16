@@ -31,8 +31,8 @@ select U.id, U.name, U.firstlogin, count(*)
   from users U join page_load_detail PLD
           on U.id = PLD.user_id
 group by U.id
-order by count
-limit 20
+order by count DESC
+limit 40
 EOF
 
 if [ $? -ne 0 ]
