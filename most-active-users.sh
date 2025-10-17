@@ -42,9 +42,6 @@ then
 	exit 1
 fi
 
-# this is for the logs (/var/log/daily.log)
-cat ${SPOOL_FILE}
-
 # this is for the email so I don't have to look at the logs
 cat ${SPOOL_FILE} | mail -s "$SUBJECT" "$TO_EMAIL"
 
