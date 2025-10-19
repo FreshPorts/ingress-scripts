@@ -36,8 +36,8 @@ $Text::Wrap::columns = 82;
 
 sub SendListOfCommitsToMaintainers($;$) {
 
-	my $To            = shift;
-	my $BodyIn        = shift;
+	my $To      = shift;
+	my $BodyIn  = shift;
 
 	my $From    = 'FreshPorts Watch Daemon <FreshPorts-Watch@FreshPorts.org>';
 	my $Subject = "FreshPorts Notification: Ports you maintain";
