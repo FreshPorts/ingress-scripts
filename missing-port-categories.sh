@@ -18,14 +18,36 @@ fi
 
 if [ $OFFLINE = 1 ]
 then
-	$LOGGER -t $LOGGERTAG exit now because the system is OFFLINE
+	$LOGGER -t $LOGGERTAG "exit now because the system is OFFLINE"
 	exit 0
 fi
 
-$LOGGER -t $LOGGERTAG Checking for ports without ports_categories entries
-$LOGGER -t $LOGGERTAG      ${PSQL} -h ${HOST} -q --pset t -d ${DB} --user ${DBUSER} -c "${QUERYCOUNT} ${QUERYBASE}" 
+# this logging should be found /var/log/freshports.log
+#
+$LOGGER -t $LOGGERTAG "This is debug code for the periodic issue: failed: fe_sendauth: no password supplied"
+
+$LOGGER -t $LOGGERTAG "Checking for the ${DBUSER} user password"
+$LOGGER -t $LOGGERTAG "$(grep -l ${DBUSER} ~/.pgpass)"
+
+# include the -- otherwise this gets interpreted as a argument: -rw------- 1 freshports freshports 230 Aug 28 13:47 /var/db/freshports/.pgpass
+# and we get: logger: illegal option -- r
+# usage: logger [-46Ais] [-f file] [-h host] [-P port] [-p pri] [-t tag]
+#               [-S addr:port] [message ...]
+
+# this sometimes gets a No such file or directory
+$LOGGER -t $LOGGERTAG -- $(ls -l ~/.pgpass)
+
+# so let's try a full path - the "who am i?" below is always showing: uid=10001(freshports) gid=10001(freshports) groups=10001(freshports)
+$LOGGER -t $LOGGERTAG -- $(ls -l /var/db/freshports/.pgpass)
+
+$LOGGER -t $LOGGERTAG "testing"
+$LOGGER -t $LOGGERTAG "done checking for the user password"
+$LOGGER -t $LOGGERTAG "who am i? $(id)"
+
+$LOGGER -t $LOGGERTAG "Checking for ports without ports_categories entries"
+$LOGGER -t $LOGGERTAG ${PSQL} -h ${HOST} -q --pset t -d ${DB} --user ${DBUSER} -c "${QUERYCOUNT} ${QUERYBASE}"
 ROWCOUNT=$(${PSQL} -q --pset t "sslcertmode=disable host=${HOST} dbname=${DB} user=${DBUSER}" -c "${QUERYCOUNT} ${QUERYBASE}" | tr -d ' ')
-$LOGGER -t $LOGGERTAG found this many invalid entries: $ROWCOUNT
+$LOGGER -t $LOGGERTAG "found this many invalid entries: $ROWCOUNT"
 if [ "${ROWCOUNT}" != "0" ]
 then
   TMPFILE="/tmp/missing-ports.$$"
