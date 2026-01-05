@@ -11,6 +11,8 @@ then
 	exit 0
 fi
 
+logger -p local3.notice -t FreshPorts $0 has started.
+
 #
 # save these values for use by psql via environment variables. The password is stored in ~/.pgpass
 #
@@ -42,8 +44,12 @@ then
 	exit 1
 fi
 
-# this is for the email so I don't have to look at the logs
-cat ${SPOOL_FILE} | mail -s "$SUBJECT" "$TO_EMAIL"
+# do not email if no active users - most relevant to non-prod hosts
+if [ $(grep -c '(0 rows)' ${SPOOL_FILE}) -ne 1 ]
+then
+	# this is for the email so I don't have to look at the logs
+	cat ${SPOOL_FILE} | mail -s "$SUBJECT" "$TO_EMAIL"
+fi
 
 rm ${SPOOL_FILE}
 logger -p local3.notice -t FreshPorts $0 has completed.
