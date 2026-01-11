@@ -35,7 +35,16 @@ $LOGGER -t $LOGGERTAG "$(grep -l ${DBUSER} ~/.pgpass)"
 #               [-S addr:port] [message ...]
 
 # this sometimes gets a No such file or directory
+$LOGGER -t $LOGGERTAG -- 'looking at my pgpass file'
 $LOGGER -t $LOGGERTAG -- $(ls -l ~/.pgpass)
+$LOGGER -t $LOGGERTAG -- 'looking at my home dir'
+$LOGGER -t $LOGGERTAG -- $(ls -l ~/)
+$LOGGER -t $LOGGERTAG -- 'moving to home dir'
+cd ~
+$LOGGER -t $LOGGERTAG -- 'what is over here?'
+$LOGGER -t $LOGGERTAG -- $(pwd)
+cd -
+$LOGGER -t $LOGGERTAG -- 'and back again'
 
 # so let's try a full path - the "who am i?" below is always showing: uid=10001(freshports) gid=10001(freshports) groups=10001(freshports)
 $LOGGER -t $LOGGERTAG -- $(ls -l /var/db/freshports/.pgpass)
