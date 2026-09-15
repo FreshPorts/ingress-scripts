@@ -24,9 +24,9 @@ ${MAKE} -V PORTNAME       -V PKGNAME             -V DESCR                -V CATE
         -V NO_PACKAGE     -V PKGNAMEPREFIX       -V PKGNAMESUFFIX        -V PORTEPOCH       \
         -V RESTRICTED     -V NO_CDROM            -V EXPIRATION_DATE      -V IS_INTERACTIVE  \
         -V ONLY_FOR_ARCHS -V NOT_FOR_ARCHS       -V LICENSE              -V FETCH_DEPENDS   \
-        -V PATCH_DEPENDS  -V EXTRACT_DEPENDS     -V USES                 -V PKGMESSAGE      \
+        -V EXTRACT_DEPENDS -V PATCH_DEPENDS      -V USES                 -V PKGMESSAGE      \
         -V DISTINFO_FILE  -V _LICENSE_RESTRICTED -V MANUAL_PACKAGE_BUILD -V LICENSE_PERMS   \
         -V CONFLICTS      -V CONFLICTS_BUILD     -V CONFLICTS_INSTALL    -V OPTIONS_NAME    \
-        -V WWW            -V TEST_DEPENDS        -V USE_RC_SUBR:ts:                         \
+        -V WWW            -V TEST_DEPENDS        -V BUILD_RUN_DEPENDS    -V USE_RC_SUBR:ts: \
         -f ${REPO_PATH}/${PORT}/Makefile \
         PORTSDIR=${REPO_PATH}
