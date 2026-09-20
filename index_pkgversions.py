@@ -1,12 +1,17 @@
 #!/usr/local/bin/python3
 
 # Compile a list of packages from a ports INDEX file, one tab separated line
-# per port:
+# per INDEX entry:
 #
 #   accessibility/accerciser<tab>accerciser-3.48.0<tab>accerciser
 #
 # that is, the origin, PKGNAME with its version, and the package name on its
 # own.
+#
+# Every entry is emitted.  A flavored port appears in the INDEX once per
+# flavor, all under the one origin, and which of them is the default is not
+# something the INDEX tells us.  Keeping them all lets the comparison ask
+# whether the version FreshPorts holds is among them, rather than guessing.
 #
 # The INDEX is pipe separated.  We want the first two fields:
 #
@@ -49,7 +54,7 @@ def open_index(pathname):
 
 
 def parse_line(line):
-    # returns (origin, pkgname, name, pkgversion), or raises ValueError
+    # returns (origin, pkgname, name), or raises ValueError
 
     fields = line.split('|')
     if len(fields) < 2:
@@ -71,16 +76,14 @@ def parse_line(line):
 
     origin = '/'.join(parts[-2:])
 
-    return origin, pkgname, name, pkgversion
+    return origin, pkgname, name
 
 
 def parse_index(f, warn):
-    # returns {origin: (pkgname, name, pkgversion)}
+    # returns ([(origin, pkgname, name)], malformed)
 
-    ports = {}
+    rows = []
     malformed = 0
-    ignored = 0
-    conflicts = 0
 
     for number, line in enumerate(f, start=1):
         line = line.strip()
@@ -88,27 +91,12 @@ def parse_index(f, warn):
             continue
 
         try:
-            origin, pkgname, name, pkgversion = parse_line(line)
+            rows.append(parse_line(line))
         except ValueError as problem:
             malformed += 1
             warn('line %d: %s' % (number, problem))
-            continue
 
-        # One line per port is the rule, but flavors and mistakes both break
-        # it.  Several lines at the same version tell us nothing, so keep the
-        # first and say nothing.  Differing versions are worth knowing about.
-        if origin in ports:
-            if ports[origin][2] == pkgversion:
-                ignored += 1
-            else:
-                conflicts += 1
-                warn("line %d: %s is already present at %s, now %s" %
-                     (number, origin, ports[origin][2], pkgversion))
-            continue
-
-        ports[origin] = (pkgname, name, pkgversion)
-
-    return ports, malformed, ignored, conflicts
+    return rows, malformed
 
 
 def main():
@@ -119,7 +107,7 @@ def main():
     parser.add_argument('-o', '--output', default='-',
                         help="where to write, '-' for stdout (default: stdout)")
     parser.add_argument('--json', action='store_true',
-                        help='write a JSON object instead of tab separated lines')
+                        help='write a JSON array instead of tab separated lines')
     parser.add_argument('--quiet', action='store_true',
                         help='do not report malformed lines or the summary')
     args = parser.parse_args()
@@ -136,33 +124,35 @@ def main():
         return 1
 
     try:
-        ports, malformed, ignored, conflicts = parse_index(f, warn)
+        rows, malformed = parse_index(f, warn)
     finally:
         if f is not sys.stdin:
             f.close()
 
+    # by origin first, the key the database is compared on, then by package
+    # so that a port's flavors come out in a stable order
+    rows.sort()
+
     out = sys.stdout if args.output == '-' else open(args.output, 'w', encoding='utf-8')
     try:
         if args.json:
-            json.dump({origin: {'pkgname': pkgname, 'package_name': name}
-                       for origin, (pkgname, name, _) in ports.items()},
-                      out, indent=2, sort_keys=True)
+            json.dump([{'origin': origin, 'pkgname': pkgname, 'package_name': name}
+                       for origin, pkgname, name in rows],
+                      out, indent=2)
             out.write('\n')
         else:
-            # sorted by origin, the key the database is compared on
-            for origin in sorted(ports):
-                pkgname, name, _ = ports[origin]
+            for origin, pkgname, name in rows:
                 out.write('%s\t%s\t%s\n' % (origin, pkgname, name))
     finally:
         if out is not sys.stdout:
             out.close()
 
-    warn('%d ports, %d malformed lines, %d rows ignored as same version, '
-         '%d origins with more than one version' %
-         (len(ports), malformed, ignored, conflicts))
+    origins = len(set(origin for origin, _, _ in rows))
+    warn('%d rows, %d origins, %d malformed lines' %
+         (len(rows), origins, malformed))
 
     # nothing parsed at all means the file was not an INDEX
-    return 0 if ports else 1
+    return 0 if rows else 1
 
 
 if __name__ == '__main__':
