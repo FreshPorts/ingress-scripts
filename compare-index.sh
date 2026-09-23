@@ -10,8 +10,8 @@
 #
 # usage: compare-index.sh [-f] [-i INDEX] [-o OUTDIR]
 #
-#   -f         fetch the INDEX into the jail first.  Needs the jail to have
-#              network access and a writable ports tree.
+#   -f         fetch the INDEX into the jail's ports tree first.  make runs
+#              on the host, not in the jail, because the jail has no network.
 #   -i INDEX   compare against this INDEX instead of the jail's own
 #   -o OUTDIR  where to write the lists (default: $SPOOLINGDIR)
 #
@@ -27,8 +27,8 @@
 #   not-in-index.txt        in FreshPorts, absent from the INDEX
 #   not-in-freshports.txt   in the INDEX, absent from FreshPorts
 #
-# Runs as the freshports user, so the two jexec calls go through sudo.  See
-# SUDOERS below for the entries they need.
+# Runs as the freshports user.  make runs on the host, not in the jail, and
+# fetching needs sudo to write into the jail's ports tree.  See SUDOERS below.
 #
 # Only the version is compared, including PORTREVISION and PORTEPOCH.  The
 # package name is not: a port's PKGNAMEPREFIX follows DEFAULT_VERSIONS, so
@@ -45,15 +45,16 @@
 #
 # SUDOERS
 #
-# These are matched literally, so they must agree with JAILMAKE below, and
-# with FRESHPORTS_JAIL_NAME and PORTSDIR in config.sh.  Neither command takes
-# an argument from outside the script, so neither needs a wildcard.
+# This is matched literally, so it must agree with MAKE and MAKEPORTS below,
+# which are built from FRESHPORTS_JAIL_BASE_DIR and PORTSDIR in config.sh.  It
+# takes no argument from outside the script, so it needs no wildcard.
 #
-# freshports     ALL=(ALL) NOPASSWD:/usr/sbin/jexec freshports /usr/bin/make -C /usr/ports -V INDEXFILE
-# freshports     ALL=(ALL) NOPASSWD:/usr/sbin/jexec freshports /usr/bin/make -C /usr/ports fetchindex
+# freshports     ALL=(ALL) NOPASSWD:/usr/bin/make -C /jails/freshports/usr/ports PORTSDIR=/jails/freshports/usr/ports fetchindex
 #
-# The second is only needed if you run with -f.  Leave it out to fetch the
-# INDEX some other way and point -i at it.
+# Only -f needs it.  Reading INDEXDIR and INDEXFILE writes nothing and runs as
+# the invoking user.  Leave the entry out to fetch the INDEX some other way
+# and point -i at it, and drop the sudo altogether if that ports tree is
+# writable by the freshports user.
 
 if [ ! -f config.sh ]
 then
@@ -111,9 +112,16 @@ JAILPORTS="${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}"
 # means this still selects head if that view is ever widened.
 ELEMENT_HEAD_PREFIX="/ports/head"
 
-# make(1) inside the jail.  Spelled out in full because sudoers matches the
-# command line literally, and this has to be the same string there.
-JAILMAKE="/usr/bin/make"
+# The jail has no networking, so make runs on the host, pointed at the jail's
+# ports tree.  Spelled out in full because sudoers matches the command line
+# literally, and this has to be the same string there.
+MAKE="/usr/bin/make"
+
+# Both are needed.  -C is where make runs; PORTSDIR is where it looks for the
+# Mk files AND, through INDEXDIR, where fetchindex puts the INDEX.  PORTSDIR
+# defaults to /usr/ports whatever -C says, so without this the host's own
+# ports tree is read and written instead of the jail's.
+MAKEPORTS="-C ${JAILPORTS} PORTSDIR=${JAILPORTS}"
 
 MD5="/sbin/md5"
 
@@ -143,23 +151,30 @@ trap "rm -f $tsv $out $loaded" EXIT INT TERM
 
 if [ $FETCH = 1 ]
 then
-	info "fetching the INDEX into jail $FRESHPORTS_JAIL_NAME"
-	if ! $SUDO /usr/sbin/jexec $FRESHPORTS_JAIL_NAME $JAILMAKE -C $PORTSDIR fetchindex
+	info "fetching the INDEX into $JAILPORTS"
+	if ! $SUDO $MAKE $MAKEPORTS fetchindex
 	then
-		fatal "could not fetch the INDEX into jail $FRESHPORTS_JAIL_NAME"
+		fatal "could not fetch the INDEX into $JAILPORTS"
 	fi
 fi
 
 if [ "${INDEX}x" = 'x' ]
 then
-	# INDEXFILE is INDEX-15 on 15.x, INDEX-14 on 14.x, and so on.  Ask the
-	# jail rather than guessing, so this keeps working across a major bump.
-	indexfile=$($SUDO /usr/sbin/jexec $FRESHPORTS_JAIL_NAME $JAILMAKE -C $PORTSDIR -V INDEXFILE)
-	if [ "${indexfile}x" = 'x' ]
+	# Ask make where fetchindex puts the file rather than working it out.
+	# INDEXDIR is where it lands, INDEXFILE is what it is called -- INDEX-15
+	# on 15.x, INDEX-14 on 14.x -- so this keeps working across a major bump,
+	# and says so out loud if either ever moves.
+	#
+	# No sudo: reading a variable writes nothing.
+	indexdir=$($MAKE $MAKEPORTS -V INDEXDIR)
+	indexfile=$($MAKE $MAKEPORTS -V INDEXFILE)
+
+	if [ "${indexdir}x" = 'x' -o "${indexfile}x" = 'x' ]
 	then
-		fatal "could not determine INDEXFILE -- is the sudoers entry in place?"
+		fatal "could not determine INDEXDIR or INDEXFILE from $JAILPORTS"
 	fi
-	INDEX="${JAILPORTS}/${indexfile}"
+
+	INDEX="${indexdir}/${indexfile}"
 fi
 
 if [ ! -f $INDEX ]
