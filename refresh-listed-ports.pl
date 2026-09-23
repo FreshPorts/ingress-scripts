@@ -33,7 +33,12 @@ use FreshPorts::constants;
 use FreshPorts::database;
 use FreshPorts::utilities;
 use FreshPorts::system_status;
+use File::Basename;
 use Getopt::Long;
+
+# Report() appends the script directory, so the basename is enough to say
+# which script in that directory did the talking.
+my $ME = basename($0);
 
 my $dbh;
 my $sql;
@@ -225,7 +230,7 @@ while (my $category_port = <$LIST>) {
 
 			# to the terminal for whoever is watching, and to syslog so the
 			# scheduled runs leave a record of what they changed
-			my $change = sprintf("%s: %s -> %s", $category_port, $was, $now);
+			my $change = sprintf("%s %s: %s -> %s", $ME, $category_port, $was, $now);
 
 			print $change . "\n";
 			FreshPorts::Utilities::Report('info', $change);
@@ -250,7 +255,7 @@ close($LIST) if ($filename ne '-');
 
 $sth->finish();
 
-my $tally = "$0 ends: $refreshed refreshed, $failed failed, $notfound not found";
+my $tally = "$ME ends: $refreshed refreshed, $failed failed, $notfound not found";
 
 print $tally . "\n";
 FreshPorts::Utilities::Report('info', $tally);
