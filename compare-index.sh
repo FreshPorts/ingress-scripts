@@ -16,8 +16,10 @@
 #   -o OUTDIR  where to write the lists (default: $SPOOLINGDIR)
 #
 # The INDEX is checksummed, and the checksum kept in SPOOLINGDIR.  An INDEX
-# which has not changed since the last run is not processed again -- the
-# answer cannot have changed either.  To force a run, remove the checksum:
+# which has not changed since the last run is not processed again.  Note this
+# gates on one of the two inputs: the database moves independently, so after
+# commit processing catches up the answer can differ while the INDEX has not.
+# To force a run, remove the checksum:
 #
 #   rm ${SPOOLINGDIR}/compare-index.md5
 #
