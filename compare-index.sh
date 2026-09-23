@@ -15,6 +15,12 @@
 #   -i INDEX   compare against this INDEX instead of the jail's own
 #   -o OUTDIR  where to write the lists (default: $SPOOLINGDIR)
 #
+# The INDEX is checksummed, and the checksum kept in SPOOLINGDIR.  An INDEX
+# which has not changed since the last run is not processed again -- the
+# answer cannot have changed either.  To force a run, remove the checksum:
+#
+#   rm ${SPOOLINGDIR}/compare-index.md5
+#
 # Writes three files to OUTDIR, one port per line:
 #
 #   refresh.txt             version differs, refresh these
@@ -105,6 +111,12 @@ ELEMENT_HEAD_PREFIX="/ports/head"
 # command line literally, and this has to be the same string there.
 JAILMAKE="/usr/bin/make"
 
+MD5="/sbin/md5"
+
+# Where the last INDEX checksum is kept.  SPOOLINGDIR, not OUTDIR: this has to
+# survive a run which wrote its lists somewhere else.
+MD5FILE="${SPOOLINGDIR}/compare-index.md5"
+
 if [ "${SUDO}x" = 'x' ]
 then
 	fatal "SUDO is not set in config.sh"
@@ -156,7 +168,29 @@ then
 	fatal "the INDEX at $INDEX is empty"
 fi
 
-info "comparing against $INDEX"
+md5=$($MD5 -q $INDEX)
+
+if [ "${md5}x" = 'x' ]
+then
+	fatal "could not checksum $INDEX"
+fi
+
+if [ -f $MD5FILE ]
+then
+	previous=$(cat $MD5FILE)
+else
+	previous=''
+fi
+
+info "INDEX $INDEX md5 $md5, previously ${previous:-none}"
+
+if [ "$md5" = "$previous" ]
+then
+	info "INDEX unchanged, not processing"
+	exit 0
+fi
+
+info "INDEX changed, processing"
 
 if ! ${SCRIPTDIR}/index_pkgversions.py -i $INDEX -o $tsv
 then
@@ -281,6 +315,12 @@ do
 	$LOGGER -t $0[$$] $bucket: $count ports
 	echo "${count}	${OUTDIR}/${bucket}.txt"
 done
+
+#
+# Only now, with the lists written, is this INDEX one we have finished with.
+# Recording it earlier would mean a failed run was never retried.
+#
+echo $md5 > $MD5FILE
 
 $LOGGER -t $0[$$] ends
 
