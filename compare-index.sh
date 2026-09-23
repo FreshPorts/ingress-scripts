@@ -101,10 +101,14 @@ done
 
 JAILPORTS="${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}"
 
-# The database stores element pathnames as /ports/head/category/port, which is
-# DB_Root_Prefix_PORTS in the perl config, not PORTSDIR.  The ports table holds
-# a row per port per branch, so without this we would compare head against the
-# quarterly branches as well.
+# The ports table holds a row per port per branch, so head has to be picked
+# out or we would compare it against the quarterly branches as well.  The
+# pathnames look like /ports/head/category/port -- that prefix is
+# DB_Root_Prefix_PORTS in the perl config, not PORTSDIR.
+#
+# ports_active already restricts itself to head.  Saying so again costs one
+# comparison on a column the view hands us, makes the intent visible, and
+# means this still selects head if that view is ever widened.
 ELEMENT_HEAD_PREFIX="/ports/head"
 
 # make(1) inside the jail.  Spelled out in full because sudoers matches the
@@ -246,7 +250,7 @@ WITH fp AS (
              '\.1[45][0-9]{5}(\$|[_,])', '\1'),
              '^1[45][0-9]{5}(\$|[_,])', '\1') AS pkgversion
       FROM ports_active pa
-     WHERE element_pathname(pa.element_id) LIKE '${ELEMENT_HEAD_PREFIX}/%'
+     WHERE pa.pathname LIKE '${ELEMENT_HEAD_PREFIX}/%'
 ),
 idx AS (
     SELECT origin,
