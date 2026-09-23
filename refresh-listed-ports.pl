@@ -13,6 +13,16 @@
 #
 # HEAD only, as process_default_versions.pl is.
 #
+# The ports tree has to be on main before this runs.  A refresh reads the
+# Makefiles as they are on disk, so a tree left detached at some older commit
+# -- which is how the ingress often leaves it -- would write those older
+# versions into the database and undo the very thing this is fixing.
+#
+# Do NOT git pull or git fetch to satisfy that.  The ingress owns the state of
+# that tree, and moving it forward underneath in-flight commit processing is
+# worse than not running at all.  Leave the tree to whatever puts it back on
+# main, and run this afterwards.
+#
 
 use strict;
 use FreshPorts::branches;
@@ -49,6 +59,68 @@ if (!defined($filename)) {
 	exit 1;
 }
 
+#
+# Refuse to run against a tree which is not on main.  .git/HEAD is read
+# directly rather than shelling out to git: the tree is owned by root, so git
+# needs either privilege or a safe.directory exception, and this needs
+# neither.  On a branch the file holds 'ref: refs/heads/<branch>'; detached,
+# it holds a bare commit hash.
+#
+sub CheckPortsTreeOnMain {
+	my $portsdir = $FreshPorts::Config::JailBaseDir . $FreshPorts::Config::PortsDir;
+	my $headfile = $portsdir . '/.git/HEAD';
+
+	my $HEAD;
+	if (!open($HEAD, '<', $headfile)) {
+		print "$0: cannot read $headfile: $!\n";
+		return 0;
+	}
+
+	my $ref = <$HEAD>;
+	close($HEAD);
+
+	if (!defined($ref)) {
+		print "$0: $headfile is empty\n";
+		return 0;
+	}
+
+	chomp($ref);
+
+	if ($ref eq 'ref: refs/heads/main') {
+		return 1;
+	}
+
+	if ($ref =~ m|^ref: refs/heads/(.*)$|) {
+		print "$0: $portsdir is on branch '$1', not main\n";
+	} else {
+		print "$0: $portsdir is detached at $ref, not on main\n";
+	}
+
+	print "$0: leave it to whatever returns it to main.  Do not pull or fetch.\n";
+
+	return 0;
+}
+
+#
+# version, revision and epoch assembled the way bsd.port.mk assembles
+# PKGVERSION: ${PORTVERSION}[_${PORTREVISION}][,${PORTEPOCH}], with the
+# revision and the epoch left off when they are unset or zero.
+#
+# A NULL revision or epoch fetches as undef, hence the defined() tests.
+#
+sub PkgVersion {
+	my $port = shift;
+
+	my $version  = defined($port->{version})   ? $port->{version}   : '';
+	my $revision = defined($port->{revision})  ? $port->{revision}  : '';
+	my $epoch    = defined($port->{portepoch}) ? $port->{portepoch} : '';
+
+	$version .= '_' . $revision if ($revision ne '' && $revision ne '0');
+	$version .= ',' . $epoch    if ($epoch    ne '' && $epoch    ne '0');
+
+	return $version;
+}
+
 my $LIST;
 if ($filename eq '-') {
 	$LIST = \*STDIN;
@@ -59,6 +131,11 @@ if ($filename eq '-') {
 FreshPorts::Utilities::InitSyslog();
 
 print("$0 starts\n");
+
+if (!CheckPortsTreeOnMain()) {
+	FreshPorts::Utilities::ReportError('warning', "ports tree is not on main; refusing to refresh", 0);
+	exit 1;
+}
 
 #
 # see if the system is online.
@@ -135,9 +212,24 @@ while (my $category_port = <$LIST>) {
 
 	$port->{id} = $port_id;
 	if ($port->FetchByID()) {
+		# what the database holds now, before the Makefile is read
+		my $was = PkgVersion($port);
+
 		my $result = $port->RefreshFromFiles($currentBranch, $currentBranch);
 
 		if ($result == 0) {
+			# and what the Makefile says.  Both are printed whether or not
+			# they differ: a port which comes back unchanged is worth seeing,
+			# because it means the refresh was not what it needed.
+			my $now = PkgVersion($port);
+
+			# to the terminal for whoever is watching, and to syslog so the
+			# scheduled runs leave a record of what they changed
+			my $change = sprintf("%s: %s -> %s", $category_port, $was, $now);
+
+			print $change . "\n";
+			FreshPorts::Utilities::Report('info', $change);
+
 			$port->save($currentBranch);
 			# commit each port on its own, so a failure part way through
 			# does not throw away the ports already done
@@ -158,7 +250,10 @@ close($LIST) if ($filename ne '-');
 
 $sth->finish();
 
-print "$0 ends: $refreshed refreshed, $failed failed, $notfound not found\n";
+my $tally = "$0 ends: $refreshed refreshed, $failed failed, $notfound not found";
+
+print $tally . "\n";
+FreshPorts::Utilities::Report('info', $tally);
 
 $dbh->commit();
 $dbh->disconnect();
