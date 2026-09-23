@@ -50,6 +50,20 @@ fi
 
 . config.sh
 
+# Every failure has to reach both syslog, for the scheduled runs, and stderr,
+# for the person who just typed the command.  Logging only to syslog is how a
+# failure looks like success at the terminal.
+fatal() {
+	$LOGGER -t $0[$$] "FATAL: $*"
+	echo "$0: $*" >&2
+	exit 1
+}
+
+info() {
+	$LOGGER -t $0[$$] "$*"
+	echo "$0: $*"
+}
+
 $LOGGER -t $0[$$] starts
 
 if [ $OFFLINE = 1 ]
@@ -86,9 +100,7 @@ JAILMAKE="/usr/bin/make"
 
 if [ "${SUDO}x" = 'x' ]
 then
-	$LOGGER -t $0[$$] FATAL: SUDO is not set in config.sh
-	echo "$0: SUDO is not set in config.sh" >&2
-	exit 1
+	fatal "SUDO is not set in config.sh"
 fi
 
 #
@@ -100,18 +112,18 @@ export PGUSER=$DBUSER
 
 # see also PGSSLMODE and PGSSLROOTCERT in config.sh
 
-tsv=$(mktemp ${SPOOLINGDIR}/compare-index-tsv.XXXXXX)   || exit 1
-out=$(mktemp ${SPOOLINGDIR}/compare-index-out.XXXXXX)   || exit 1
+tsv=$(mktemp    ${SPOOLINGDIR}/compare-index-tsv.XXXXXX)    || exit 1
+out=$(mktemp    ${SPOOLINGDIR}/compare-index-out.XXXXXX)    || exit 1
+loaded=$(mktemp ${SPOOLINGDIR}/compare-index-loaded.XXXXXX) || exit 1
 
-trap "rm -f $tsv $out" EXIT INT TERM
+trap "rm -f $tsv $out $loaded" EXIT INT TERM
 
 if [ $BUILD = 1 ]
 then
 	$LOGGER -t $0[$$] building the INDEX in jail $FRESHPORTS_JAIL_NAME
 	if ! $SUDO /usr/sbin/jexec $FRESHPORTS_JAIL_NAME $JAILMAKE -C $PORTSDIR index
 	then
-		$LOGGER -t $0[$$] FATAL: could not build the INDEX
-		exit 1
+		fatal "could not build the INDEX in jail $FRESHPORTS_JAIL_NAME"
 	fi
 fi
 
@@ -122,33 +134,44 @@ then
 	indexfile=$($SUDO /usr/sbin/jexec $FRESHPORTS_JAIL_NAME $JAILMAKE -C $PORTSDIR -V INDEXFILE)
 	if [ "${indexfile}x" = 'x' ]
 	then
-		$LOGGER -t $0[$$] FATAL: could not determine INDEXFILE
-		exit 1
+		fatal "could not determine INDEXFILE -- is the sudoers entry in place?"
 	fi
 	INDEX="${JAILPORTS}/${indexfile}"
 fi
 
 if [ ! -f $INDEX ]
 then
-	$LOGGER -t $0[$$] FATAL: no INDEX at $INDEX
-	echo "$0: no INDEX at $INDEX" >&2
-	exit 1
+	fatal "no INDEX at $INDEX"
 fi
 
-$LOGGER -t $0[$$] comparing against $INDEX
+if [ ! -s $INDEX ]
+then
+	fatal "the INDEX at $INDEX is empty"
+fi
+
+info "comparing against $INDEX"
 
 if ! ${SCRIPTDIR}/index_pkgversions.py -i $INDEX -o $tsv
 then
-	$LOGGER -t $0[$$] FATAL: could not parse $INDEX
-	exit 1
+	fatal "could not parse $INDEX"
 fi
+
+if [ ! -s $tsv ]
+then
+	fatal "no packages parsed out of $INDEX"
+fi
+
+info "$(wc -l < $tsv | tr -d ' ') packages read from the INDEX"
 
 #
 # The whole comparison runs in one psql session, so index_ports can be a TEMP
 # table and nothing is left behind in the database.  The SELECT goes into a
 # TEMP VIEW first because a psql \copy has to fit on one line.
 #
-if ! $PSQL --quiet --no-psqlrc <<EOF
+# ON_ERROR_STOP is what makes a failed statement a failed run.  Without it
+# psql complains on stderr and still exits 0, so a broken query, a missing
+# table or a refused connection all look like a clean run with no differences.
+if ! $PSQL --quiet --no-psqlrc -v ON_ERROR_STOP=1 <<EOF
 CREATE TEMP TABLE index_ports (
     origin       text NOT NULL,
     pkgname      text NOT NULL,
@@ -156,6 +179,8 @@ CREATE TEMP TABLE index_ports (
 );
 
 \copy index_ports FROM '$tsv'
+
+\copy (SELECT count(*) FROM index_ports) TO '$loaded'
 
 CREATE INDEX ON index_ports (origin);
 ANALYZE index_ports;
@@ -210,9 +235,27 @@ SELECT COALESCE(fp.origin, o.origin) AS origin,
 \copy (SELECT * FROM comparison) TO '$out'
 EOF
 then
-	$LOGGER -t $0[$$] FATAL: the comparison failed
-	exit 1
+	fatal "the comparison failed -- see the psql errors above"
 fi
+
+#
+# Confirm we compared against what we just parsed.  Loading a stale file, or
+# loading nothing at all, otherwise reports a clean run.
+#
+expected=$(wc -l < $tsv | tr -d ' ')
+actual=$(cat $loaded)
+
+if [ "${actual}x" = 'x' ]
+then
+	fatal "psql returned no row count -- did it connect?"
+fi
+
+if [ "$actual" != "$expected" ]
+then
+	fatal "loaded $actual rows but the INDEX gave $expected"
+fi
+
+info "$actual rows loaded and compared"
 
 # start from empty, so a bucket which found nothing this time says so
 for bucket in refresh not-in-index not-in-freshports
@@ -220,7 +263,10 @@ do
 	: > ${OUTDIR}/${bucket}.txt
 done
 
-awk -F'\t' -v outdir="$OUTDIR" '{ print $1 >> (outdir "/" $2 ".txt") }' $out
+if ! awk -F'\t' -v outdir="$OUTDIR" '{ print $1 >> (outdir "/" $2 ".txt") }' $out
+then
+	fatal "could not write the lists to $OUTDIR"
+fi
 
 for bucket in refresh not-in-index not-in-freshports
 do
