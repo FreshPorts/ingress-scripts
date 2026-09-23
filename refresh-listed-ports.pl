@@ -65,45 +65,43 @@ if (!defined($filename)) {
 }
 
 #
-# Refuse to run against a tree which is not on main.  .git/HEAD is read
-# directly rather than shelling out to git: the tree is owned by root, so git
-# needs either privilege or a safe.directory exception, and this needs
-# neither.  On a branch the file holds 'ref: refs/heads/<branch>'; detached,
-# it holds a bare commit hash.
+# Is the ports tree on main?  Returns undef when it is, and the reason why
+# not when it is not, so the caller can log that reason rather than a
+# generic refusal: which branch, or which commit, is the only thing worth
+# having in the log.
 #
-sub CheckPortsTreeOnMain {
+# .git/HEAD is read directly rather than shelling out to git: the tree is
+# owned by root, so git needs either privilege or a safe.directory exception,
+# and this needs neither.  On a branch the file holds 'ref: refs/heads/
+# <branch>'; detached, it holds a bare commit hash.
+#
+sub WhyPortsTreeIsNotOnMain {
 	my $portsdir = $FreshPorts::Config::JailBaseDir . $FreshPorts::Config::PortsDir;
 	my $headfile = $portsdir . '/.git/HEAD';
 
 	my $HEAD;
 	if (!open($HEAD, '<', $headfile)) {
-		print "$0: cannot read $headfile: $!\n";
-		return 0;
+		return "cannot read $headfile: $!";
 	}
 
 	my $ref = <$HEAD>;
 	close($HEAD);
 
 	if (!defined($ref)) {
-		print "$0: $headfile is empty\n";
-		return 0;
+		return "$headfile is empty";
 	}
 
 	chomp($ref);
 
 	if ($ref eq 'ref: refs/heads/main') {
-		return 1;
+		return undef;
 	}
 
 	if ($ref =~ m|^ref: refs/heads/(.*)$|) {
-		print "$0: $portsdir is on branch '$1', not main\n";
-	} else {
-		print "$0: $portsdir is detached at $ref, not on main\n";
+		return "$portsdir is on branch '$1', not main";
 	}
 
-	print "$0: leave it to whatever returns it to main.  Do not pull or fetch.\n";
-
-	return 0;
+	return "$portsdir is detached at $ref, not on main";
 }
 
 #
@@ -137,8 +135,17 @@ FreshPorts::Utilities::InitSyslog();
 
 print("$0 starts\n");
 
-if (!CheckPortsTreeOnMain()) {
-	FreshPorts::Utilities::ReportError('warning', "ports tree is not on main; refusing to refresh", 0);
+my $notonmain = WhyPortsTreeIsNotOnMain();
+
+if (defined($notonmain)) {
+	#
+	# Both lines are logged as well as printed.  A scheduled run which
+	# refuses has to say what the tree was doing, and whoever reads that
+	# in syslog needs the same warning as whoever reads it on a terminal:
+	# the fix is to wait, not to move the tree.
+	#
+	FreshPorts::Utilities::ReportError('warning', "$ME $notonmain; refusing to refresh", 0);
+	FreshPorts::Utilities::ReportError('warning', "$ME leave it to whatever returns it to main.  Do not pull or fetch.", 0);
 	exit 1;
 }
 
