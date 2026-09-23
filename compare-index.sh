@@ -8,10 +8,10 @@
 # refresh those ports, so they sit in the database at an old version.  This
 # finds them by comparing every port against the INDEX.
 #
-# usage: compare-index.sh [-b] [-i INDEX] [-o OUTDIR]
+# usage: compare-index.sh [-f] [-i INDEX] [-o OUTDIR]
 #
-#   -b         build the INDEX in the jail first.  Slow -- time it before
-#              putting this on a schedule.
+#   -f         fetch the INDEX into the jail first.  Needs the jail to have
+#              network access and a writable ports tree.
 #   -i INDEX   compare against this INDEX instead of the jail's own
 #   -o OUTDIR  where to write the lists (default: $SPOOLINGDIR)
 #
@@ -30,6 +30,13 @@
 # OSVERSION spliced into a version is ignored too, since it says more about
 # the machine than the port.
 #
+# The INDEX is fetched rather than built: make index needs perl, and the jail
+# has no packages installed.  A fetched INDEX is built elsewhere and lags the
+# tree, so some of what this reports is that lag rather than a stale port.
+# Those show up as FreshPorts being ahead of the INDEX, and refreshing them
+# is harmless -- it just re-reads the Makefile and writes back what is
+# already there.
+#
 # SUDOERS
 #
 # These are matched literally, so they must agree with JAILMAKE below, and
@@ -37,10 +44,10 @@
 # an argument from outside the script, so neither needs a wildcard.
 #
 # freshports     ALL=(ALL) NOPASSWD:/usr/sbin/jexec freshports /usr/bin/make -C /usr/ports -V INDEXFILE
-# freshports     ALL=(ALL) NOPASSWD:/usr/sbin/jexec freshports /usr/bin/make -C /usr/ports index
+# freshports     ALL=(ALL) NOPASSWD:/usr/sbin/jexec freshports /usr/bin/make -C /usr/ports fetchindex
 #
-# The second is only needed if you run with -b.  Leave it out to keep the
-# ability to build an INDEX off this host.
+# The second is only needed if you run with -f.  Leave it out to fetch the
+# INDEX some other way and point -i at it.
 
 if [ ! -f config.sh ]
 then
@@ -72,17 +79,17 @@ then
 	exit 0
 fi
 
-BUILD=0
+FETCH=0
 INDEX=''
 OUTDIR="${SPOOLINGDIR}"
 
-while getopts 'bi:o:' option
+while getopts 'fi:o:' option
 do
 	case $option in
-	b)	BUILD=1        ;;
+	f)	FETCH=1        ;;
 	i)	INDEX=$OPTARG  ;;
 	o)	OUTDIR=$OPTARG ;;
-	*)	echo "usage: $0 [-b] [-i INDEX] [-o OUTDIR]"; exit 1 ;;
+	*)	echo "usage: $0 [-f] [-i INDEX] [-o OUTDIR]"; exit 1 ;;
 	esac
 done
 
@@ -118,12 +125,12 @@ loaded=$(mktemp ${SPOOLINGDIR}/compare-index-loaded.XXXXXX) || exit 1
 
 trap "rm -f $tsv $out $loaded" EXIT INT TERM
 
-if [ $BUILD = 1 ]
+if [ $FETCH = 1 ]
 then
-	$LOGGER -t $0[$$] building the INDEX in jail $FRESHPORTS_JAIL_NAME
-	if ! $SUDO /usr/sbin/jexec $FRESHPORTS_JAIL_NAME $JAILMAKE -C $PORTSDIR index
+	info "fetching the INDEX into jail $FRESHPORTS_JAIL_NAME"
+	if ! $SUDO /usr/sbin/jexec $FRESHPORTS_JAIL_NAME $JAILMAKE -C $PORTSDIR fetchindex
 	then
-		fatal "could not build the INDEX in jail $FRESHPORTS_JAIL_NAME"
+		fatal "could not fetch the INDEX into jail $FRESHPORTS_JAIL_NAME"
 	fi
 fi
 
