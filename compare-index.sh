@@ -21,11 +21,26 @@
 #   not-in-index.txt        in FreshPorts, absent from the INDEX
 #   not-in-freshports.txt   in the INDEX, absent from FreshPorts
 #
+# Runs as the freshports user, so the two jexec calls go through sudo.  See
+# SUDOERS below for the entries they need.
+#
 # Only the version is compared, including PORTREVISION and PORTEPOCH.  The
 # package name is not: a port's PKGNAMEPREFIX follows DEFAULT_VERSIONS, so
 # py311-foo and py312-foo are the same port at the same version.  An
 # OSVERSION spliced into a version is ignored too, since it says more about
 # the machine than the port.
+#
+# SUDOERS
+#
+# These are matched literally, so they must agree with JAILMAKE below, and
+# with FRESHPORTS_JAIL_NAME and PORTSDIR in config.sh.  Neither command takes
+# an argument from outside the script, so neither needs a wildcard.
+#
+# freshports     ALL=(ALL) NOPASSWD:/usr/sbin/jexec freshports /usr/bin/make -C /usr/ports -V INDEXFILE
+# freshports     ALL=(ALL) NOPASSWD:/usr/sbin/jexec freshports /usr/bin/make -C /usr/ports index
+#
+# The second is only needed if you run with -b.  Leave it out to keep the
+# ability to build an INDEX off this host.
 
 if [ ! -f config.sh ]
 then
@@ -65,6 +80,17 @@ JAILPORTS="${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}"
 # quarterly branches as well.
 ELEMENT_HEAD_PREFIX="/ports/head"
 
+# make(1) inside the jail.  Spelled out in full because sudoers matches the
+# command line literally, and this has to be the same string there.
+JAILMAKE="/usr/bin/make"
+
+if [ "${SUDO}x" = 'x' ]
+then
+	$LOGGER -t $0[$$] FATAL: SUDO is not set in config.sh
+	echo "$0: SUDO is not set in config.sh" >&2
+	exit 1
+fi
+
 #
 # save these values for use by psql via environment variables. The password is stored in ~/.pgpass
 #
@@ -82,7 +108,7 @@ trap "rm -f $tsv $out" EXIT INT TERM
 if [ $BUILD = 1 ]
 then
 	$LOGGER -t $0[$$] building the INDEX in jail $FRESHPORTS_JAIL_NAME
-	if ! /usr/sbin/jexec $FRESHPORTS_JAIL_NAME make -C $PORTSDIR index
+	if ! $SUDO /usr/sbin/jexec $FRESHPORTS_JAIL_NAME $JAILMAKE -C $PORTSDIR index
 	then
 		$LOGGER -t $0[$$] FATAL: could not build the INDEX
 		exit 1
@@ -93,7 +119,7 @@ if [ "${INDEX}x" = 'x' ]
 then
 	# INDEXFILE is INDEX-15 on 15.x, INDEX-14 on 14.x, and so on.  Ask the
 	# jail rather than guessing, so this keeps working across a major bump.
-	indexfile=$(/usr/sbin/jexec $FRESHPORTS_JAIL_NAME make -C $PORTSDIR -V INDEXFILE)
+	indexfile=$($SUDO /usr/sbin/jexec $FRESHPORTS_JAIL_NAME $JAILMAKE -C $PORTSDIR -V INDEXFILE)
 	if [ "${indexfile}x" = 'x' ]
 	then
 		$LOGGER -t $0[$$] FATAL: could not determine INDEXFILE

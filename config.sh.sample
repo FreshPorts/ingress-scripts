@@ -110,6 +110,9 @@ fi
 # no updates are performed
 #
 PSQL=/usr/local/bin/psql
+
+# used where a script has to enter the jail, e.g. compare-index.sh
+SUDO=/usr/local/bin/sudo
 DB=freshports.org
 HOST='localhost'
 DBUSER='reading'
