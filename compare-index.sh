@@ -146,10 +146,28 @@ MD5="/sbin/md5"
 # survive a run which wrote its lists somewhere else.
 MD5FILE="${SPOOLINGDIR}/compare-index.md5"
 
-if [ "${SUDO}x" = 'x' ]
+#
+# config.sh is deployed separately from this script, so a new variable can be
+# missing from it.  Unset expands to nothing, which silently builds a command
+# with a hole in it -- jexec with no jail name, a path starting at the wrong
+# root -- so check, and name the one which is missing.
+#
+required='INDEX_JAIL_BASE_DIR'
+
+if [ $BUILD = 1 ]
 then
-	fatal "SUDO is not set in config.sh"
+	required="$required SUDO GIT INDEX_JAIL_NAME"
 fi
+
+for variable in $required
+do
+	eval value=\$$variable
+
+	if [ "${value}x" = 'x' ]
+	then
+		fatal "$variable is not set in config.sh"
+	fi
+done
 
 #
 # save these values for use by psql via environment variables. The password is stored in ~/.pgpass
