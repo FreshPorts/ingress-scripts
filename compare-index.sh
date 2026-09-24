@@ -8,11 +8,13 @@
 # refresh those ports, so they sit in the database at an old version.  This
 # finds them by comparing every port against the INDEX.
 #
-# usage: compare-index.sh [-f] [-i INDEX] [-o OUTDIR]
+# usage: compare-index.sh [-b] [-c COMMIT] [-i INDEX] [-o OUTDIR]
 #
-#   -f         fetch the INDEX into the jail's ports tree first.  make runs
-#              on the host, not in the jail, because the jail has no network.
-#   -i INDEX   compare against this INDEX instead of the jail's own
+#   -b         build the INDEX first, in the index jail.  Without this the
+#              INDEX already sitting in that jail is used, however old.
+#   -c COMMIT  check the index jail's ports tree out at this commit before
+#              building.  Only meaningful with -b.
+#   -i INDEX   compare against this INDEX instead of the index jail's own
 #   -o OUTDIR  where to write the lists (default: $SPOOLINGDIR)
 #
 # The INDEX is checksummed, and the checksum kept in SPOOLINGDIR.  An INDEX
@@ -29,8 +31,9 @@
 #   not-in-index.txt        in FreshPorts, absent from the INDEX
 #   not-in-freshports.txt   in the INDEX, absent from FreshPorts
 #
-# Runs as the freshports user.  make runs on the host, not in the jail, and
-# fetching needs sudo to write into the jail's ports tree.  See SUDOERS below.
+# Runs as the freshports user.  Building needs sudo twice: to check the index
+# jail's ports tree out, and to run make in that jail.  See SUDOERS below.
+# Neither is needed without -b.
 #
 # Only the version is compared, including PORTREVISION and PORTEPOCH.  The
 # package name is not: a port's PKGNAMEPREFIX follows DEFAULT_VERSIONS, so
@@ -38,25 +41,34 @@
 # OSVERSION spliced into a version is ignored too, since it says more about
 # the machine than the port.
 #
-# The INDEX is fetched rather than built: make index needs perl, and the jail
-# has no packages installed.  A fetched INDEX is built elsewhere and lags the
-# tree, so some of what this reports is that lag rather than a stale port.
-# Those show up as FreshPorts being ahead of the INDEX, and refreshing them
-# is harmless -- it just re-reads the Makefile and writes back what is
-# already there.
+# The INDEX is built in the index jail rather than in the freshports one:
+# make index needs perl, and the freshports jail has no packages installed.
+# The index jail carries its own ports tree, synchronised with the freshports
+# one.
+#
+# Pass -c with the commit FreshPorts has finished processing.  The tree is
+# checked out there first, so the INDEX describes the same tree state the
+# database was built from.  Without it the INDEX describes whatever state
+# that tree happens to be in, and anything which moved in between is reported
+# as a difference when it is really just the two sides being read at
+# different moments.
 #
 # SUDOERS
 #
-# This is matched literally, so it must agree with MAKE and MAKEPORTS below,
-# which are built from FRESHPORTS_JAIL_BASE_DIR and PORTSDIR in config.sh.  It
-# takes no argument from outside the script, so it needs no wildcard.
+# These are matched literally, so they must agree with GIT, MAKE and the
+# paths below, which are built from INDEX_JAIL_NAME, INDEX_JAIL_BASE_DIR and
+# PORTSDIR in config.sh.
 #
-# freshports     ALL=(ALL) NOPASSWD:/usr/bin/make -C /jails/freshports/usr/ports PORTSDIR=/jails/freshports/usr/ports fetchindex
+# freshports     ALL=(ALL) NOPASSWD:/usr/local/bin/git -C /jails/index/usr/ports checkout *
+# freshports     ALL=(ALL) NOPASSWD:/usr/sbin/jexec index /usr/bin/make -C /usr/ports index
 #
-# Only -f needs it.  Reading INDEXDIR and INDEXFILE writes nothing and runs as
-# the invoking user.  Leave the entry out to fetch the INDEX some other way
-# and point -i at it, and drop the sudo altogether if that ports tree is
-# writable by the freshports user.
+# Only -b needs them, and only -c needs the first.  Reading INDEXDIR and
+# INDEXFILE writes nothing and runs as the invoking user, so a run against an
+# INDEX built elsewhere -- or pointed at with -i -- needs no sudo at all.
+#
+# The checkout entry ends in a wildcard because the commit is supplied by the
+# caller.  The script checks it is a hex hash of at least seven characters
+# before passing it on, so an option cannot be smuggled through in its place.
 
 if [ ! -f config.sh ]
 then
@@ -88,21 +100,24 @@ then
 	exit 0
 fi
 
-FETCH=0
+BUILD=0
+COMMIT=''
 INDEX=''
 OUTDIR="${SPOOLINGDIR}"
 
-while getopts 'fi:o:' option
+while getopts 'bc:i:o:' option
 do
 	case $option in
-	f)	FETCH=1        ;;
+	b)	BUILD=1        ;;
+	c)	COMMIT=$OPTARG ;;
 	i)	INDEX=$OPTARG  ;;
 	o)	OUTDIR=$OPTARG ;;
-	*)	echo "usage: $0 [-f] [-i INDEX] [-o OUTDIR]"; exit 1 ;;
+	*)	echo "usage: $0 [-b] [-c COMMIT] [-i INDEX] [-o OUTDIR]"; exit 1 ;;
 	esac
 done
 
-JAILPORTS="${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}"
+# the ports tree of the index jail, as seen from the host
+JAILPORTS="${INDEX_JAIL_BASE_DIR}${PORTSDIR}"
 
 # The ports table holds a row per port per branch, so head has to be picked
 # out or we would compare it against the quarterly branches as well.  The
@@ -114,15 +129,15 @@ JAILPORTS="${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}"
 # means this still selects head if that view is ever widened.
 ELEMENT_HEAD_PREFIX="/ports/head"
 
-# The jail has no networking, so make runs on the host, pointed at the jail's
-# ports tree.  Spelled out in full because sudoers matches the command line
-# literally, and this has to be the same string there.
+# Spelled out in full because sudoers matches the command line literally, and
+# these have to be the same strings there.
 MAKE="/usr/bin/make"
 
-# Both are needed.  -C is where make runs; PORTSDIR is where it looks for the
-# Mk files AND, through INDEXDIR, where fetchindex puts the INDEX.  PORTSDIR
-# defaults to /usr/ports whatever -C says, so without this the host's own
-# ports tree is read and written instead of the jail's.
+# Reading INDEXDIR and INDEXFILE happens on the host, against the index
+# jail's tree.  Both parts are needed: -C is where make runs; PORTSDIR is
+# where it looks for the Mk files AND, through INDEXDIR, where the INDEX
+# lands.  PORTSDIR defaults to /usr/ports whatever -C says, so without this
+# the host's own ports tree is read instead of the jail's.
 MAKEPORTS="-C ${JAILPORTS} PORTSDIR=${JAILPORTS}"
 
 MD5="/sbin/md5"
@@ -151,12 +166,48 @@ loaded=$(mktemp ${SPOOLINGDIR}/compare-index-loaded.XXXXXX) || exit 1
 
 trap "rm -f $tsv $out $loaded" EXIT INT TERM
 
-if [ $FETCH = 1 ]
+if [ "${COMMIT}x" != 'x' -a $BUILD = 0 ]
 then
-	info "fetching the INDEX into $JAILPORTS"
-	if ! $SUDO $MAKE $MAKEPORTS fetchindex
+	fatal "-c is only meaningful with -b"
+fi
+
+if [ $BUILD = 1 ]
+then
+	if [ "${COMMIT}x" != 'x' ]
 	then
-		fatal "could not fetch the INDEX into $JAILPORTS"
+		#
+		# The commit reaches sudo, and the sudoers entry has to end in a
+		# wildcard because it varies.  Check it is a hash and nothing else,
+		# so no option can be smuggled through in its place.
+		#
+		case "$COMMIT" in
+		*[!0-9a-f]*)
+			fatal "commit '$COMMIT' is not a hex hash"
+			;;
+		esac
+
+		if [ ${#COMMIT} -lt 7 ]
+		then
+			fatal "commit '$COMMIT' is too short to be a hash"
+		fi
+
+		info "checking $JAILPORTS out at $COMMIT"
+		if ! $SUDO $GIT -C $JAILPORTS checkout $COMMIT
+		then
+			fatal "could not check $JAILPORTS out at $COMMIT"
+		fi
+	else
+		info "building the INDEX from $JAILPORTS as it stands, no commit given"
+	fi
+
+	#
+	# make index runs inside the jail, where perl is.  PORTSDIR needs no
+	# override there: /usr/ports is the tree.
+	#
+	info "building the INDEX in jail $INDEX_JAIL_NAME"
+	if ! $SUDO /usr/sbin/jexec $INDEX_JAIL_NAME $MAKE -C $PORTSDIR index
+	then
+		fatal "could not build the INDEX in jail $INDEX_JAIL_NAME"
 	fi
 fi
 
