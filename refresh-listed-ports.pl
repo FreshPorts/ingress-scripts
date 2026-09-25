@@ -201,6 +201,17 @@ sub WhyVersionComesFromWhere {
 	foreach my $file (@files) {
 		my ($relative, $absolute) = @{$file};
 
+		#
+		# Mk holds the framework, which every port in the tree reads.  Its
+		# own definitions -- bsd.port.mk deriving PORTVERSION from
+		# DISTVERSION and back again -- are true of every port and so
+		# explain nothing about why this one moved.  Skip them here.
+		#
+		# They are still searched when following a reference: PYTHON_DEFAULT
+		# really is set in Mk/bsd.default-versions.mk, and that is an answer.
+		#
+		next if ($relative =~ m|^Mk/|);
+
 		foreach my $line (@{MakefileLines($absolute)}) {
 			# ?= += := != as well as plain =; != is a shell escape, whose
 			# value we can show but cannot follow
