@@ -8,20 +8,21 @@
 # Written for the output of compare-index.sh, which finds ports whose version
 # in the database no longer matches the ports tree.
 #
-# usage: refresh-listed-ports.pl [--dryrun y] [--debug y] FILE
+# usage: refresh-listed-ports.pl [--dryrun] [--debug] FILE
 #
 #   FILE         one category/port per line.  - reads standard input.  Blank
 #                lines are ignored, as is anything after a #, so a list can
 #                be annotated.
-#   --dryrun y   report what would happen and write nothing to the database.
+#   --dryrun     report what would happen and write nothing to the database.
 #                Everything else runs: the port is looked up, its Makefiles
 #                are read, and the version and the reason are reported.
-#   --debug y    print the SQL used to look a port up.
+#                Takes no argument, unlike process_default_versions.pl.
+#   --debug      print the SQL used to look a port up.
 #
 # for example:
 #
 #   refresh-listed-ports.pl /var/db/freshports/cache/spooling/refresh.txt
-#   refresh-listed-ports.pl --dryrun y refresh.txt
+#   refresh-listed-ports.pl --dryrun refresh.txt
 #   compare-index.sh ... | refresh-listed-ports.pl -
 #
 # Each port reports the version it held, the version the Makefile gives, and
@@ -64,25 +65,30 @@ my $dbh;
 my $sql;
 my $sth;
 
-my $dryrun = 'n';
-my $debug  = 'n';
+my $dryrun = 0;
+my $debug  = 0;
 
-if (!GetOptions('debug=s' => \$debug, 'dryrun=s' => \$dryrun)) {
+if (!GetOptions('debug' => \$debug, 'dryrun' => \$dryrun)) {
 	exit;
 }
 
-if ($dryrun ne 'y' && $dryrun ne 'n') {
-	print("--dryrun must be y or n\n");
-	exit;
+#
+# process_default_versions.pl spells these --dryrun y and --debug y, so a
+# stray y is a likely mistake.  Without this it becomes the filename and the
+# error says only that y cannot be read, which explains nothing.
+#
+if (defined($ARGV[0]) && ($ARGV[0] eq 'y' || $ARGV[0] eq 'n')) {
+	print("--dryrun and --debug take no argument; drop the '$ARGV[0]'\n");
+	exit 1;
 }
 
 my $filename = shift;
 
 if (!defined($filename)) {
-	print("usage: $0 [--dryrun y] [--debug y] FILE\n");
+	print("usage: $0 [--dryrun] [--debug] FILE\n");
 	print("       FILE       one category/port per line, or - for stdin\n");
-	print("       --dryrun y report what would happen, write nothing\n");
-	print("       --debug y  print the SQL used to look a port up\n");
+	print("       --dryrun   report what would happen, write nothing\n");
+	print("       --debug    print the SQL used to look a port up\n");
 	exit 1;
 }
 
@@ -325,7 +331,7 @@ $sql = "SET CLIENT_ENCODING TO 'ISO-8859-1';
          where pathname = ?
            and EP.element_id = P.element_id";
 
-if ($debug eq 'y') {
+if ($debug) {
 	print "\$dryrun='$dryrun'\n";
 	print "sql = $sql\n";
 }
@@ -406,7 +412,7 @@ while (my $category_port = <$LIST>) {
 				FreshPorts::Utilities::Report('info', $reason);
 			}
 
-			if ($dryrun eq 'y') {
+			if ($dryrun) {
 				# everything above reads; save() and commit() are the only
 				# things which write, so a dry run simply stops here
 				$dbh->rollback();
@@ -435,7 +441,7 @@ $sth->finish();
 
 my $tally = "$ME ends: $refreshed refreshed, $failed failed, $notfound not found";
 
-if ($dryrun eq 'y') {
+if ($dryrun) {
 	$tally = "$ME ends: $dryrunned would be refreshed, $failed failed, $notfound not found (dry run, nothing written)";
 }
 
