@@ -34,6 +34,7 @@ use FreshPorts::database;
 use FreshPorts::utilities;
 use FreshPorts::system_status;
 use File::Basename;
+use File::Spec;
 use Getopt::Long;
 
 # Report() appends the script directory, so the basename is enough to say
@@ -124,6 +125,139 @@ sub PkgVersion {
 	return $version;
 }
 
+#
+# Where a port's version comes from.
+#
+# A port whose version moves without a commit to its own directory got that
+# version from somewhere else: a master port, an included Makefile, or a
+# default version in Mk.  This asks make which files it read, looks in those
+# files for what assigns the version, and follows one level of indirection --
+# PORTVERSION=${PYTHON_DEFAULT} is only half an answer without knowing where
+# PYTHON_DEFAULT is set.
+#
+# It reports what it can see textually.  A version built by a shell escape,
+# or by conditionals, is reported as assigned in that file with no further
+# explanation, which is honest rather than a guess.
+#
+my $MAKE = '/usr/bin/make';   # base system make; the ports tree needs no other
+
+my %MakefileCache;            # absolute path -> [ lines ]
+
+sub MakefileLines {
+	my $pathname = shift;
+
+	if (!exists($MakefileCache{$pathname})) {
+		my @lines;
+
+		if (open(my $FILE, '<', $pathname)) {
+			@lines = <$FILE>;
+			close($FILE);
+		}
+
+		$MakefileCache{$pathname} = \@lines;
+	}
+
+	return $MakefileCache{$pathname};
+}
+
+#
+# The makefiles make read for this port, as [ repo-relative, absolute ]
+# pairs, in the order it read them.  Those outside the ports tree -- base
+# system mk files, make.conf -- are dropped: they are not what moves a port.
+#
+# make runs on the host against the jail's tree, as compare-index.sh does.
+# No jexec, so no sudo.  The list form of open() keeps a shell out of it.
+#
+sub MakefilesRead {
+	my $origin   = shift;
+	my $portsdir = $FreshPorts::Config::JailBaseDir . $FreshPorts::Config::PortsDir;
+
+	my $MAKEFILES;
+	if (!open($MAKEFILES, '-|', $MAKE, '-C', "$portsdir/$origin",
+	                             "PORTSDIR=$portsdir", '-V', '.MAKE.MAKEFILES')) {
+		return ();
+	}
+
+	my $line = <$MAKEFILES>;
+	close($MAKEFILES);
+
+	return () if (!defined($line));
+
+	chomp($line);
+
+	my @files;
+	my %seen;
+
+	foreach my $file (split(/\s+/, $line)) {
+		next if ($file eq '');
+
+		# 'Makefile' is relative to the port; others can hold a ..
+		my $absolute = ($file =~ m|^/|) ? $file : "$portsdir/$origin/$file";
+		$absolute = File::Spec->canonpath($absolute);
+		1 while ($absolute =~ s|/[^/]+/\.\./|/|);
+
+		next if ($absolute !~ m|^\Q$portsdir\E/(.+)$|);
+
+		my $relative = $1;
+		next if ($seen{$relative}++);
+
+		push @files, [ $relative, $absolute ];
+	}
+
+	return @files;
+}
+
+sub WhyVersionComesFromWhere {
+	my $origin = shift;
+
+	my @files = MakefilesRead($origin);
+
+	if (!@files) {
+		return ("could not ask make which files it read for $origin");
+	}
+
+	my @why;
+
+	foreach my $file (@files) {
+		my ($relative, $absolute) = @{$file};
+
+		foreach my $line (@{MakefileLines($absolute)}) {
+			# ?= += := != as well as plain =; != is a shell escape, whose
+			# value we can show but cannot follow
+			next if ($line !~ /^\s*(PORTVERSION|DISTVERSIONPREFIX|DISTVERSIONSUFFIX|DISTVERSION)\s*[?+:!]?=\s*(.*?)\s*$/);
+
+			my ($variable, $value) = ($1, $2);
+
+			# the whole point: is this the port's own Makefile, or not?
+			my $where = ($relative =~ m|^\Q$origin\E/|) ? '' : ' (outside this port)';
+
+			push @why, "$variable set in $relative$where: $value";
+
+			# follow one level: ${FOO} on the right hand side
+			my %referenced;
+			while ($value =~ /\$[\{\(](\w+)[\}\)]/g) {
+				$referenced{$1} = 1;
+			}
+
+			foreach my $reference (sort keys %referenced) {
+				foreach my $other (@files) {
+					my ($otherrelative, $otherabsolute) = @{$other};
+
+					if (grep { /^\s*\Q$reference\E\s*[?+:!]?=/ } @{MakefileLines($otherabsolute)}) {
+						push @why, "  $reference set in $otherrelative";
+					}
+				}
+			}
+		}
+	}
+
+	if (!@why) {
+		push @why, "nothing in the files make read assigns the version textually";
+	}
+
+	return @why;
+}
+
 my $LIST;
 if ($filename eq '-') {
 	$LIST = \*STDIN;
@@ -178,6 +312,7 @@ if ($debug eq 'y') {
 $sth = $dbh->prepare($sql);
 
 my $refreshed = 0;
+my $dryrunned = 0;
 my $failed    = 0;
 my $notfound  = 0;
 
@@ -199,10 +334,6 @@ while (my $category_port = <$LIST>) {
 	my $element_pathname = $FreshPorts::Constants::Ports_HEAD_commit . $category_port;
 
 	print("$0 working on '$category_port' ('$element_pathname')\n");
-
-	if ($dryrun eq 'y') {
-		next;
-	}
 
 	$sth->execute($element_pathname) ||
 		FreshPorts::Utilities::ReportError('warning', "Could not execute SQL $sql ... maybe invalid? with '$element_pathname'", 1);
@@ -242,11 +373,30 @@ while (my $category_port = <$LIST>) {
 			print $change . "\n";
 			FreshPorts::Utilities::Report('info', $change);
 
-			$port->save($currentBranch);
-			# commit each port on its own, so a failure part way through
-			# does not throw away the ports already done
-			$dbh->commit();
-			$refreshed++;
+			#
+			# Why this port's version can move without a commit to its own
+			# directory.  Reported whether or not it moved this time: the
+			# reason is what makes the list worth reading.
+			#
+			foreach my $why (WhyVersionComesFromWhere($category_port)) {
+				my $reason = "$ME $category_port: $why";
+
+				print $reason . "\n";
+				FreshPorts::Utilities::Report('info', $reason);
+			}
+
+			if ($dryrun eq 'y') {
+				# everything above reads; save() and commit() are the only
+				# things which write, so a dry run simply stops here
+				$dbh->rollback();
+				$dryrunned++;
+			} else {
+				$port->save($currentBranch);
+				# commit each port on its own, so a failure part way through
+				# does not throw away the ports already done
+				$dbh->commit();
+				$refreshed++;
+			}
 		} else {
 			$dbh->rollback();
 			FreshPorts::Utilities::ReportError('warning', "Could not refresh '$category_port' (result $result)", 0);
@@ -263,6 +413,10 @@ close($LIST) if ($filename ne '-');
 $sth->finish();
 
 my $tally = "$ME ends: $refreshed refreshed, $failed failed, $notfound not found";
+
+if ($dryrun eq 'y') {
+	$tally = "$ME ends: $dryrunned would be refreshed, $failed failed, $notfound not found (dry run, nothing written)";
+}
 
 print $tally . "\n";
 FreshPorts::Utilities::Report('info', $tally);
