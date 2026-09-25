@@ -8,10 +8,12 @@
 # refresh those ports, so they sit in the database at an old version.  This
 # finds them by comparing every port against the INDEX.
 #
-# usage: compare-index.sh [-b] [-c COMMIT] [-i INDEX] [-o OUTDIR]
+# usage: compare-index.sh [-b] [-c COMMIT] [-i INDEX] [-o OUTDIR] [-F]
 #
 #   -b         build the INDEX first, in the index jail.  Without this the
 #              INDEX already sitting in that jail is used, however old.
+#   -F         compare even if the INDEX has not changed since the last run.
+#              For testing: the comparison is the part worth repeating.
 #   -c COMMIT  check the index jail's ports tree out at this commit before
 #              building.  Only meaningful with -b.
 #   -i INDEX   compare against this INDEX instead of the index jail's own
@@ -21,7 +23,7 @@
 # which has not changed since the last run is not processed again.  Note this
 # gates on one of the two inputs: the database moves independently, so after
 # commit processing catches up the answer can differ while the INDEX has not.
-# To force a run, remove the checksum:
+# Pass -F to compare anyway, or remove the checksum:
 #
 #   rm ${SPOOLINGDIR}/compare-index.md5
 #
@@ -101,18 +103,20 @@ then
 fi
 
 BUILD=0
+FORCE=0
 COMMIT=''
 INDEX=''
 OUTDIR="${SPOOLINGDIR}"
 
-while getopts 'bc:i:o:' option
+while getopts 'bFc:i:o:' option
 do
 	case $option in
 	b)	BUILD=1        ;;
+	F)	FORCE=1        ;;
 	c)	COMMIT=$OPTARG ;;
 	i)	INDEX=$OPTARG  ;;
 	o)	OUTDIR=$OPTARG ;;
-	*)	echo "usage: $0 [-b] [-c COMMIT] [-i INDEX] [-o OUTDIR]"; exit 1 ;;
+	*)	echo "usage: $0 [-b] [-c COMMIT] [-i INDEX] [-o OUTDIR] [-F]"; exit 1 ;;
 	esac
 done
 
@@ -276,11 +280,16 @@ info "INDEX $INDEX md5 $md5, previously ${previous:-none}"
 
 if [ "$md5" = "$previous" ]
 then
-	info "INDEX unchanged, not processing"
-	exit 0
-fi
+	if [ $FORCE = 0 ]
+	then
+		info "INDEX unchanged, not processing"
+		exit 0
+	fi
 
-info "INDEX changed, processing"
+	info "INDEX unchanged, processing anyway: -F"
+else
+	info "INDEX changed, processing"
+fi
 
 if ! ${SCRIPTDIR}/index_pkgversions.py -i $INDEX -o $tsv
 then
