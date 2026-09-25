@@ -3,13 +3,32 @@
 # Copyright (c) 1999-2026 DVL Software
 #
 
-# Refresh each port named in a file, one category/port per line.
+# Refresh each port named in a file, and say why its version can move.
 #
 # Written for the output of compare-index.sh, which finds ports whose version
 # in the database no longer matches the ports tree.
 #
+# usage: refresh-listed-ports.pl [--dryrun y] [--debug y] FILE
+#
+#   FILE         one category/port per line.  - reads standard input.  Blank
+#                lines are ignored, as is anything after a #, so a list can
+#                be annotated.
+#   --dryrun y   report what would happen and write nothing to the database.
+#                Everything else runs: the port is looked up, its Makefiles
+#                are read, and the version and the reason are reported.
+#   --debug y    print the SQL used to look a port up.
+#
+# for example:
+#
 #   refresh-listed-ports.pl /var/db/freshports/cache/spooling/refresh.txt
+#   refresh-listed-ports.pl --dryrun y refresh.txt
 #   compare-index.sh ... | refresh-listed-ports.pl -
+#
+# Each port reports the version it held, the version the Makefile gives, and
+# where that version comes from.  Both go to the terminal and to syslog:
+#
+#   devel/geany-plugin-vc: 2.0 -> 2.1
+#   devel/geany-plugin-vc: PORTVERSION set in devel/geany-plugins/Makefile (outside this port): 2.1
 #
 # HEAD only, as process_default_versions.pl is.
 #
@@ -60,8 +79,10 @@ if ($dryrun ne 'y' && $dryrun ne 'n') {
 my $filename = shift;
 
 if (!defined($filename)) {
-	print("usage: $0 [--debug y] [--dryrun y] FILE\n");
-	print("       FILE holds one category/port per line, or - for stdin\n");
+	print("usage: $0 [--dryrun y] [--debug y] FILE\n");
+	print("       FILE       one category/port per line, or - for stdin\n");
+	print("       --dryrun y report what would happen, write nothing\n");
+	print("       --debug y  print the SQL used to look a port up\n");
 	exit 1;
 }
 
