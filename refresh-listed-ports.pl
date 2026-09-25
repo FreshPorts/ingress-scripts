@@ -33,15 +33,8 @@
 #
 # HEAD only, as process_default_versions.pl is.
 #
-# The ports tree has to be on main before this runs.  A refresh reads the
-# Makefiles as they are on disk, so a tree left detached at some older commit
-# -- which is how the ingress often leaves it -- would write those older
-# versions into the database and undo the very thing this is fixing.
-#
-# Do NOT git pull or git fetch to satisfy that.  The ingress owns the state of
-# that tree, and moving it forward underneath in-flight commit processing is
-# worse than not running at all.  Leave the tree to whatever puts it back on
-# main, and run this afterwards.
+# A refresh reads the Makefiles as they are on disk, so what it writes
+# describes the tree in whatever state it is in when this runs.
 #
 
 use strict;
@@ -90,46 +83,6 @@ if (!defined($filename)) {
 	print("       --dryrun   report what would happen, write nothing\n");
 	print("       --debug    print the SQL used to look a port up\n");
 	exit 1;
-}
-
-#
-# Is the ports tree on main?  Returns undef when it is, and the reason why
-# not when it is not, so the caller can log that reason rather than a
-# generic refusal: which branch, or which commit, is the only thing worth
-# having in the log.
-#
-# .git/HEAD is read directly rather than shelling out to git: the tree is
-# owned by root, so git needs either privilege or a safe.directory exception,
-# and this needs neither.  On a branch the file holds 'ref: refs/heads/
-# <branch>'; detached, it holds a bare commit hash.
-#
-sub WhyPortsTreeIsNotOnMain {
-	my $portsdir = $FreshPorts::Config::JailBaseDir . $FreshPorts::Config::PortsDir;
-	my $headfile = $portsdir . '/.git/HEAD';
-
-	my $HEAD;
-	if (!open($HEAD, '<', $headfile)) {
-		return "cannot read $headfile: $!";
-	}
-
-	my $ref = <$HEAD>;
-	close($HEAD);
-
-	if (!defined($ref)) {
-		return "$headfile is empty";
-	}
-
-	chomp($ref);
-
-	if ($ref eq 'ref: refs/heads/main') {
-		return undef;
-	}
-
-	if ($ref =~ m|^ref: refs/heads/(.*)$|) {
-		return "$portsdir is on branch '$1', not main";
-	}
-
-	return "$portsdir is detached at $ref, not on main";
 }
 
 #
@@ -295,20 +248,6 @@ if ($filename eq '-') {
 FreshPorts::Utilities::InitSyslog();
 
 print("$0 starts\n");
-
-my $notonmain = WhyPortsTreeIsNotOnMain();
-
-if (defined($notonmain)) {
-	#
-	# Both lines are logged as well as printed.  A scheduled run which
-	# refuses has to say what the tree was doing, and whoever reads that
-	# in syslog needs the same warning as whoever reads it on a terminal:
-	# the fix is to wait, not to move the tree.
-	#
-	FreshPorts::Utilities::ReportError('warning', "$ME $notonmain; refusing to refresh", 0);
-	FreshPorts::Utilities::ReportError('warning', "$ME leave it to whatever returns it to main.  Do not pull or fetch.", 0);
-	exit 1;
-}
 
 #
 # see if the system is online.
