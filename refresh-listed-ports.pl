@@ -111,7 +111,8 @@ sub PkgVersion {
 # A port whose version moves without a commit to its own directory got that
 # version from somewhere else: a master port, an included Makefile, or a
 # default version in Mk.  This asks make which files it read, looks in those
-# files for what assigns the version, and follows one level of indirection --
+# files for what assigns the version -- PORTVERSION, PORTREVISION, PORTEPOCH
+# and the DISTVERSION forms -- and follows one level of indirection --
 # PORTVERSION=${PYTHON_DEFAULT} is only half an answer without knowing where
 # PYTHON_DEFAULT is set.
 #
@@ -213,9 +214,13 @@ sub WhyVersionComesFromWhere {
 		next if ($relative =~ m|^Mk/|);
 
 		foreach my $line (@{MakefileLines($absolute)}) {
+			# PORTREVISION and PORTEPOCH are part of the version too, and
+			# a revision bumped in a master port moves every slave without
+			# a commit to any of them.
+			#
 			# ?= += := != as well as plain =; != is a shell escape, whose
 			# value we can show but cannot follow
-			next if ($line !~ /^\s*(PORTVERSION|DISTVERSIONPREFIX|DISTVERSIONSUFFIX|DISTVERSION)\s*[?+:!]?=\s*(.*?)\s*$/);
+			next if ($line !~ /^\s*(PORTVERSION|PORTREVISION|PORTEPOCH|DISTVERSIONPREFIX|DISTVERSIONSUFFIX|DISTVERSION)\s*[?+:!]?=\s*(.*?)\s*$/);
 
 			my ($variable, $value) = ($1, $2);
 
