@@ -322,6 +322,10 @@ info "$(wc -l < $tsv | tr -d ' ') packages read from the INDEX"
 # table and nothing is left behind in the database.  The SELECT goes into a
 # TEMP VIEW first because a psql \copy has to fit on one line.
 #
+# Timed as a whole: the load, the index and the comparison together.
+#
+started=$(/bin/date +%s)
+
 # ON_ERROR_STOP is what makes a failed statement a failed run.  Without it
 # psql complains on stderr and still exits 0, so a broken query, a missing
 # table or a refused connection all look like a clean run with no differences.
@@ -396,8 +400,10 @@ SELECT COALESCE(fp.origin, o.origin) AS origin,
 \copy (SELECT * FROM comparison) TO '$out'
 EOF
 then
-	fatal "the comparison failed -- see the psql errors above"
+	fatal "the comparison failed after $(( $(/bin/date +%s) - started ))s -- see the psql errors above"
 fi
+
+info "the comparison took $(( $(/bin/date +%s) - started ))s"
 
 #
 # Confirm we compared against what we just parsed.  Loading a stale file, or
