@@ -27,11 +27,18 @@
 #
 #   rm ${SPOOLINGDIR}/compare-index.md5
 #
-# Writes three files to OUTDIR, one port per line:
+# Writes four files to OUTDIR, one port per line:
 #
-#   refresh.txt             version differs, refresh these
+#   refresh.txt             the version goes up: FreshPorts trails the INDEX,
+#                           so refresh these
+#   index-behind.txt        the version goes down: the INDEX trails the ports
+#                           tree, so refreshing would change nothing
 #   not-in-index.txt        in FreshPorts, absent from the INDEX
 #   not-in-freshports.txt   in the INDEX, absent from FreshPorts
+#
+# Which way a version moved is decided by pkg version -t, which knows ports
+# version ordering; the query can only compare for equality.  See
+# https://man.freebsd.org/cgi/man.cgi?pkg-version
 #
 # Runs as the freshports user.  Building needs sudo: to fetch into and check
 # out the index jail's ports tree, and to run make in that jail.  See SUDOERS
@@ -147,6 +154,9 @@ MAKE="/usr/bin/make"
 MAKEPORTS="-C ${JAILPORTS} PORTSDIR=${JAILPORTS}"
 
 MD5="/sbin/md5"
+
+# pkg version -t orders two port versions.  Nothing in SQL can.
+PKG="/usr/local/sbin/pkg"
 
 # Where the last INDEX checksum is kept.  SPOOLINGDIR, not OUTDIR: this has to
 # survive a run which wrote its lists somewhere else.
@@ -425,31 +435,75 @@ fi
 info "$actual rows loaded and compared"
 
 # start from empty, so a bucket which found nothing this time says so
-for bucket in refresh not-in-index not-in-freshports
+for bucket in refresh index-behind not-in-index not-in-freshports
 do
-	: > ${OUTDIR}/${bucket}.txt
+	: > ${OUTDIR}/${bucket}.txt || fatal "could not write ${OUTDIR}/${bucket}.txt"
 done
 
-# The lists stay one port per line; the reason for each refresh goes to
-# $reasons, to be logged.  \N is how \copy writes a NULL: a port FreshPorts
-# holds with no version at all.
-if ! awk -F'\t' -v outdir="$OUTDIR" -v reasons="$reasons" '
-	function show(v) { return v == "\\N" ? "none" : (v == "" ? "empty" : v) }
-	{
-		print $1 >> (outdir "/" $2 ".txt")
-		if ($2 == "refresh")
-			print "refresh: " $1 ": FreshPorts has " show($3) ", INDEX has " show($4) > reasons
-	}' $out
-then
-	fatal "could not write the lists to $OUTDIR"
-fi
+# \N is how \copy writes a NULL: a port FreshPorts holds with no version at
+# all, or a side which has no version because the origin is missing from it.
+show() {
+	case "$1" in
+	'\N')	echo 'none'  ;;
+	'')	echo 'empty' ;;
+	*)	echo "$1"    ;;
+	esac
+}
+
+#
+# The lists stay one port per line; the reason for each goes to $reasons, to
+# be logged.
+#
+# A differing version is split by which way it moved.  'pkg version -t a b'
+# prints '<' when a is the older, so '<' here is FreshPorts trailing the
+# INDEX: the version goes up and the port wants refreshing.  '>' is the INDEX
+# trailing the ports tree, which refreshing would not change.
+#
+# An origin can hold more than one INDEX version, one per flavor, so every
+# one of them has to agree before we believe the direction.
+#
+while IFS='	' read -r origin bucket fpversion indexversions
+do
+	if [ "$bucket" != 'refresh' ]
+	then
+		echo "$origin" >> ${OUTDIR}/${bucket}.txt
+		continue
+	fi
+
+	up=0
+	down=0
+
+	case "$fpversion" in
+	'\N'|'')
+		# nothing to order against; refreshing is the harmless choice
+		;;
+	*)
+		for indexversion in $indexversions
+		do
+			case $($PKG version -t "$fpversion" "$indexversion" 2>/dev/null) in
+			'<')	up=$((up + 1))     ;;
+			'>')	down=$((down + 1)) ;;
+			esac
+		done
+		;;
+	esac
+
+	if [ $down -gt 0 -a $up = 0 ]
+	then
+		echo "$origin" >> ${OUTDIR}/index-behind.txt
+		echo "index behind: $origin: FreshPorts has $(show "$fpversion"), INDEX has $(show "$indexversions")" >> $reasons
+	else
+		echo "$origin" >> ${OUTDIR}/refresh.txt
+		echo "refresh: $origin: FreshPorts has $(show "$fpversion"), INDEX has $(show "$indexversions")" >> $reasons
+	fi
+done < $out
 
 if [ -s $reasons ]
 then
 	$LOGGER -t $0[$$] < $reasons
 fi
 
-for bucket in refresh not-in-index not-in-freshports
+for bucket in refresh index-behind not-in-index not-in-freshports
 do
 	count=$(wc -l < ${OUTDIR}/${bucket}.txt | tr -d ' ')
 	$LOGGER -t $0[$$] $bucket: $count ports
