@@ -33,8 +33,9 @@
 #   not-in-index.txt        in FreshPorts, absent from the INDEX
 #   not-in-freshports.txt   in the INDEX, absent from FreshPorts
 #
-# Runs as the freshports user.  Building needs sudo twice: to check the index
-# jail's ports tree out, and to run make in that jail.  See SUDOERS below.
+# Runs as the freshports user.  Building needs sudo: to fetch into and check
+# out the index jail's ports tree, and to run make in that jail.  See SUDOERS
+# below.
 # Neither is needed without -b.
 #
 # Only the version is compared, including PORTREVISION and PORTEPOCH.  The
@@ -61,10 +62,11 @@
 # paths below, which are built from INDEX_JAIL_NAME, INDEX_JAIL_BASE_DIR and
 # PORTSDIR in config.sh.
 #
+# freshports     ALL=(ALL) NOPASSWD:/usr/local/bin/git -C /jails/index/usr/ports fetch
 # freshports     ALL=(ALL) NOPASSWD:/usr/local/bin/git -C /jails/index/usr/ports checkout *
 # freshports     ALL=(ALL) NOPASSWD:/usr/sbin/jexec index /usr/bin/make -C /usr/ports index
 #
-# Only -b needs them, and only -c needs the first.  Reading INDEXDIR and
+# Only -b needs them, and only -c needs the first two.  Reading INDEXDIR and
 # INDEXFILE writes nothing and runs as the invoking user, so a run against an
 # INDEX built elsewhere -- or pointed at with -i -- needs no sudo at all.
 #
@@ -185,8 +187,9 @@ export PGUSER=$DBUSER
 tsv=$(mktemp    ${SPOOLINGDIR}/compare-index-tsv.XXXXXX)    || exit 1
 out=$(mktemp    ${SPOOLINGDIR}/compare-index-out.XXXXXX)    || exit 1
 loaded=$(mktemp ${SPOOLINGDIR}/compare-index-loaded.XXXXXX) || exit 1
+reasons=$(mktemp ${SPOOLINGDIR}/compare-index-reasons.XXXXXX) || exit 1
 
-trap "rm -f $tsv $out $loaded" EXIT INT TERM
+trap "rm -f $tsv $out $loaded $reasons" EXIT INT TERM
 
 if [ "${COMMIT}x" != 'x' -a $BUILD = 0 ]
 then
@@ -211,6 +214,17 @@ then
 		if [ ${#COMMIT} -lt 7 ]
 		then
 			fatal "commit '$COMMIT' is too short to be a hash"
+		fi
+
+		#
+		# Fetch first.  The commit FreshPorts has just processed is often
+		# newer than anything this tree has seen, and checkout cannot find
+		# a commit which was never fetched.
+		#
+		info "fetching into $JAILPORTS"
+		if ! $SUDO $GIT -C $JAILPORTS fetch
+		then
+			fatal "could not fetch into $JAILPORTS"
 		fi
 
 		info "checking $JAILPORTS out at $COMMIT"
@@ -362,7 +376,14 @@ SELECT COALESCE(fp.origin, o.origin) AS origin,
        CASE WHEN fp.origin IS NULL THEN 'not-in-freshports'
             WHEN o.origin  IS NULL THEN 'not-in-index'
             ELSE 'refresh'
-       END AS bucket
+       END AS bucket,
+       -- the two sides of the comparison, OSVERSION already stripped, so a
+       -- refresh can say why it is one.  An origin can appear in the INDEX
+       -- more than once, one row per flavor, hence the list.
+       fp.pkgversion AS freshports_version,
+       (SELECT string_agg(DISTINCT i.pkgversion, ' ' ORDER BY i.pkgversion)
+          FROM idx i
+         WHERE i.origin = o.origin) AS index_versions
   FROM fp
   FULL OUTER JOIN idx_origins o ON o.origin = fp.origin
  WHERE fp.origin IS NULL
@@ -403,9 +424,23 @@ do
 	: > ${OUTDIR}/${bucket}.txt
 done
 
-if ! awk -F'\t' -v outdir="$OUTDIR" '{ print $1 >> (outdir "/" $2 ".txt") }' $out
+# The lists stay one port per line; the reason for each refresh goes to
+# $reasons, to be logged.  \N is how \copy writes a NULL: a port FreshPorts
+# holds with no version at all.
+if ! awk -F'\t' -v outdir="$OUTDIR" -v reasons="$reasons" '
+	function show(v) { return v == "\\N" ? "none" : (v == "" ? "empty" : v) }
+	{
+		print $1 >> (outdir "/" $2 ".txt")
+		if ($2 == "refresh")
+			print "refresh: " $1 ": FreshPorts has " show($3) ", INDEX has " show($4) > reasons
+	}' $out
 then
 	fatal "could not write the lists to $OUTDIR"
+fi
+
+if [ -s $reasons ]
+then
+	$LOGGER -t $0[$$] < $reasons
 fi
 
 for bucket in refresh not-in-index not-in-freshports
