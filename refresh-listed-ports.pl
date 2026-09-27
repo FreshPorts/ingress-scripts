@@ -295,6 +295,8 @@ $sth = $dbh->prepare($sql);
 
 my $refreshed = 0;
 my $dryrunned = 0;
+my $unchanged = 0;
+my $missed    = 0;
 my $failed    = 0;
 my $notfound  = 0;
 
@@ -360,24 +362,68 @@ while (my $category_port = <$LIST>) {
 			# directory.  Reported whether or not it moved this time: the
 			# reason is what makes the list worth reading.
 			#
-			foreach my $why (WhyVersionComesFromWhere($category_port)) {
+			my @why = WhyVersionComesFromWhere($category_port);
+
+			foreach my $why (@why) {
 				my $reason = "$ME $category_port: $why";
 
 				print $reason . "\n";
 				FreshPorts::Utilities::Report('info', $reason);
 			}
 
+			# the lines which name an assignment, as opposed to a reference
+			# we followed or a note that we found nothing
+			my @assignments = grep { /^(?:PORTVERSION|PORTREVISION|PORTEPOCH|DISTVERSION)/ } @why;
+			my $outside     = grep { /\(outside this port\)/ } @assignments;
+
+			# An assignment whose value is a reference -- PORTVERSION=
+			# ${PYTHON_DEFAULT} -- sits inside the port but takes its value
+			# from wherever that variable is set.  Only a literal value can
+			# tell us a commit to this port must have changed it.
+			my $referenced  = grep { /\$[\{\(]/ } @assignments;
+
+			if ($was eq $now) {
+				#
+				# The database already held what the Makefile says, so this
+				# port never needed refreshing.  compare-index.sh listed it
+				# because the INDEX disagrees with the ports tree -- the two
+				# were read at different commits -- which is a fact about
+				# those two, not about the database.
+				#
+				my $nochange = "$ME $category_port: no change needed; the INDEX and the ports tree disagree, not the database";
+
+				print $nochange . "\n";
+				FreshPorts::Utilities::Report('notice', $nochange);
+				$unchanged++;
+			} elsif (@assignments && !$outside && !$referenced) {
+				#
+				# The version moved and nothing outside this port sets it, so
+				# only a commit to this port's own directory can have moved
+				# it -- and we are finding out from the INDEX rather than
+				# from that commit.  Commit processing missed it.
+				#
+				FreshPorts::Utilities::ReportError('err',
+					"$ME $category_port: version changed to $now and is set only within the port: a commit to $category_port was missed", 0);
+				$missed++;
+			}
+
+			#
+			# A port whose version did not move is still saved -- other
+			# fields may have changed -- but it is counted as needing no
+			# change rather than as a refresh, so the two counts are
+			# separate facts which add up to the ports processed.
+			#
 			if ($dryrun) {
 				# everything above reads; save() and commit() are the only
 				# things which write, so a dry run simply stops here
 				$dbh->rollback();
-				$dryrunned++;
+				$dryrunned++ if ($was ne $now);
 			} else {
 				$port->save($currentBranch);
 				# commit each port on its own, so a failure part way through
 				# does not throw away the ports already done
 				$dbh->commit();
-				$refreshed++;
+				$refreshed++ if ($was ne $now);
 			}
 		} else {
 			$dbh->rollback();
@@ -394,14 +440,23 @@ close($LIST) if ($filename ne '-');
 
 $sth->finish();
 
-my $tally = "$ME ends: $refreshed refreshed, $failed failed, $notfound not found";
+my $tally = "$ME ends: $refreshed refreshed, $unchanged needed no change, $failed failed, $notfound not found";
 
 if ($dryrun) {
-	$tally = "$ME ends: $dryrunned would be refreshed, $failed failed, $notfound not found (dry run, nothing written)";
+	$tally = "$ME ends: $dryrunned would be refreshed, $unchanged needed no change, $failed failed, $notfound not found (dry run, nothing written)";
 }
 
 print $tally . "\n";
 FreshPorts::Utilities::Report('info', $tally);
+
+#
+# Said again on its own, because a missed commit is not a counter anyone
+# should have to notice at the end of a line.
+#
+if ($missed) {
+	FreshPorts::Utilities::ReportError('err',
+		"$ME $missed port(s) changed version with no commit processed for them: commits have been missed", 0);
+}
 
 $dbh->commit();
 $dbh->disconnect();
