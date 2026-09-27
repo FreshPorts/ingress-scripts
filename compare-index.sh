@@ -394,8 +394,15 @@ SELECT COALESCE(fp.origin, o.origin) AS origin,
        -- the two sides of the comparison, OSVERSION already stripped, so a
        -- refresh can say why it is one.  An origin can appear in the INDEX
        -- more than once, one row per flavor, hence the list.
-       fp.pkgversion AS freshports_version,
-       (SELECT string_agg(DISTINCT i.pkgversion, ' ' ORDER BY i.pkgversion)
+       --
+       -- A version stripped down to nothing goes out as (empty), never as
+       -- ''.  The shell reads these rows splitting on tabs, and a tab is
+       -- whitespace to read: two in a row are one separator, so an empty
+       -- field vanishes and the rest shift left.  In the list, an empty
+       -- entry would vanish the same way when the list is split on spaces.
+       COALESCE(NULLIF(fp.pkgversion, ''), '(empty)') AS freshports_version,
+       (SELECT string_agg(DISTINCT COALESCE(NULLIF(i.pkgversion, ''), '(empty)'), ' '
+                          ORDER BY COALESCE(NULLIF(i.pkgversion, ''), '(empty)'))
           FROM idx i
          WHERE i.origin = o.origin) AS index_versions
   FROM fp
@@ -442,11 +449,12 @@ done
 
 # \N is how \copy writes a NULL: a port FreshPorts holds with no version at
 # all, or a side which has no version because the origin is missing from it.
+# (empty) is how the query writes a version stripped down to nothing.
 show() {
 	case "$1" in
-	'\N')	echo 'none'  ;;
-	'')	echo 'empty' ;;
-	*)	echo "$1"    ;;
+	'\N')		echo 'none'  ;;
+	'(empty)')	echo 'empty' ;;
+	*)		echo "$1"    ;;
 	esac
 }
 
@@ -474,12 +482,20 @@ do
 	down=0
 
 	case "$fpversion" in
-	'\N'|'')
+	'\N'|'(empty)')
 		# nothing to order against; refreshing is the harmless choice
 		;;
 	*)
 		for indexversion in $indexversions
 		do
+			# nothing to order against, so the flavors cannot be said to
+			# agree; count it as up, since refreshing is the harmless choice
+			if [ "$indexversion" = '(empty)' ]
+			then
+				up=$((up + 1))
+				continue
+			fi
+
 			case $($PKG version -t "$fpversion" "$indexversion" 2>/dev/null) in
 			'<')	up=$((up + 1))     ;;
 			'>')	down=$((down + 1)) ;;
