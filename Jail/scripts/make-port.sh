@@ -28,5 +28,6 @@ ${MAKE} -V PORTNAME       -V PKGNAME             -V DESCR                -V CATE
         -V DISTINFO_FILE  -V _LICENSE_RESTRICTED -V MANUAL_PACKAGE_BUILD -V LICENSE_PERMS   \
         -V CONFLICTS      -V CONFLICTS_BUILD     -V CONFLICTS_INSTALL    -V OPTIONS_NAME    \
         -V WWW            -V TEST_DEPENDS        -V BUILD_RUN_DEPENDS    -V USE_RC_SUBR:ts: \
+        -V PKGVERSION                                                                        \
         -f ${REPO_PATH}/${PORT}/Makefile \
         PORTSDIR=${REPO_PATH}
