@@ -340,37 +340,49 @@ started=$(/bin/date +%s)
 # psql complains on stderr and still exits 0, so a broken query, a missing
 # table or a refused connection all look like a clean run with no differences.
 if ! $PSQL --quiet --no-psqlrc -v ON_ERROR_STOP=1 <<EOF
+--
+-- pkgversion is the version the comparison actually uses, worked out once
+-- as the rows land rather than once per comparison.  Same three rules as
+-- the FreshPorts side below: take what follows the last hyphen, strip an
+-- OSVERSION, and write (empty) for what is left of a version which was
+-- nothing but an OSVERSION.
+--
+-- (empty), never ''.  The shell reads these rows splitting on tabs, and a
+-- tab is whitespace to read: two in a row are one separator, so an empty
+-- field vanishes and the rest shift left.  In the version list, an empty
+-- entry would vanish the same way when the list is split on spaces.
+--
+-- Both sides are written this way, so the column holds exactly what is
+-- compared and exactly what is shown, and the two cannot drift apart.
+--
+-- Generated rather than filled in afterwards: \copy computes it as it
+-- loads, so there is no second pass over the rows and none of them are
+-- rewritten.  regexp_replace, NULLIF and COALESCE are all immutable, which
+-- a generated column requires.  Needs PostgreSQL 12 or newer.
+--
 CREATE TEMP TABLE index_ports (
     origin       text NOT NULL,
     pkgname      text NOT NULL,
     package_name text NOT NULL,
-    pkgversion   text
+    pkgversion   text NOT NULL GENERATED ALWAYS AS (
+                     COALESCE(NULLIF(regexp_replace(regexp_replace(
+                       regexp_replace(pkgname, '^.*-', ''),
+                       '\.1[45][0-9]{5}(\$|[_,])', '\1'),
+                       '^1[45][0-9]{5}(\$|[_,])', '\1'), ''), '(empty)')) STORED
 );
 
 \copy index_ports (origin, pkgname, package_name) FROM '$tsv'
 
 \copy (SELECT count(*) FROM index_ports) TO '$loaded'
 
---
--- The version the comparison actually uses, worked out once here rather
--- than once per comparison.  Same two rules as the FreshPorts side below:
--- take what follows the last hyphen, then strip an OSVERSION.
---
-UPDATE index_ports
-   SET pkgversion = regexp_replace(regexp_replace(
-                      regexp_replace(pkgname, '^.*-', ''),
-                      '\.1[45][0-9]{5}(\$|[_,])', '\1'),
-                      '^1[45][0-9]{5}(\$|[_,])', '\1');
-
 -- (origin, pkgversion) serves the NOT EXISTS below as a plain index probe,
 -- and origin alone serves the version list beside it
 CREATE INDEX ON index_ports (origin, pkgversion);
 
 --
--- VACUUM as well as ANALYZE.  The UPDATE above rewrote every row, leaving
--- the old ones dead and the visibility map unset, which makes an index only
--- scan visit the heap for every probe anyway.  VACUUM sets the map, so the
--- probes stay in the index where they belong.
+-- VACUUM as well as ANALYZE.  A COPY leaves the visibility map unset, which
+-- makes an index only scan visit the heap for every probe anyway.  VACUUM
+-- sets the map, so the probes stay in the index where they belong.
 --
 VACUUM ANALYZE index_ports;
 
@@ -385,14 +397,15 @@ VACUUM ANALYZE index_ports;
 CREATE TEMP VIEW comparison AS
 WITH fp AS (
     SELECT pa.category || '/' || pa.name AS origin,
-           regexp_replace(regexp_replace(
+           -- (empty) rather than '', for the reason given at index_ports above
+           COALESCE(NULLIF(regexp_replace(regexp_replace(
              pa.version
              || CASE WHEN COALESCE(pa.revision,  '') NOT IN ('', '0')
                      THEN '_' || pa.revision  ELSE '' END
              || CASE WHEN COALESCE(pa.portepoch, '') NOT IN ('', '0')
                      THEN ',' || pa.portepoch ELSE '' END,
              '\.1[45][0-9]{5}(\$|[_,])', '\1'),
-             '^1[45][0-9]{5}(\$|[_,])', '\1') AS pkgversion
+             '^1[45][0-9]{5}(\$|[_,])', '\1'), ''), '(empty)') AS pkgversion
       FROM ports_active pa
      WHERE pa.pathname LIKE '${ELEMENT_HEAD_PREFIX}/%'
 ),
@@ -404,18 +417,11 @@ SELECT COALESCE(fp.origin, o.origin) AS origin,
             WHEN o.origin  IS NULL THEN 'not-in-index'
             ELSE 'refresh'
        END AS bucket,
-       -- the two sides of the comparison, OSVERSION already stripped, so a
-       -- refresh can say why it is one.  An origin can appear in the INDEX
-       -- more than once, one row per flavor, hence the list.
-       --
-       -- A version stripped down to nothing goes out as (empty), never as
-       -- ''.  The shell reads these rows splitting on tabs, and a tab is
-       -- whitespace to read: two in a row are one separator, so an empty
-       -- field vanishes and the rest shift left.  In the list, an empty
-       -- entry would vanish the same way when the list is split on spaces.
-       COALESCE(NULLIF(fp.pkgversion, ''), '(empty)') AS freshports_version,
-       (SELECT string_agg(DISTINCT COALESCE(NULLIF(i.pkgversion, ''), '(empty)'), ' '
-                          ORDER BY COALESCE(NULLIF(i.pkgversion, ''), '(empty)'))
+       -- the two sides of the comparison, already normalised on both sides,
+       -- so a refresh can say why it is one.  An origin can appear in the
+       -- INDEX more than once, one row per flavor, hence the list.
+       fp.pkgversion AS freshports_version,
+       (SELECT string_agg(DISTINCT i.pkgversion, ' ' ORDER BY i.pkgversion)
           FROM index_ports i
          WHERE i.origin = o.origin) AS index_versions
   FROM fp
