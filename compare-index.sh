@@ -343,15 +343,36 @@ if ! $PSQL --quiet --no-psqlrc -v ON_ERROR_STOP=1 <<EOF
 CREATE TEMP TABLE index_ports (
     origin       text NOT NULL,
     pkgname      text NOT NULL,
-    package_name text NOT NULL
+    package_name text NOT NULL,
+    pkgversion   text
 );
 
-\copy index_ports FROM '$tsv'
+\copy index_ports (origin, pkgname, package_name) FROM '$tsv'
 
 \copy (SELECT count(*) FROM index_ports) TO '$loaded'
 
-CREATE INDEX ON index_ports (origin);
-ANALYZE index_ports;
+--
+-- The version the comparison actually uses, worked out once here rather
+-- than once per comparison.  Same two rules as the FreshPorts side below:
+-- take what follows the last hyphen, then strip an OSVERSION.
+--
+UPDATE index_ports
+   SET pkgversion = regexp_replace(regexp_replace(
+                      regexp_replace(pkgname, '^.*-', ''),
+                      '\.1[45][0-9]{5}(\$|[_,])', '\1'),
+                      '^1[45][0-9]{5}(\$|[_,])', '\1');
+
+-- (origin, pkgversion) serves the NOT EXISTS below as a plain index probe,
+-- and origin alone serves the version list beside it
+CREATE INDEX ON index_ports (origin, pkgversion);
+
+--
+-- VACUUM as well as ANALYZE.  The UPDATE above rewrote every row, leaving
+-- the old ones dead and the visibility map unset, which makes an index only
+-- scan visit the heap for every probe anyway.  VACUUM sets the map, so the
+-- probes stay in the index where they belong.
+--
+VACUUM ANALYZE index_ports;
 
 --
 -- strip_osversion(): an OSVERSION says more about the machine which built the
@@ -375,14 +396,6 @@ WITH fp AS (
       FROM ports_active pa
      WHERE pa.pathname LIKE '${ELEMENT_HEAD_PREFIX}/%'
 ),
-idx AS (
-    SELECT origin,
-           regexp_replace(regexp_replace(
-             regexp_replace(pkgname, '^.*-', ''),
-             '\.1[45][0-9]{5}(\$|[_,])', '\1'),
-             '^1[45][0-9]{5}(\$|[_,])', '\1') AS pkgversion
-      FROM index_ports
-),
 idx_origins AS (
     SELECT DISTINCT origin FROM index_ports
 )
@@ -403,13 +416,13 @@ SELECT COALESCE(fp.origin, o.origin) AS origin,
        COALESCE(NULLIF(fp.pkgversion, ''), '(empty)') AS freshports_version,
        (SELECT string_agg(DISTINCT COALESCE(NULLIF(i.pkgversion, ''), '(empty)'), ' '
                           ORDER BY COALESCE(NULLIF(i.pkgversion, ''), '(empty)'))
-          FROM idx i
+          FROM index_ports i
          WHERE i.origin = o.origin) AS index_versions
   FROM fp
   FULL OUTER JOIN idx_origins o ON o.origin = fp.origin
  WHERE fp.origin IS NULL
     OR o.origin  IS NULL
-    OR NOT EXISTS (SELECT 1 FROM idx i
+    OR NOT EXISTS (SELECT 1 FROM index_ports i
                     WHERE i.origin     = fp.origin
                       AND i.pkgversion = fp.pkgversion)
  ORDER BY bucket, origin;
