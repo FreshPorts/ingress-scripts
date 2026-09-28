@@ -339,7 +339,14 @@ started=$(/bin/date +%s)
 # ON_ERROR_STOP is what makes a failed statement a failed run.  Without it
 # psql complains on stderr and still exits 0, so a broken query, a missing
 # table or a refused connection all look like a clean run with no differences.
-if ! $PSQL --quiet --no-psqlrc -v ON_ERROR_STOP=1 <<EOF
+# sslcertmode=disable to avoid: could not open certificate file
+# "/root/.postgresql/postgresql.crt": Permission denied.  The server asks for
+# a client certificate, libpq looks for one under $HOME, and $HOME is not
+# ours when this is run through su.  We authenticate by password from
+# ~/.pgpass, so there is no certificate to find.  Same reason, same string,
+# as most-active-users.sh.
+#
+if ! $PSQL --quiet --no-psqlrc -v ON_ERROR_STOP=1 "sslcertmode=disable" <<EOF
 --
 -- pkgversion is the version the comparison actually uses, worked out once
 -- as the rows land rather than once per comparison.  Same three rules as
