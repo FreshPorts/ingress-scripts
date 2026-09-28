@@ -45,7 +45,8 @@
 # below.
 # Neither is needed without -b.
 #
-# Only the version is compared, including PORTREVISION and PORTEPOCH.  The
+# Only the version is compared: ports.pkgversion, which is make's own
+# PKGVERSION and so includes PORTREVISION and PORTEPOCH.  The
 # package name is not: a port's PKGNAMEPREFIX follows DEFAULT_VERSIONS, so
 # py311-foo and py312-foo are the same port at the same version.  An
 # OSVERSION spliced into a version is ignored too, since it says more about
@@ -137,9 +138,9 @@ JAILPORTS="${INDEX_JAIL_BASE_DIR}${PORTSDIR}"
 # pathnames look like /ports/head/category/port -- that prefix is
 # DB_Root_Prefix_PORTS in the perl config, not PORTSDIR.
 #
-# ports_active already restricts itself to head.  Saying so again costs one
-# comparison on a column the view hands us, makes the intent visible, and
-# means this still selects head if that view is ever widened.
+# The query reads the base tables, not ports_active, so this is the only
+# thing picking head out.  It also gives the origin: the pathname with this
+# prefix taken off.
 ELEMENT_HEAD_PREFIX="/ports/head"
 
 # Spelled out in full because sudoers matches the command line literally, and
@@ -394,27 +395,42 @@ CREATE INDEX ON index_ports (origin, pkgversion);
 VACUUM ANALYZE index_ports;
 
 --
--- strip_osversion(): an OSVERSION says more about the machine which built the
--- INDEX than about the port, so take it out of the version before comparing.
+-- strip_osversion(): an OSVERSION says more about the machine which ran make
+-- than about the port, so take it out of the version before comparing.  Both
+-- sides carry one now, and not necessarily the same one: the INDEX's comes
+-- from the index jail, pkgversion's from wherever that port was refreshed.
 -- It appears in two shapes:
 --
 --   spliced in    13.1.0.1501502,2  ->  13.1.0,2
 --   on its own    1501503           ->  (nothing left)
 --
 CREATE TEMP VIEW comparison AS
+--
+-- The FreshPorts side is ports.pkgversion: what make -V PKGVERSION said when
+-- the port was last refreshed, so the same value the INDEX was built from,
+-- rather than one put back together from PORTVERSION, PORTREVISION and
+-- PORTEPOCH.  ports_active does not carry that column, so this reads the base
+-- tables, and does by hand what the view does: element status 'A', or
+-- deleted ports come along too.
+--
+-- A NULL pkgversion stays NULL -- \N to the shell, logged as none -- rather
+-- than becoming (empty): a port never refreshed since the column was added is
+-- not the same thing as a version stripped down to nothing.
+--
 WITH fp AS (
-    SELECT pa.category || '/' || pa.name AS origin,
+    SELECT substr(EP.pathname, length('${ELEMENT_HEAD_PREFIX}/') + 1) AS origin,
            -- (empty) rather than '', for the reason given at index_ports above
-           COALESCE(NULLIF(regexp_replace(regexp_replace(
-             pa.version
-             || CASE WHEN COALESCE(pa.revision,  '') NOT IN ('', '0')
-                     THEN '_' || pa.revision  ELSE '' END
-             || CASE WHEN COALESCE(pa.portepoch, '') NOT IN ('', '0')
-                     THEN ',' || pa.portepoch ELSE '' END,
-             '\.1[45][0-9]{5}(\$|[_,])', '\1'),
-             '^1[45][0-9]{5}(\$|[_,])', '\1'), ''), '(empty)') AS pkgversion
-      FROM ports_active pa
-     WHERE pa.pathname LIKE '${ELEMENT_HEAD_PREFIX}/%'
+           CASE WHEN P.pkgversion IS NULL THEN NULL
+                ELSE COALESCE(NULLIF(regexp_replace(regexp_replace(
+                       P.pkgversion,
+                       '\.1[45][0-9]{5}(\$|[_,])', '\1'),
+                       '^1[45][0-9]{5}(\$|[_,])', '\1'), ''), '(empty)')
+           END AS pkgversion
+      FROM ports P
+      JOIN element          E  ON E.id          = P.element_id
+      JOIN element_pathname EP ON EP.element_id = P.element_id
+     WHERE E.status = 'A'
+       AND EP.pathname LIKE '${ELEMENT_HEAD_PREFIX}/%'
 ),
 idx_origins AS (
     SELECT DISTINCT origin FROM index_ports
