@@ -110,12 +110,18 @@ FreshPorts::Branches::SetBranchInDB($dbh, $currentBranch);
 # until that view is recreated.  The base tables do, and element_pathname
 # gives us head and the origin in one go.
 #
+# Going round the view means doing by hand what it does for us: element
+# status 'A', or deleted ports come along too.
+#
 my $sql = "
-  SELECT P.id       AS port_id,
+  SELECT P.id        AS port_id,
          EP.pathname AS pathname
     FROM ports P,
+         element E,
          element_pathname EP
    WHERE EP.element_id = P.element_id
+     AND E.id          = P.element_id
+     AND E.status      = 'A'
      AND EP.pathname LIKE '" . $FreshPorts::Constants::Ports_HEAD_commit . "%'";
 
 if (!$all) {
