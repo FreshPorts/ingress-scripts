@@ -12,6 +12,11 @@ FRESHPORTS_FREEBSD_SVN_URL="https://svn.freebsd.org"
 FETCH="/usr/bin/fetch"
 FETCH_OPTIONS="-qo"
 
+# compare-index-daily.sh pings this after a run which worked, so a run which
+# stops happening is noticed.  The URL carries a token, which is why it is
+# here and not in the script.  Empty means do not ping.
+WATCHGOOSE_COMPARE_INDEX=""
+
 # At one time, this was where the website was installed.
 # Do not include a trailing slash
 # This is usually the home directory of the freshports user

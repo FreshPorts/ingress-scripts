@@ -89,6 +89,20 @@ RESULT=$?
 if [ $RESULT = 0 ]
 then
 	SUBJECT="$SUBJECT -- $COMMIT"
+
+	#
+	# Tell watchgoose the run finished.  On success only: a ping after a
+	# failed run would report the check as healthy when it is not, which is
+	# worse than no monitoring at all.
+	#
+	# The URL carries a token, so it lives in config.sh rather than here.
+	# Empty means do not ping, which keeps this quiet on a host which is not
+	# being watched.
+	#
+	if [ "${WATCHGOOSE_COMPARE_INDEX}x" != 'x' ]
+	then
+		$FETCH --output /dev/null -q --retry --retry-delay=10 "$WATCHGOOSE_COMPARE_INDEX"
+	fi
 else
 	SUBJECT="$SUBJECT -- FAILED at $COMMIT"
 fi
@@ -97,7 +111,14 @@ fi
 # Mailed whether it worked or not: a silent failure at 02:04 is one nobody
 # finds until the lists go stale.
 #
-mail -s "$SUBJECT" "$TO_EMAIL" < ${SPOOL_FILE}
+# make index names every category as it goes, sixty-odd lines of
+# '--- describe.foo ---' around the five lines anyone reads.  They are left
+# in the spool file, which is what the log wants, and taken out of the mail.
+# Removing the markers rather than whole lines because the first and last are
+# run together with the text either side of them.
+#
+sed -e 's/--- describe\.[^ ]* ---//g' -e '/^[[:space:]]*$/d' ${SPOOL_FILE} |
+	mail -s "$SUBJECT" "$TO_EMAIL"
 
 logger -p local3.notice -t FreshPorts $0 has completed.
 
