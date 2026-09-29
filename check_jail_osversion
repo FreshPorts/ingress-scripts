@@ -1,0 +1,90 @@
+#!/bin/sh
+
+# Nagios check: two jails are on the same version of FreeBSD.
+#
+# usage: check_jail_osversion [JAILBASE JAILBASE]
+#
+# Defaults to /jails/index and /jails/freshports.
+#
+# Why this matters to FreshPorts: compare-index.sh compares PKGVERSION from
+# the database against PKGVERSION from the INDEX.  The database side is
+# built in the freshports jail and the INDEX in the index jail, and for the
+# hundred or so ports which splice ${OSVERSION} into their version -- the
+# kmod ports, audio/oss and friends -- the two agree only while both jails
+# report the same OSVERSION.  Let the jails drift apart and those ports
+# start showing as differences for a reason which has nothing to do with a
+# port having changed.
+#
+# OSVERSION is read the way bsd.port.mk reads it: __FreeBSD_version from
+# sys/param.h in that jail, falling back to the running kernel when a jail
+# has no includes.  No jexec, so the check needs no privileges; it only
+# reads a file.
+
+OK=0
+CRITICAL=2
+UNKNOWN=3
+
+BASE_ONE=${1:-/jails/index}
+BASE_TWO=${2:-/jails/freshports}
+
+SYSCTL=/sbin/sysctl
+
+#
+# What bsd.port.mk would call OSVERSION inside this jail.  Prints the value
+# and the source, so the check can say where it came from.
+#
+osversion() {
+	base=$1
+	param="${base}/usr/include/sys/param.h"
+
+	if [ -r "$param" ]
+	then
+		awk '$1 == "#define" && $2 == "__FreeBSD_version" { print $3, "param.h"; exit }' "$param"
+		return
+	fi
+
+	# no includes in the jail, so bsd.port.mk asks the kernel -- and a jail
+	# shares the host's
+	echo "$($SYSCTL -n kern.osreldate) kernel"
+}
+
+for base in $BASE_ONE $BASE_TWO
+do
+	if [ ! -d "$base" ]
+	then
+		echo "OSVERSION UNKNOWN - no such jail: $base"
+		exit $UNKNOWN
+	fi
+done
+
+NAME_ONE=$(basename $BASE_ONE)
+NAME_TWO=$(basename $BASE_TWO)
+
+set -- $(osversion $BASE_ONE)
+ONE=$1
+ONE_FROM=$2
+
+set -- $(osversion $BASE_TWO)
+TWO=$1
+TWO_FROM=$2
+
+for value in "$ONE" "$TWO"
+do
+	case "$value" in
+	'' | *[!0-9]*)
+		echo "OSVERSION UNKNOWN - could not read __FreeBSD_version for $NAME_ONE or $NAME_TWO"
+		exit $UNKNOWN
+		;;
+	esac
+done
+
+PERFDATA="${NAME_ONE}=${ONE} ${NAME_TWO}=${TWO}"
+
+if [ "$ONE" != "$TWO" ]
+then
+	echo "OSVERSION CRITICAL - $NAME_ONE $ONE ($ONE_FROM), $NAME_TWO $TWO ($TWO_FROM) | $PERFDATA"
+	exit $CRITICAL
+fi
+
+echo "OSVERSION OK - $NAME_ONE and $NAME_TWO both $ONE ($ONE_FROM, $TWO_FROM) | $PERFDATA"
+exit $OK
