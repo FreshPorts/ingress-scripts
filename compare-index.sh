@@ -564,8 +564,9 @@ fi
 for bucket in refresh index-behind not-in-index not-in-freshports
 do
 	count=$(wc -l < ${OUTDIR}/${bucket}.txt | tr -d ' ')
-	$LOGGER -t $0[$$] $bucket: $count ports
-	echo "${count}	${OUTDIR}/${bucket}.txt"
+	msg="${count}	${OUTDIR}/${bucket}.txt"
+	$LOGGER -t $0[$$] "$msg"
+	echo "$msg"
 done
 
 #
