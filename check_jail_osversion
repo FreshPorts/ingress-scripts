@@ -19,6 +19,36 @@
 # sys/param.h in that jail, falling back to the running kernel when a jail
 # has no includes.  No jexec, so the check needs no privileges; it only
 # reads a file.
+#
+# WHEN THIS GOES RED, AND IT IS BECAUSE A JAIL WAS UPGRADED
+#
+# Those hundred-odd ports hold an OSVERSION which was true when each was
+# last refreshed, and a port is refreshed when something commits to it.  So
+# after an upgrade they carry the old OSVERSION until their next commit,
+# which for some of them is years away.
+#
+# compare-index.sh will not catch it: it takes the OSVERSION out of both
+# sides before comparing, which is the component that just changed.
+#
+# Refresh them instead.  This lists them -- the ports whose PKGVERSION is
+# not what version, revision and portepoch compose to, which is exactly the
+# ports carrying an OSVERSION:
+#
+#   SELECT C.name || '/' || E.name
+#     FROM ports P
+#     JOIN element          E  ON E.id          = P.element_id
+#     JOIN element_pathname EP ON EP.element_id = P.element_id
+#     JOIN categories       C  ON C.id          = P.category_id
+#    WHERE E.status = 'A'
+#      AND EP.pathname LIKE '/ports/head/%'
+#      AND P.pkgversion IS DISTINCT FROM
+#          P.version
+#          || CASE WHEN COALESCE(P.revision,  '') NOT IN ('', '0') THEN '_' || P.revision  ELSE '' END
+#          || CASE WHEN COALESCE(P.portepoch, '') NOT IN ('', '0') THEN ',' || P.portepoch ELSE '' END;
+#
+# and refresh-listed-ports.pl takes that list.  Not set-pkgversion.pl: a few
+# of these ports have PORTVERSION set to ${OSVERSION} itself, so their
+# version column ages too, and only a refresh puts both right.
 
 OK=0
 CRITICAL=2
