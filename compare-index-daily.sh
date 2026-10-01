@@ -103,6 +103,24 @@ then
 	then
 		$FETCH --output /dev/null -q --retry --retry-delay=10 "$WATCHGOOSE_COMPARE_INDEX"
 	fi
+
+	#
+	# Hand the work to job-waiting.pl, which runs refresh-from-index.sh.
+	# The flag only goes up when there is something in the list: raising it
+	# for an empty one would start a job with nothing to do, and the usual
+	# night has nothing to do.
+	#
+	# Scheduled rather than run here: a refresh writes to the database and
+	# clears caches, which belongs in the queue with everything else of that
+	# kind, not in a cron job holding the INDEX build open behind it.
+	#
+	REFRESH_LIST="${SPOOLINGDIR}/refresh.txt"
+
+	if [ -s $REFRESH_LIST ]
+	then
+		logger -p local3.notice -t FreshPorts $0 scheduling a refresh of $(wc -l < $REFRESH_LIST | tr -d ' ') ports
+		touch ${REFRESHFROMINDEXFLAG}
+	fi
 else
 	SUBJECT="$SUBJECT -- FAILED at $COMMIT"
 fi
