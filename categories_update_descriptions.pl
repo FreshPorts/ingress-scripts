@@ -3,7 +3,7 @@
 #
 # $Id: categories_update_descriptions.pl,v 1.3 2007-10-11 18:14:38 dan Exp $
 #
-# Copyright (c) 2007  DVL Software
+# Copyright (c) 2007-2026 Dan Langille
 #
 
 #use 5.006;

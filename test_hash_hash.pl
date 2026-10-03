@@ -2,7 +2,7 @@
 #
 # $Id: test_hash_hash.pl,v 1.3 2001-12-31 15:27:47 dan Exp $
 #
-# Copyright (c) 2001 DVL Software
+# Copyright (c) 2001-2026 Dan Langille
 #
 use strict;
 

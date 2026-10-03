@@ -2,7 +2,7 @@
 #
 # $Id: process_updating.sh,v 1.2 2006-12-17 12:04:02 dan Exp $
 #
-# Copyright (c) 2003-2004 DVL Software Limited
+# Copyright (c) 2003-2026 Dan Langille
 #
 # Check to see if the switch is set, and if so, load the
 # /usr/ports/UPDATING file into the database

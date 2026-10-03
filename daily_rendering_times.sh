@@ -2,7 +2,7 @@
 #
 # $Id: daily_rendering_times.sh,v 1.2 2006-12-17 12:04:00 dan Exp $
 #
-# Copyright (c) 2004 DVL Software Limited
+# Copyright (c) 2004-2026 Dan Langille
 #
 # archive away all the messages which were created yesterday.
 # this script is designed to be called like this from crontab:

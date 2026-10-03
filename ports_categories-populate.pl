@@ -2,7 +2,7 @@
 #
 # $Id: ports_categories-populate.pl,v 1.2 2006-12-17 12:04:01 dan Exp $
 #
-# Copyright (c) 1999-2003 DVL Software
+# Copyright (c) 1999-2026 Dan Langille
 #
 
 use strict;

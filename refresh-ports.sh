@@ -1,7 +1,7 @@
 #!/bin/sh
 # $Id$
 #
-# Copyright (c) 2003-2021 DVL Software Limited
+# Copyright (c) 2003-2026 Dan Langille
 #
 # Check to see if the switch is set, and if so, process the contents of the
 # ports_to_refresh table.

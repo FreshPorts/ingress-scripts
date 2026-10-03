@@ -2,7 +2,7 @@
 #
 # $Id: fetch-refresh-ports.pl,v 1.8 2007-10-11 18:14:03 dan Exp $
 #
-# Copyright (c) 2001 DVL Software
+# Copyright (c) 2001-2026 Dan Langille
 #
 
 use strict;

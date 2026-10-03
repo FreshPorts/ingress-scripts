@@ -2,7 +2,7 @@
 #
 # $Id: vuln_latest.pl,v 1.12 2008-09-04 14:33:09 dan Exp $
 #
-# Copyright (c) 2006 DVL Software
+# Copyright (c) 2006-2026 Dan Langille
 #
 
 use strict;

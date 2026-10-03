@@ -2,7 +2,7 @@
 #
 # $Id: archive-compress.sh,v 1.4 2002-02-02 17:04:49 dan Exp $
 #
-# Copyright (c) 1999-2000 DVL Software
+# Copyright (c) 1999-2026 Dan Langille
 #
 # I'm not so sure this is used any more
 #

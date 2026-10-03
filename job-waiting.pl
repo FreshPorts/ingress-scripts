@@ -2,7 +2,7 @@
 #
 # $Id: job-waiting.pl,v 1.3 2007-01-29 00:17:35 dan Exp $
 #
-# Copyright (c) 1999-2025 Dan Langille
+# Copyright (c) 1999-2026 Dan Langille
 #
 # This script is invoked by the freshports.sh script
 # usually located in /usr/local/libexec/freshports-service/

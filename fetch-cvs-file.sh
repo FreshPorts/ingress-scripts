@@ -2,7 +2,7 @@
 #
 # $Id: fetch-cvs-file.sh,v 1.11 2007-03-17 13:12:07 dan Exp $
 #
-# Copyright (c) 1999-2001 DVL Software
+# Copyright (c) 1999-2026 Dan Langille
 #
 # This script used to fetch files from the cvs repo into our own tree.
 #
@@ -10,7 +10,7 @@
 #
 # $Id: fetch-cvs-file.sh,v 1.11 2007-03-17 13:12:07 dan Exp $
 #
-# Copyright (c) 2000-2004 DVL Software
+# Copyright (c) 2000-2026 Dan Langille
 #
 echo "num of params = $#"
 if  [ $# -ne 6 ];

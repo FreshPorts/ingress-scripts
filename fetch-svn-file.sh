@@ -2,7 +2,7 @@
 #
 # $Id: fetch-svn-file.sh,v 1.6 2012-08-15 11:49:10 dan Exp $
 #
-# Copyright (c) 1999-2012 DVL Software
+# Copyright (c) 1999-2026 Dan Langille
 #
 # This script used to fetch files from the svn repo into our own tree.
 

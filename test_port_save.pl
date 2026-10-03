@@ -2,7 +2,7 @@
 #
 # $Id: test_port_save.pl,v 1.5 2001-12-22 04:30:43 dan Exp $
 #
-# Copyright (c) 2001 DVL Software
+# Copyright (c) 2001-2026 Dan Langille
 #
 
 use strict;

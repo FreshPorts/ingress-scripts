@@ -2,7 +2,7 @@
 #
 # $Id: report-security-notice.pl,v 1.4 2007-04-19 22:33:12 dan Exp $
 #
-# Copyright (c) 2001-2006 DVL Software
+# Copyright (c) 2001-2026 Dan Langille
 #
 
 use strict;

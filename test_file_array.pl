@@ -2,7 +2,7 @@
 #
 # $Id: test_file_array.pl,v 1.2 2001-12-22 04:30:42 dan Exp $
 #
-# Copyright (c) 2001 DVL Software
+# Copyright (c) 2001-2026 Dan Langille
 #
 use strict;
 

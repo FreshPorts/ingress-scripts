@@ -2,7 +2,7 @@
 #
 # $Id: process_vuxml.sh,v 1.7 2012-07-24 15:56:40 dan Exp $
 #
-# Copyright (c) 2003-2005 DVL Software Limited
+# Copyright (c) 2003-2026 Dan Langille
 #
 
 LOGGERTAG="process_vuxml.sh"

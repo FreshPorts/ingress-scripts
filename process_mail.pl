@@ -2,7 +2,7 @@
 #
 # $Id: process_mail.pl,v 1.7 2012-07-12 19:26:10 dan Exp $
 #
-# Copyright (c) 2001-2003  DVL Software
+# Copyright (c) 2001-2026 Dan Langille
 #
 # Process determine if this is cvs or svn email, and invoke the correct code.
 # and convert it to XML output according to the FreshPorts DTD.

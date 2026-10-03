@@ -2,7 +2,7 @@
 #
 # $Id: archive-compress-monthly.sh,v 1.1 2002-02-02 17:04:49 dan Exp $
 #
-# Copyright (c) 2001 DVL Software Limited
+# Copyright (c) 2001-2026 Dan Langille
 #
 # given an archive in ARCHIVEDIR/YYYY_MM, tar it up and remove the original
 #

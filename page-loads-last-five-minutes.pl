@@ -2,7 +2,7 @@
 #
 # $Id: page-loads-last-five-minutes.pl,v 1.1 2007-02-14 22:25:42 dan Exp $
 #
-# Copyright (c) 1999-2006 DVL Software
+# Copyright (c) 1999-2026 Dan Langille
 #
 
 use strict;

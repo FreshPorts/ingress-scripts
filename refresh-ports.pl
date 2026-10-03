@@ -2,7 +2,7 @@
 #
 # $Id: refresh-all-ports.pl,v 1.1 2013-04-24 12:21:49 dan Exp $
 #
-# Copyright (c) 1999-2021 DVL Software
+# Copyright (c) 1999-2026 Dan Langille
 #
 
 # refresh the ports listed in the ports_to_refresh table.

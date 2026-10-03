@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 #
-# Copyright (c) 1999-2026 DVL Software
+# Copyright (c) 1999-2026 Dan Langille
 #
 
 # Refresh each port named in a file, and say why its version can move.

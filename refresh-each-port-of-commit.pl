@@ -2,7 +2,7 @@
 #
 # $Id: refresh-each-port.pl,v 1.4 2012-08-15 11:49:10 dan Exp $
 #
-# Copyright (c) 1999-2004 DVL Software
+# Copyright (c) 1999-2026 Dan Langille
 #
 
 #

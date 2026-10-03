@@ -2,7 +2,7 @@
 #
 # $Id: purge_old_password_tokens.pl,v 1.1 2010-09-17 14:31:02 dan Exp $
 #
-# Copyright (c) 2001-2006 DVL Software
+# Copyright (c) 2001-2026 Dan Langille
 #
 
 use strict;

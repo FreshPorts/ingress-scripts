@@ -2,7 +2,7 @@
 #
 # $Id: process_updating.pl,v 1.3 2008-02-01 14:31:31 dan Exp $
 #
-# Copyright (c) 2004-2006 DVL Software
+# Copyright (c) 2004-2026 Dan Langille
 #
 # Original code by Travis Campbell (HCoyote).
 #

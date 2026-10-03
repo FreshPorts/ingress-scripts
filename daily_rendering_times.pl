@@ -2,7 +2,7 @@
 #
 # $Id: daily_rendering_times.pl,v 1.2 2006-12-17 12:04:00 dan Exp $
 #
-# Copyright (c) 2004 DVL Software
+# Copyright (c) 2004-2026 Dan Langille
 #
 
 use strict;

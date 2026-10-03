@@ -2,7 +2,7 @@
 #
 # $Id: announce.pl,v 1.6 2006-12-17 12:03:58 dan Exp $
 #
-# Copyright (c) 1999-2006 DVL Software
+# Copyright (c) 1999-2026 Dan Langille
 #
 
 use strict;

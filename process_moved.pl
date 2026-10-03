@@ -2,7 +2,7 @@
 #
 # $Id: process_moved.pl,v 1.2 2006-12-17 12:04:02 dan Exp $
 #
-# Copyright (c) 2001-2004 DVL Software
+# Copyright (c) 2001-2026 Dan Langille
 #
 # Parse /usr/ports/MOVED and load into ports_moved table
 #

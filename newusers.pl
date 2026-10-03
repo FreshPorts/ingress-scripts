@@ -2,7 +2,7 @@
 #
 # $Id: newusers.pl,v 1.5 2011-08-22 01:39:35 dan Exp $
 #
-# Copyright (c) 2001-2006 DVL Software
+# Copyright (c) 2001-2026 Dan Langille
 #
 
 use strict;

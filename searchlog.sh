@@ -2,7 +2,7 @@
 #
 # $Id: searchlog.sh,v 1.4 2006-12-17 12:04:03 dan Exp $
 #
-# Copyright (c) 2001-2003 DVL Software
+# Copyright (c) 2001-2026 Dan Langille
 #
 
 grep $(date -v-1d "+%Y-%m-%d") ${CACHINGROOT}/searchlog.txt

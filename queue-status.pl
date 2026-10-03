@@ -2,7 +2,7 @@
 #
 # $Id: queue-status.pl,v 1.3 2012/10/17 18:10:22 dan Exp $
 #
-# Copyright (c) 2001-2006 DVL Software
+# Copyright (c) 2001-2026 Dan Langille
 #
 
 use strict;

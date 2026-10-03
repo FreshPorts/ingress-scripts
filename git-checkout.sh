@@ -2,7 +2,7 @@
 #
 # $Id: svn-up-file.sh,v 1.1 2012-08-15 11:49:10 dan Exp $
 #
-# Copyright (c) 1999-2019 Dan Langille
+# Copyright (c) 1999-2026 Dan Langille
 #
 # This script used to checkout a given commit via a git working copy
 

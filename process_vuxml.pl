@@ -2,7 +2,7 @@
 #
 # $Id: process_vuxml.pl,v 1.6 2013-01-16 15:37:57 dan Exp $
 #
-# Copyright (c) 2001-2012 DVL Software
+# Copyright (c) 2001-2026 Dan Langille
 #
 # much of this file is based on contributions from Matthew Seamon
 #

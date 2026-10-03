@@ -39,7 +39,7 @@
 #
 # $Id: load_xml_into_db.pl,v 1.49 2006-12-17 12:04:01 dan Exp $
 #
-# Copyright (c) 2001-2003 DVL Software
+# Copyright (c) 2001-2026 Dan Langille
 #
 # Parse cvs messages in XML format so they can be put into a database
 # Version 4 - uses DTD version 0.12

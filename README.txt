@@ -2,7 +2,7 @@
 # $Id: README.txt,v 1.4 2006-12-17 12:03:58 dan Exp $
 #
 #
-# Copyright (c) 2001-2003 DVL Software
+# Copyright (c) 2001-2026 Dan Langille
 #
 When installing the scripts, be sure to modify the "use lib" entry
 in load_xml_into_db.pl to point to the directory in which 
