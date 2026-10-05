@@ -122,6 +122,22 @@ sub PkgVersion {
 #
 my $MAKE = '/usr/bin/make';   # base system make; the ports tree needs no other
 
+#
+# PATH for the make child.  make itself needs none of it -- $MAKE is
+# absolute -- but the ports infrastructure make parses does.  Mk/Uses/*.mk
+# files compute values with parse-time shell escapes, and those run with
+# whatever PATH we hand down.  Mk/Uses/electron.mk sets
+# UPSTREAM_ELECTRON_VER with a bare `jq`, which lives in /usr/local/bin.
+#
+# The PATH inherited under fp-daemon does not include /usr/local/bin, so
+# that escape fails with "/bin/sh: jq: not found" and the variable comes
+# back empty.  Nothing this script reports depends on it today --
+# PORTVERSION, DISTVERSION, PKGVERSION and the *_DEPENDS lists are byte
+# identical with and without it -- but the next .mk file to do the same
+# thing may feed something we do read, and it will fail just as quietly.
+#
+my $MAKE_PATH = '/usr/local/bin:/usr/local/sbin:/bin:/sbin:/usr/bin:/usr/sbin';
+
 my %MakefileCache;            # absolute path -> [ lines ]
 
 sub MakefileLines {
@@ -147,13 +163,17 @@ sub MakefileLines {
 # system mk files, make.conf -- are dropped: they are not what moves a port.
 #
 # make runs on the host against the jail's tree, as compare-index.sh does.
-# No jexec, so no sudo.  The list form of open() keeps a shell out of it.
+# No jexec, so no sudo.  The list form of open() keeps a shell out of our
+# own invocation, but make still runs /bin/sh itself for the parse-time
+# escapes in the tree's .mk files -- hence $MAKE_PATH.
 #
 sub MakefilesRead {
 	my $origin   = shift;
 	my $portsdir = $FreshPorts::Config::JailBaseDir . $FreshPorts::Config::PortsDir;
 
 	my $MAKEFILES;
+	local $ENV{PATH} = $MAKE_PATH;
+
 	if (!open($MAKEFILES, '-|', $MAKE, '-C', "$portsdir/$origin",
 	                             "PORTSDIR=$portsdir", '-V', '.MAKE.MAKEFILES')) {
 		return ();
