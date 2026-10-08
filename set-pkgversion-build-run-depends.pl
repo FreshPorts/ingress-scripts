@@ -42,6 +42,16 @@
 # port_dependencies carries cache-clearing triggers on INSERT and DELETE, so
 # the dependencies' pages are queued too.
 
+# So either run it when that is affordable, or disable the trigger for the
+# duration and leave the caches alone:
+#
+#   ALTER TABLE ports DISABLE TRIGGER ports_clear_cache;
+#   ... run this ...
+#   ALTER TABLE ports ENABLE TRIGGER ports_clear_cache;
+#
+# Disabling is safe here only because nothing rendered changes.  It would
+# not be safe for a refresh, which changes plenty.
+
 use strict;
 use FreshPorts::branches;
 use DBI;
