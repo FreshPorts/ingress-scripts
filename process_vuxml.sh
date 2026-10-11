@@ -43,8 +43,32 @@ then
 	echo $(date) "${LOGGERTAG}"  "vuxml processing begins"                      >> ${LOGFILE}
 	
 	# define the vuln file we are going to operate on
-	VULNFILE="${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}/security/vuxml/vuln.xml"
-	
+	VULNSRC="${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}/security/vuxml/vuln.xml"
+
+	# vuln.xml pulls in vuln/*.xml via external entities. expat's billion
+	# laughs protection treats that expansion as an attack and aborts with
+	# "limit on input amplification factor (from DTD and entities) breached".
+	# Flatten it first so the parser sees no entities to expand.
+	# See https://news.freshports.org/2024/11/23/vuxml-processing-broken-files-have-grown-too-much/
+	VULNFILE=$(mktemp -t vuln-flat)
+	if [ $? -ne 0 ]
+	then
+		${LOGGER} -t ${LOGGERTAG} "FATAL could not create temp file for flattened vuln.xml"
+		rm ${VUXMLMUTEX}
+		exit 1
+	fi
+
+	${LOGGER} -t ${LOGGERTAG} "flattening ${VULNSRC} into ${VULNFILE}"
+	echo $(date) "flattening ${VULNSRC} into ${VULNFILE}"                       >> ${LOGFILE}
+	/usr/local/bin/xmllint --noent --dropdtd --nonet ${VULNSRC} > ${VULNFILE} 2>> ${LOGFILE}
+	if [ $? -ne 0 ]
+	then
+		${LOGGER} -t ${LOGGERTAG} "FATAL xmllint could not flatten ${VULNSRC} - see ${LOGFILE}"
+		rm -f ${VULNFILE}
+		rm ${VUXMLMUTEX}
+		exit 1
+	fi
+
 	${LOGGER} -t ${LOGGERTAG} "process_vuxml.pl begins on ${VULNFILE}"
 	echo $(date) "process_vuxml.pl begins on ${VULNFILE}"                       >> ${LOGFILE}
 	${LOGGER} -t ${LOGGERTAG} "there is often a delay before the next message"
@@ -56,6 +80,8 @@ then
 	else
 	  ${LOGGER} -t ${LOGGERTAG} "FATAL process_vuxml.pl finished with an error: $?"
 	fi
+
+	rm -f ${VULNFILE}
 
 	${LOGGER} -t ${LOGGERTAG} "vuln_latest.pl begins"
 	/usr/local/bin/perl ./vuln_latest.pl >> ${LOGFILE}
