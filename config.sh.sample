@@ -23,7 +23,7 @@ WATCHGOOSE_COMPARE_INDEX=""
 BASEDIR="/var/db/freshports"
 
 # if this file exists, scripts should not run.
-OFFLINE_SIGNAL="${BASEDIR}/OFFLINE"
+OFFLINE_SIGNAL="${BASEDIR}/signals/OFFLINE"
 
 # The home directory of the ingress user
 INGRESS_BASEDIR="/var/db/ingress"
