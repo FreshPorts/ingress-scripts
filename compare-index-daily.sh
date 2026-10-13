@@ -91,20 +91,6 @@ then
 	SUBJECT="$SUBJECT -- $COMMIT"
 
 	#
-	# Tell watchgoose the run finished.  On success only: a ping after a
-	# failed run would report the check as healthy when it is not, which is
-	# worse than no monitoring at all.
-	#
-	# The URL carries a token, so it lives in config.sh rather than here.
-	# Empty means do not ping, which keeps this quiet on a host which is not
-	# being watched.
-	#
-	if [ "${WATCHGOOSE_COMPARE_INDEX}x" != 'x' ]
-	then
-		$FETCH --output /dev/null -q --retry --retry-delay=10 "$WATCHGOOSE_COMPARE_INDEX"
-	fi
-
-	#
 	# Hand the work to job-waiting.pl, which runs refresh-from-index.sh.
 	# The flag only goes up when there is something in the list: raising it
 	# for an empty one would start a job with nothing to do, and the usual
@@ -116,10 +102,78 @@ then
 	#
 	REFRESH_LIST="${SPOOLINGDIR}/refresh.txt"
 
+	#
+	# A list longer than this is more likely a fault than real drift -- an
+	# INDEX built from the wrong tree, a database which has fallen behind --
+	# and refreshing it all would be slow and hide the cause.  So stop and
+	# say so, and leave it for someone to look at.  config.sh may set it;
+	# 50 otherwise.
+	#
+	REFRESH_FROM_INDEX_MAX=${REFRESH_FROM_INDEX_MAX:-50}
+
+	#
+	# Not a number makes the -gt below an error, which reads as false and
+	# would schedule any number of ports.  Treat it as a limit of nothing.
+	#
+	case "$REFRESH_FROM_INDEX_MAX" in
+	*[!0-9]*)
+		logger -p local3.error -t FreshPorts $0 REFRESH_FROM_INDEX_MAX "'$REFRESH_FROM_INDEX_MAX'" is not a number, using 0
+		REFRESH_FROM_INDEX_MAX=0
+		;;
+	esac
+
 	if [ -s $REFRESH_LIST ]
 	then
-		logger -p local3.notice -t FreshPorts $0 scheduling a refresh of $(wc -l < $REFRESH_LIST | tr -d ' ') ports
-		touch ${REFRESHFROMINDEXFLAG}
+		REFRESH_COUNT=$(wc -l < $REFRESH_LIST | tr -d ' ')
+
+		if [ $REFRESH_COUNT -gt $REFRESH_FROM_INDEX_MAX ]
+		then
+			MESSAGE="FATAL: $REFRESH_LIST lists $REFRESH_COUNT ports, more than REFRESH_FROM_INDEX_MAX ($REFRESH_FROM_INDEX_MAX); not scheduling a refresh"
+			logger -p local3.crit -t FreshPorts $0 $MESSAGE
+			echo "$0: $MESSAGE" >> ${SPOOL_FILE}
+			SUBJECT="$SUBJECT -- TOO MANY REFRESHES ($REFRESH_COUNT)"
+			RESULT=1
+		else
+			logger -p local3.notice -t FreshPorts $0 scheduling a refresh of $REFRESH_COUNT ports
+			touch ${REFRESHFROMINDEXFLAG}
+		fi
+
+		#
+		# Keep every port refresh.txt has ever named, once each.  refresh.txt
+		# is rewritten on every run, so without this there is no telling
+		# which ports keep drifting.
+		#
+		# Here rather than in compare-index.sh so only the scheduled runs
+		# count, not a test run writing its lists somewhere else with -o.
+		#
+		# sort may write its output over one of its inputs, so the history
+		# is merged in place.  A rerun on an unchanged INDEX leaves the old
+		# refresh.txt behind and adds it again, which -u makes harmless.
+		#
+		REFRESH_HISTORY="${SPOOLINGDIR}/refresh-history.txt"
+
+		touch $REFRESH_HISTORY
+		if ! sort -u -o $REFRESH_HISTORY $REFRESH_HISTORY $REFRESH_LIST
+		then
+			logger -p local3.error -t FreshPorts $0 could not add $REFRESH_LIST to $REFRESH_HISTORY
+		fi
+	fi
+
+	if [ $RESULT = 0 ]
+	then
+		#
+		# Tell watchgoose the run finished.  On success only: a ping after a
+		# failed run would report the check as healthy when it is not, which is
+		# worse than no monitoring at all.
+		#
+		# The URL carries a token, so it lives in config.sh rather than here.
+		# Empty means do not ping, which keeps this quiet on a host which is not
+		# being watched.
+		#
+		if [ "${WATCHGOOSE_COMPARE_INDEX}x" != 'x' ]
+		then
+			$FETCH --output /dev/null -q --retry --retry-delay=10 "$WATCHGOOSE_COMPARE_INDEX"
+		fi
 	fi
 else
 	SUBJECT="$SUBJECT -- FAILED at $COMMIT"

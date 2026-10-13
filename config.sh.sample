@@ -89,6 +89,10 @@ PORTSTOREFRESHFLAG="${BASEDIR}/signals/ports_to_refresh"
 # $FreshPorts::Config::RefreshFromIndexFlag in config.pm.
 REFRESHFROMINDEXFLAG="${BASEDIR}/signals/refresh_from_index"
 
+# compare-index-daily.sh will not raise REFRESHFROMINDEXFLAG for a refresh.txt
+# longer than this; it logs a fatal error instead.  50 if unset.
+REFRESH_FROM_INDEX_MAX=50
+
 CHECKPORTSCATEGORIESFILE="${BASEDIR}/signals/check_port_categories"
 PORTSFREEZEFILE="${BASEDIR}/signals/PortsFreezeIsOn"
 
