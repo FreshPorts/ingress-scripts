@@ -1,0 +1,18 @@
+# Installed into this directory by other packages; not part of this repo.
+
+# py*-packages-import
+UpdatePackagesFromRawPackages.py
+check_repos_for_new_stuff.py
+fetch-extract-parse-import-one-abi.sh
+fetch-parse-meta.conf
+get_packagesite.txz_date
+import-via-copy-packagesite-all-raw-fields.py
+import_packagesite.py
+
+# py*-freshports-git-proc-commit
+check_git.sh
+git-delta.sh
+git-last-processed-tags.sh
+git-range-of-commits.sh
+git-single-commit.sh
+git-to-freshports-xml.py
