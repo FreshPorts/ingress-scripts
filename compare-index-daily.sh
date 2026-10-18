@@ -150,11 +150,18 @@ then
 		# is merged in place.  A rerun on an unchanged INDEX leaves the old
 		# refresh.txt behind and adds it again, which -u makes harmless.
 		#
+		# Doing that, sort writes a temporary file and renames it over the
+		# history, so the history ends up 0600 like the temporary file
+		# whatever it was before.  chmod puts it back to match refresh.txt,
+		# so it can be read by someone other than freshports.
+		#
 		REFRESH_HISTORY="${SPOOLINGDIR}/refresh-history.txt"
 
 		touch $REFRESH_HISTORY
-		if ! sort -u -o $REFRESH_HISTORY $REFRESH_HISTORY $REFRESH_LIST
+		if sort -u -o $REFRESH_HISTORY $REFRESH_HISTORY $REFRESH_LIST
 		then
+			chmod 644 $REFRESH_HISTORY
+		else
 			logger -p local3.error -t FreshPorts $0 could not add $REFRESH_LIST to $REFRESH_HISTORY
 		fi
 	fi
