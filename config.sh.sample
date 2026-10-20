@@ -81,9 +81,6 @@ UPDATINGFLAGFILE="${BASEDIR}/signals/refresh_updating"
 # The file for checking git for commits
 CHECKGITFILE="${INGRESS_BASEDIR}/signals/check_git"
 
-# The file for processing the ports_to_refresh table
-PORTSTOREFRESHFLAG="${BASEDIR}/signals/ports_to_refresh"
-
 # compare-index-daily.sh raises this when it finds ports to refresh.
 # job-waiting.pl notices it and runs refresh-from-index.sh.  Same path as
 # $FreshPorts::Config::RefreshFromIndexFlag in config.pm.

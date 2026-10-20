@@ -41,7 +41,6 @@ my %Jobs_freshports = (
 	$FreshPorts::Config::MovedFileFlag            => 'process_moved.sh',
 	$FreshPorts::Config::NewReposReadyForImport   => 'import_packagesite.py',
 	$FreshPorts::Config::UpdatingFileFlag         => 'process_updating.sh',
-	$FreshPorts::Config::PortsToRefresh           => 'refresh-ports.sh',
 	$FreshPorts::Config::RefreshFromIndexFlag     => 'refresh-from-index.sh',
 	$FreshPorts::Config::VuXMLFileFlag            => 'process_vuxml.sh',
 	$FreshPorts::Config::DefaultVersionsFlag      => 'process_default_versions.pl',
