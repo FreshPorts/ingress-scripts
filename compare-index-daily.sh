@@ -100,6 +100,10 @@ then
 	# clears caches, which belongs in the queue with everything else of that
 	# kind, not in a cron job holding the INDEX build open behind it.
 	#
+	# fp-daemon starts job-waiting.pl only when JOBWAITINGFLAG exists, so
+	# that goes up too.  Without it the refresh waits for some unrelated
+	# commit (UPDATING, MOVED, vuxml...) to raise it.
+	#
 	REFRESH_LIST="${SPOOLINGDIR}/refresh.txt"
 
 	#
@@ -135,7 +139,12 @@ then
 			RESULT=1
 		else
 			logger -p local3.notice -t FreshPorts $0 scheduling a refresh of $REFRESH_COUNT ports
+			#
+			# The job's own flag first, so job-waiting.pl finds it when
+			# JOBWAITINGFLAG wakes it.
+			#
 			touch ${REFRESHFROMINDEXFLAG}
+			touch ${JOBWAITINGFLAG}
 		fi
 
 		#

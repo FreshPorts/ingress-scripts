@@ -86,6 +86,11 @@ CHECKGITFILE="${INGRESS_BASEDIR}/signals/check_git"
 # $FreshPorts::Config::RefreshFromIndexFlag in config.pm.
 REFRESHFROMINDEXFLAG="${BASEDIR}/signals/refresh_from_index"
 
+# fp-daemon runs job-waiting.pl only when this exists, so anything raising a
+# job's flag above raises this too.  Same path as
+# $FreshPorts::Config::JobWaiting in config.pm.
+JOBWAITINGFLAG=${JOBWAITINGFLAG:-${BASEDIR}/signals/job_waiting}
+
 # compare-index-daily.sh will not raise REFRESHFROMINDEXFLAG for a refresh.txt
 # longer than this; it logs a fatal error instead.  50 if unset.
 REFRESH_FROM_INDEX_MAX=50
