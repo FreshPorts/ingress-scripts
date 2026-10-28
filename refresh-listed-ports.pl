@@ -420,10 +420,16 @@ while (my $category_port = <$LIST>) {
 				# The version moved and nothing outside this port sets it, so
 				# only a commit to this port's own directory can have moved
 				# it -- and we are finding out from the INDEX rather than
-				# from that commit.  Commit processing missed it.
+				# from that commit.  Either commit processing missed that
+				# commit, or it processed it but left the port as it was.
+				# A sanity test failure does the latter: on test, five
+				# commits from 2026-02-10 were in commit_log, yet their
+				# ports still held the version from before them, and
+				# sysutils/py-container-inspector's had failed its sanity
+				# test.  Nothing here can tell which.
 				#
 				FreshPorts::Utilities::ReportError('err',
-					"$ME $category_port: version changed to $now and is set only within the port: a commit to $category_port was missed", 0);
+					"$ME $category_port: version changed to $now and is set only within the port: commit processing missed a commit to $category_port, or did not update the port (a sanity test failure?)", 0);
 				$missed++;
 			}
 
@@ -470,12 +476,12 @@ print $tally . "\n";
 FreshPorts::Utilities::Report('info', $tally);
 
 #
-# Said again on its own, because a missed commit is not a counter anyone
-# should have to notice at the end of a line.
+# Said again on its own, because a commit processed wrongly, or not at all,
+# is not a counter anyone should have to notice at the end of a line.
 #
 if ($missed) {
 	FreshPorts::Utilities::ReportError('err',
-		"$ME $missed port(s) changed version with no commit processed for them: commits have been missed", 0);
+		"$ME $missed port(s) changed version set only within the port, which commit processing should have recorded: check commit_log for commits to them, and their sanity tests", 0);
 }
 
 $dbh->commit();
