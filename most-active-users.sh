@@ -33,6 +33,7 @@ select U.id, U.name, U.firstlogin, count(*)
   from users U join page_load_detail PLD
           on U.id = PLD.user_id
 group by U.id
+having count(*) >= 300
 order by count DESC
 limit 40
 EOF
