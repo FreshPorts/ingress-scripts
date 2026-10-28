@@ -4,7 +4,6 @@
 LOGGERTAG=${0##*/}
 
 QUERYBASE='from ports_active PA WHERE NOT EXISTS (SELECT port_id, category_id from ports_categories PC where PC.port_id = PA.id and PC.category_id = PA.category_id)'
-QUERYCOUNT='select count(id)'
 QUERYROWS="select id, category_id, name, category, category || '/' || name AS port, element_pathname(element_id)"
 QUERYORDER="ORDER BY category, name"
 
@@ -53,9 +52,30 @@ $LOGGER -t $LOGGERTAG "testing"
 $LOGGER -t $LOGGERTAG "done checking for the user password"
 $LOGGER -t $LOGGERTAG "who am i? $(id)"
 
+#
+# One query for both the count and the list, so they come from the same
+# snapshot and cannot disagree.  The count is taken from psql's footer,
+# "(1 row)" or "(N rows)".
+#
+# sslcertmode=disable avoids: could not open certificate file
+# "/root/.postgresql/postgresql.crt": Permission denied
+# Without it, the list query used to fail and the mail went out with no list.
+#
+CONNECTION="sslcertmode=disable host=${HOST} dbname=${DB} user=${DBUSER}"
+
 $LOGGER -t $LOGGERTAG "Checking for ports without ports_categories entries"
-$LOGGER -t $LOGGERTAG ${PSQL} -h ${HOST} -q --pset t -d ${DB} --user ${DBUSER} -c "${QUERYCOUNT} ${QUERYBASE}"
-ROWCOUNT=$(${PSQL} -q --pset t "sslcertmode=disable host=${HOST} dbname=${DB} user=${DBUSER}" -c "${QUERYCOUNT} ${QUERYBASE}" | tr -d ' ')
+PORTS=$(${PSQL} -q --no-psqlrc -v ON_ERROR_STOP=1 "${CONNECTION}" -c "${QUERYROWS} ${QUERYBASE} ${QUERYORDER}" 2>&1)
+RESULT=$?
+if [ $RESULT != 0 ]
+then
+  $LOGGER -t $LOGGERTAG "FATAL: psql failed with exit status $RESULT: $PORTS"
+  echo "$PORTS" | mail -s "missing-port-categories.sh: psql failed on ${WEBSITEURL}" ${ADMINEMAIL}
+  # job-waiting.pl reruns us while the flag is up; the mail has said it all
+  rm -f $CHECKPORTSCATEGORIESFILE
+  exit 1
+fi
+
+ROWCOUNT=$(echo "$PORTS" | sed -n 's/^(\([0-9]*\) rows*)$/\1/p')
 $LOGGER -t $LOGGERTAG "found this many invalid entries: $ROWCOUNT"
 if [ "${ROWCOUNT}" != "0" ]
 then
@@ -67,7 +87,7 @@ then
   echo >> ${TMPFILE}
   echo 'This is a list of the ports in question:' >> ${TMPFILE}
   echo >> ${TMPFILE}
-  ${PSQL} -h ${HOST} -q -d ${DB} --user  ${DBUSER} -c "${QUERYROWS} ${QUERYBASE} ${QUERYORDER}"  >> ${TMPFILE}
+  echo "$PORTS" >> ${TMPFILE}
   cat  ${TMPFILE} | mail -s "missing ports_categories entries on ${WEBSITEURL}" ${ADMINEMAIL}
   rm ${TMPFILE}
 fi
