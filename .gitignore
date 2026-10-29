@@ -13,10 +13,10 @@ import_packagesite.py
 check_git.sh
 git-delta.sh
 git-last-processed-tags.sh
-git-range-of-commits.sh
-git-single-commit.sh
+/git-range-of-commits.sh
+/git-single-commit.sh
 git-to-freshports-xml.py
 
 # Local to each host
 config.sh
-helper_scripts/
+helper_scripts/website-clear-all-cache

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# see also https://github.com/FreshPorts/host-init/blob/master/jail-vars.sh.sample
+
+caching_sets="categories commits daily general news packages pages ports spooling"
+for set in $caching_sets
+do
+    # adjust FOO and BAR accordingly
+    zfs snapshot FOO/freshports/BAR/var/db/freshports/cache/$set@empty
+done
