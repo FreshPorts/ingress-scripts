@@ -2,6 +2,42 @@
 #
 # $Id: config.sh.sample,v 1.11 2012-12-29 21:51:51 dan Exp $
 #
+# Permissions: the installed config.sh is world-readable (mode 644,
+# owner root, group freshports).  Database passwords are not kept here;
+# they are in ~freshports/.pgpass.
+#
+# The only secret in this file to date is the token in the
+# WATCHGOOSE_COMPARE_INDEX URL.  It is low-value (at worst, someone
+# could send false "run worked" pings), so the file stays world-readable.
+#
+# The database information is needed by nrpe for monitoring.
+#
+# If another secret is added such that this file must not be
+# world-readable, these are the steps to take:
+#
+#   1. Remove world read:
+#
+#        chmod o= /usr/local/etc/freshports/config.sh
+#
+#   2. Anything that sources this file as another user will now fail.
+#      Find those scripts:
+#
+#        grep -l 'freshports/config.sh' /usr/local/libexec/nagios-custom/*
+#
+#   3. Run each of them as freshports via sudo.  For example, the nrpe
+#      check check_freshports_cache_clearing runs as nagios:
+#
+#      /usr/local/etc/sudoers.d/nagios-freshports (mode 440, check
+#      with visudo -c):
+#        nagios ALL=(freshports) NOPASSWD: /usr/local/libexec/nagios-custom/check_freshports_cache_clearing
+#
+#      /usr/local/etc/nrpe.d/freshports-ingress.cfg:
+#        command[check_freshports_cache_clearing] = /usr/local/bin/sudo -n -u freshports /usr/local/libexec/nagios-custom/check_freshports_cache_clearing
+#
+#      Then reload nrpe: service nrpe reload
+#
+#   4. Do this on every ingress host.
+#
 
 LOGGER="/usr/bin/logger -p local3.info"
 
