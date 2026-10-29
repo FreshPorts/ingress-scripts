@@ -33,7 +33,10 @@ echo '<p>xml processing status:      '  $PROCESSING  '</p>' >> ${SPOOL}
 if [ -n "${VUXMLMUTEX}" -a -f "${VUXMLMUTEX}" ]
 then
 	VUXMLSTARTED=$(TZ=UTC /usr/bin/stat -f %Sm -t '%Y-%m-%d %H:%M:%S%z' ${VUXMLMUTEX})
-	echo '<p class="in-progress">vuxml processing status: in progress since' $VUXMLSTARTED '</p>' >> ${SPOOL}
+	VUXMLELAPSED=$(( $(/bin/date +%s) - $(/usr/bin/stat -f %m ${VUXMLMUTEX}) ))
+	VUXMLHOURS=$(( VUXMLELAPSED / 3600 ))
+	VUXMLMINUTES=$(( VUXMLELAPSED % 3600 / 60 ))
+	echo '<p class="in-progress">vuxml processing status: in progress since' $VUXMLSTARTED "(${VUXMLHOURS} hours ${VUXMLMINUTES} minutes)" '</p>' >> ${SPOOL}
 else
 	echo '<p>vuxml processing status:    not in progress</p>' >> ${SPOOL}
 fi
