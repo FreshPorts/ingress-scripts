@@ -272,7 +272,8 @@ sub update_modified_vids($;$;$)
             print "This is that node:\n$nodeString\n";
             print "with csum=$csum\n";
 
-            $fh->open($nodeString) || die("FATAL: $0 could not \$fh->open" );
+            # the parser reads bytes, so give it the node as UTF-8
+            $fh->open(Encode::encode_utf8($nodeString)) || die("FATAL: $0 could not \$fh->open" );
 
             print "Getting a new vuxml_parsing\n";
             my $p = FreshPorts::vuxml_parsing->new(Stream        => $fh,
