@@ -9,6 +9,12 @@
 
 SPOOL="/var/db/freshports/cache/spooling/$0.$$.tmp"
 
+# for VUXMLMUTEX
+if [ -f config.sh ]
+then
+	. config.sh
+fi
+
 # is commit processing enabled?
 COMMITS=$(/usr/sbin/service ingress status)
 PROCESSING=$(/usr/sbin/service freshports status)
@@ -22,5 +28,14 @@ echo '<p>Number of queued commits:   '  $COUNT       '</p>' >> ${SPOOL}
 echo '<p>Commits processed today:    '  $PROCESSED   '</p>' >> ${SPOOL}
 echo '<p>git commit checking status: '  $COMMITS     '</p>' >> ${SPOOL}
 echo '<p>xml processing status:      '  $PROCESSING  '</p>' >> ${SPOOL}
+
+# process_vuxml.sh holds VUXMLMUTEX while it runs; its mtime is when processing started
+if [ -n "${VUXMLMUTEX}" -a -f "${VUXMLMUTEX}" ]
+then
+	VUXMLSTARTED=$(TZ=UTC /usr/bin/stat -f %Sm -t '%Y-%m-%d %H:%M:%S%z' ${VUXMLMUTEX})
+	echo '<p class="in-progress">vuxml processing status: in progress since' $VUXMLSTARTED '</p>' >> ${SPOOL}
+else
+	echo '<p>vuxml processing status:    not in progress</p>' >> ${SPOOL}
+fi
 
 /bin/mv ${SPOOL} /var/db/freshports/cache/html/backend-status.html
