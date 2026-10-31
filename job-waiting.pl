@@ -43,7 +43,6 @@ my %Jobs_freshports = (
 	$FreshPorts::Config::UpdatingFileFlag         => 'process_updating.sh',
 	$FreshPorts::Config::RefreshFromIndexFlag     => 'refresh-from-index.sh',
 	$FreshPorts::Config::VuXMLFileFlag            => 'process_vuxml.sh',
-	$FreshPorts::Config::DefaultVersionsFlag      => 'process_default_versions.pl',
 	$FreshPorts::Config::CheckPortsCategoriesFlag => 'missing-port-categories.sh',
 	);
 

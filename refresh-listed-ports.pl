@@ -16,7 +16,7 @@
 #   --dryrun     report what would happen and write nothing to the database.
 #                Everything else runs: the port is looked up, its Makefiles
 #                are read, and the version and the reason are reported.
-#                Takes no argument, unlike process_default_versions.pl.
+#                Takes no argument.
 #   --debug      print the SQL used to look a port up.
 #
 # for example:
@@ -31,7 +31,7 @@
 #   devel/geany-plugin-vc: 2.0 -> 2.1
 #   devel/geany-plugin-vc: PORTVERSION set in devel/geany-plugins/Makefile (outside this port): 2.1
 #
-# HEAD only, as process_default_versions.pl is.
+# HEAD only.
 #
 # A refresh reads the Makefiles as they are on disk, so what it writes
 # describes the tree in whatever state it is in when this runs.
@@ -66,8 +66,8 @@ if (!GetOptions('debug' => \$debug, 'dryrun' => \$dryrun)) {
 }
 
 #
-# process_default_versions.pl spells these --dryrun y and --debug y, so a
-# stray y is a likely mistake.  Without this it becomes the filename and the
+# A y or n after --dryrun or --debug is a likely mistake, a habit from
+# scripts that took one.  Without this it becomes the filename and the
 # error says only that y cannot be read, which explains nothing.
 #
 if (defined($ARGV[0]) && ($ARGV[0] eq 'y' || $ARGV[0] eq 'n')) {
