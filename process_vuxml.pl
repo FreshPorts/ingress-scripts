@@ -235,6 +235,7 @@ sub update_modified_vids($;$;$)
 #    my $fh;
     my %VIDsToUpdate = %{$VIDsRef};
     my %ProcessedVIDs;
+    my %FailedVIDs;
     my $nodeString;
 
     # this code based on the existing process_vuxml.pl script
@@ -272,37 +273,53 @@ sub update_modified_vids($;$;$)
             print "This is that node:\n$nodeString\n";
             print "with csum=$csum\n";
 
-            # the parser reads bytes, so give it the node as UTF-8
-            $fh->open(Encode::encode_utf8($nodeString)) || die("FATAL: $0 could not \$fh->open" );
+            # All vulns are written in one transaction, committed at the end.
+            # A vuln which dies (e.g. an empty <name> or <lt> in vuln.xml) would
+            # take every other vuln in this run with it.  Instead, undo just
+            # that vuln and carry on.  It is not in vuxml, so it stays in
+            # GetListOfVulnsForUpdate() and is tried again on the next run.
+            $dbh->pg_savepoint('vuln');
+            eval {
+                # the parser reads bytes, so give it the node as UTF-8
+                $fh->open(Encode::encode_utf8($nodeString)) || die("FATAL: $0 could not \$fh->open" );
 
-            print "Getting a new vuxml_parsing\n";
-            my $p = FreshPorts::vuxml_parsing->new(Stream        => $fh,
-                                                   DBHandle      => $dbh,
-                                                   UpdateInPlace => 1);
+                print "Getting a new vuxml_parsing\n";
+                my $p = FreshPorts::vuxml_parsing->new(Stream        => $fh,
+                                                       DBHandle      => $dbh,
+                                                       UpdateInPlace => 1);
 
-            print "parsing the xml and setting \$csum\n";
-            # always pass in the checksum from our calculation
-            $p->parse_xml($csum);
+                print "parsing the xml and setting \$csum\n";
+                # always pass in the checksum from our calculation
+                $p->parse_xml($csum);
 
-            if ($p->database_updated()) {
-                print "yes, the database was updated for $vid\n";
-                $NumUpdates++;
+                $fh->close;
+
+                if ($p->database_updated()) {
+                    print "yes, the database was updated for $vid\n";
+                    $NumUpdates++;
+
+                    print 'invoking vuxml_mark_commits with ' . $vid . "\n";
+                    my $CommitMarker = FreshPorts::vuxml_mark_commits->new(DBHandle => $dbh,
+                                                                           vid      => $vid);
+
+                    print 'invoking ProcessEachRangeRecord'. "\n";
+                    my $i = $CommitMarker->ProcessEachRangeRecord();
+
+                    print 'invoking ClearCachedEntries' . "\n";
+                    $CommitMarker->ClearCachedEntries($vid);
+                } else {
+                    print "no, the database was NOT updated for $vid\n";
+                }
+            };
+            if ($@) {
+                my $error = $@;
+                $fh->close;
+                $dbh->pg_rollback_to('vuln');
+                $FailedVIDs{$vid} = $error;
+                FreshPorts::Utilities::ReportError('warning', "$0: could not process $vid, skipping it: $error", 0);
             } else {
-                print "no, the database was NOT updated for $vid\n";
-                next;
+                $dbh->pg_release('vuln');
             }
-
-            $fh->close;
-
-            print 'invoking vuxml_mark_commits with ' . $vid . "\n";
-            my $CommitMarker = FreshPorts::vuxml_mark_commits->new(DBHandle => $dbh,
-                                                                   vid      => $vid);
-
-            print 'invoking ProcessEachRangeRecord'. "\n";
-            my $i = $CommitMarker->ProcessEachRangeRecord();
-
-            print 'invoking ClearCachedEntries' . "\n";
-            $CommitMarker->ClearCachedEntries($vid);
 
 #            # putting this in here while debugging
 #            last;
@@ -324,6 +341,13 @@ sub update_modified_vids($;$;$)
         print "FATAL: we did not find everything we expected.\n";
     } else {
         print "We found and updated everything we expected.\n";
+    }
+
+    if (%FailedVIDs) {
+        foreach my $key (sort keys %FailedVIDs) {
+            print "Could not process $key, it remains pending: $FailedVIDs{$key}\n";
+        }
+        print "ERROR: " . scalar(keys %FailedVIDs) . " vulns could not be processed; the rest will be committed.\n";
     }
 
 }
