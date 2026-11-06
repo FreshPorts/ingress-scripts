@@ -16,7 +16,9 @@
 #
 # On an empty table the whole history is walked: a few thousand commits,
 # about a minute.  After that it starts from the newest commit in the
-# table, so a daily run looks at the handful of commits since then.
+# table.  Rows are added only when the lists change, so each run looks
+# again at every commit since the last change: in November 2026, two
+# years of commits, about 7 s.
 #
 # The walk stops at freshports/origin/main, the last commit FreshPorts has
 # processed (see compare-index-daily.sh), so the graph never runs ahead of
