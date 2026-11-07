@@ -37,8 +37,14 @@
 #
 #   4. portscout checked it within the last $MaxAgeDays days.
 #
-# Ports which no longer qualify lose their row.  Each port whose row is
-# added, changed, or removed has its cached pages cleared.
+# Ports which no longer qualify lose their row.
+#
+# A port's cached pages are cleared when its row is added or removed, or
+# when something the port page uses changes: port_version, newver,
+# maintainer, or discovered.  newurl and checked are stored but not shown,
+# and portscout checks every port every day, so checked changes on nearly
+# every row on every run.  A change to only those is written without
+# clearing anything; otherwise every run would clear about 5,000 pages.
 #
 # --dry-run reads the database but changes nothing; it prints the changes
 # it would have made.
@@ -170,7 +176,6 @@ $sth->finish();
 #
 # what we have now
 #
-my @Columns = qw(port_version newver newurl maintainer discovered checked);
 my %Have;
 $sth = $dbh->prepare('SELECT port_id, port_version, newver, newurl, maintainer,
                              extract(epoch FROM discovered)::bigint,
@@ -231,12 +236,21 @@ foreach my $entry (@$Entries) {
 #
 # the differences
 #
-my (@Insert, @Update, @Delete);
+# A row is: port_version newver newurl maintainer discovered checked.
+# These are the ones the port page uses; see the top of this file.
+#
+my @Shown = (0, 1, 3, 4);
+
+# @Update: something shown changed, so clear the cache
+# @Refresh: only newurl or checked changed; write it, clear nothing
+my (@Insert, @Update, @Refresh, @Delete);
 foreach my $port_id (keys %Want) {
 	if (!$Have{$port_id}) {
 		push(@Insert, $port_id);
-	} elsif (show(@{$Have{$port_id}}) ne show(@{$Want{$port_id}})) {
+	} elsif (show(@{$Have{$port_id}}[@Shown]) ne show(@{$Want{$port_id}}[@Shown])) {
 		push(@Update, $port_id);
+	} elsif (show(@{$Have{$port_id}}) ne show(@{$Want{$port_id}})) {
+		push(@Refresh, $port_id);
 	}
 }
 foreach my $port_id (keys %Have) {
@@ -249,10 +263,11 @@ if ($HaveCount >= $MinRowsForShare && @Delete > $HaveCount * $MaxDeleteShare) {
 		scalar(@Delete), $HaveCount, $MaxDeleteShare * 100, $Filename);
 }
 
-my $Summary = sprintf('%d ports in the file: %d not in FreshPorts, %d with no newer version, %d at another version than ours, %d not checked in %d days, %d not newer than ours; %d to show. %d added, %d changed, %d removed',
+my $Summary = sprintf('%d ports in the file: %d not in FreshPorts, %d with no newer version, %d at another version than ours, %d not checked in %d days, %d not newer than ours; %d to show. %d added, %d changed, %d removed, %d pages to clear; %d refreshed without clearing',
 	scalar(@$Entries), $Count{not_ours}, $Count{no_newver}, $Count{version_differs},
 	$Count{stale}, $MaxAgeDays, $Count{not_newer}, scalar(keys %Want),
-	scalar(@Insert), scalar(@Update), scalar(@Delete));
+	scalar(@Insert), scalar(@Update), scalar(@Delete),
+	scalar(@Insert) + scalar(@Update) + scalar(@Delete), scalar(@Refresh));
 
 if ($DryRun) {
 	my %Name = map { $Ports{$_}[0] => $_ } keys %Ports;
@@ -285,7 +300,7 @@ my $delete = $dbh->prepare('DELETE FROM port_upstream WHERE port_id = ?');
 foreach my $port_id (@Insert) {
 	$insert->execute($port_id, @{$Want{$port_id}}) or die "could not add port $port_id";
 }
-foreach my $port_id (@Update) {
+foreach my $port_id (@Update, @Refresh) {
 	$update->execute(@{$Want{$port_id}}, $port_id) or die "could not change port $port_id";
 }
 foreach my $port_id (@Delete) {
@@ -293,8 +308,9 @@ foreach my $port_id (@Delete) {
 }
 
 #
-# Clear the cached pages of every port whose row changed, as
-# process_updating.pl does.  The notify is delivered on commit.
+# Clear the cached pages of every port whose page changes, as
+# process_updating.pl does.  Not @Refresh: nothing it changes is shown.
+# The notify is delivered on commit.
 #
 my @Changed = (@Insert, @Update, @Delete);
 if (@Changed) {
