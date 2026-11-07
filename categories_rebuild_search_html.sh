@@ -18,7 +18,11 @@ export PGDATABASE=$DB
 export PGHOST=$HOST
 export PGUSER=$DBUSER
 
-SPOOL_FILE=$(mktemp ${SPOOLINGDIR}/categories.XXXXXX)
+# The temporary file goes in HTMLROOT itself, not SPOOLINGDIR: they are
+# separate ZFS filesystems, so a mv between them is a copy, and www could
+# read a half-written categories.php.  Within one filesystem, mv is an
+# atomic rename.
+SPOOL_FILE=$(mktemp ${HTMLROOT}/.categories.php.XXXXXX)
 
 cat << EOF > ${SPOOL_FILE}
              <OPTION VALUE=""<?php if ($category == '') echo ' SELECTED'?>>all</OPTION>
