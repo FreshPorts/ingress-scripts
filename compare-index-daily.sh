@@ -36,42 +36,42 @@ SPOOL_FILE=$(mktemp ${SPOOLINGDIR}/compare-index-daily.XXXXXX) || exit 1
 trap "rm -f $SPOOL_FILE" EXIT INT TERM
 
 #
-# The last commit FreshPorts has processed on main.  git-delta.sh tags it,
-# but only once git-to-freshports-xml.py has returned 0 for the batch:
-#
-#   git tag -m "last known commit of origin/main" -f freshports/origin/main origin/main
-#
-# so the tag is the ingress saying how far it has got, which is exactly the
-# commit the INDEX should be built at.  The repo is asked rather than the
-# database: the tag is on main by construction, it cannot name a src or doc
+# The last commit FreshPorts has processed on main.  git-delta.sh records it
+# in LATEST_COMMITS_FILE, but only once git-to-freshports-xml.py has returned
+# 0 for the batch, so it is the ingress saying how far it has got, which is
+# exactly the commit the INDEX should be built at.  That is asked rather than
+# the database: it is on main by construction, it cannot name a src or doc
 # commit, and it does not move part way through a batch.
 #
 # origin and main are spelled out here because git-delta.sh spells them out
 # too, in REMOTE and NAME_OF_HEAD.
 #
-# ^{} dereferences the annotated tag down to the commit it points at.
-# Without it this returns the hash of the tag object, which is not a commit
-# and would not check out.  git-delta.sh uses the same suffix where it works
-# out STARTPOINT.
+# This used to be the freshports/origin/main tag in the ports repo; see
+# https://github.com/FreshPorts/freshports/issues/522
 #
-# That repo belongs to the ingress user and this runs as freshports, so git
-# refuses it as dubious ownership and returns nothing.  The exception is
-# given here, for this one path and this one command, rather than with
-# 'git config --global --add safe.directory' in the freshports user's own
-# config: it stays with the script, it is visible to whoever reads it, and
-# it does not survive as host state after the script is gone.  Reading a
-# ref is all we do with it.
-#
-PORTS_REPO="${INGRESS_PORTS_DIR_BASE}/$(convert_repo_label_to_directory ports)"
-FRESHPORTS_TAG="freshports/origin/main"
+. ${SCRIPTDIR}/latest-commits.sh || exit 1
 
-COMMIT=$($GIT -c safe.directory=$PORTS_REPO -C $PORTS_REPO rev-parse -q --verify ${FRESHPORTS_TAG}^{})
+COMMIT=$(latest_commit_get ports origin/main)
 
 if [ "${COMMIT}x" = 'x' ]
 then
-	logger -p local3.error -t FreshPorts $0 found no $FRESHPORTS_TAG in $PORTS_REPO
-	echo "$0: no $FRESHPORTS_TAG in $PORTS_REPO -- has git-delta.sh ever completed a batch?" |
+	logger -p local3.error -t FreshPorts $0 found no ports origin/main in $LATEST_COMMITS_FILE
+	echo "$0: no ports origin/main in $LATEST_COMMITS_FILE -- has git-delta.sh ever completed a batch?" |
 		mail -s "$SUBJECT -- no commit found" "$TO_EMAIL"
+	exit 1
+fi
+
+#
+# TRANSITION ONLY: git-delta.sh still writes the freshports/origin/main tag
+# too, and the two must agree.  Remove with the tags.
+#
+PORTS_REPO="${INGRESS_PORTS_DIR_BASE}/$(convert_repo_label_to_directory ports)"
+
+if ! MISMATCH=$(latest_commit_check ports origin/main ${PORTS_REPO})
+then
+	logger -p local3.error -t FreshPorts $0 $MISMATCH
+	echo "$0: $MISMATCH" |
+		mail -s "$SUBJECT -- file and tag disagree" "$TO_EMAIL"
 	exit 1
 fi
 
