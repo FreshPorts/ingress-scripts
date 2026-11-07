@@ -256,7 +256,8 @@ SELECT P.id,
     JOIN (SELECT DISTINCT port_id
             FROM ports_updating_ports_xref) as tmp on P.id = tmp.port_id
            WHERE E.id = P.element_id
-             AND C.id = P.category_id';
+             AND C.id = P.category_id
+    ON CONFLICT DO NOTHING';
 
 	print "sql is $sql\n";
 
