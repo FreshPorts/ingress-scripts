@@ -53,6 +53,11 @@ FETCH_OPTIONS="-qo"
 # here and not in the script.  Empty means do not ping.
 WATCHGOOSE_COMPARE_INDEX=""
 
+# portscout_upstream.sh fetches portscout's results from here, for the
+# newer upstream versions shown on port pages (#626).  Empty means do not
+# fetch, and port_upstream is left as it is.
+PORTSCOUT_URL=""
+
 # At one time, this was where the website was installed.
 # Do not include a trailing slash
 # This is usually the home directory of the freshports user
