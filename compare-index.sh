@@ -375,8 +375,8 @@ CREATE TEMP TABLE index_ports (
     pkgversion   text NOT NULL GENERATED ALWAYS AS (
                      COALESCE(NULLIF(regexp_replace(regexp_replace(
                        regexp_replace(pkgname, '^.*-', ''),
-                       '\.1[45][0-9]{5}(\$|[_,])', '\1'),
-                       '^1[45][0-9]{5}(\$|[_,])', '\1'), ''), '(empty)')) STORED
+                       '\.1[3-9][0-9]{5}(\$|[_,])', '\1'),
+                       '^1[3-9][0-9]{5}(\$|[_,])', '\1'), ''), '(empty)')) STORED
 );
 
 \copy index_ports (origin, pkgname, package_name) FROM '$tsv'
@@ -404,6 +404,13 @@ VACUUM ANALYZE index_ports;
 --   spliced in    13.1.0.1501502,2  ->  13.1.0,2
 --   on its own    1501503           ->  (nothing left)
 --
+-- 1[3-9][0-9]{5} is any OSVERSION from 13.0 to 19.x: seven digits, the
+-- first two the major release.  It was 1[45] until November 2026, which
+-- would have stopped working the day a host or the index jail ran 16.
+-- Not any seven digits: a port's own version can end in a seven digit
+-- number, and the narrower the pattern, the less of that it can eat.
+-- Both the index_ports column above and the fp side below use it.
+--
 CREATE TEMP VIEW comparison AS
 --
 -- The FreshPorts side is ports.pkgversion: what make -V PKGVERSION said when
@@ -423,8 +430,8 @@ WITH fp AS (
            CASE WHEN P.pkgversion IS NULL THEN NULL
                 ELSE COALESCE(NULLIF(regexp_replace(regexp_replace(
                        P.pkgversion,
-                       '\.1[45][0-9]{5}(\$|[_,])', '\1'),
-                       '^1[45][0-9]{5}(\$|[_,])', '\1'), ''), '(empty)')
+                       '\.1[3-9][0-9]{5}(\$|[_,])', '\1'),
+                       '^1[3-9][0-9]{5}(\$|[_,])', '\1'), ''), '(empty)')
            END AS pkgversion
       FROM ports P
       JOIN element          E  ON E.id          = P.element_id
