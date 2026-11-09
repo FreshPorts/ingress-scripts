@@ -12,7 +12,6 @@ import_packagesite.py
 # py*-freshports-git-proc-commit
 check_git.sh
 git-delta.sh
-git-last-processed-tags.sh
 /git-range-of-commits.sh
 /git-single-commit.sh
 git-to-freshports-xml.py

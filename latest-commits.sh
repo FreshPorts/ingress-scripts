@@ -34,8 +34,12 @@
 #
 #   ports:freshports/origin/main:67f02d5de925c31ed43cfd369a50295510637da1
 #
-# which is the format git-last-processed-tags.sh has always written, so the
-# file it left behind is where this one starts from.
+# which is the format git-last-processed-tags.sh dumped from the tags, so the
+# switch started from its last dump.  For one release git-delta.sh wrote both
+# the file and the tags, and latest_commit_check made sure they agreed.  The
+# tags, the check and git-last-processed-tags.sh are gone now.  The old
+# freshports/<branch> tags are still in each repo, but nothing moves or reads
+# them.
 #
 # git-delta.sh is the only writer.  Everything else reads.
 #
@@ -64,40 +68,6 @@ latest_commit_get() {
 		$1 ":" $2 == key { commit = $3 }
 		END { if (commit == "") exit 1; print commit }
 	' "${LATEST_COMMITS_FILE}"
-}
-
-#
-# latest_commit_check repo refname repodir
-#
-# TRANSITION ONLY: remove along with the tags, in the release after the one
-# which moved to this file.
-#
-# Compares the file with the freshports/<refname> tag which git-delta.sh
-# still writes.  They should always agree; if they do not, something other
-# than git-delta.sh has moved one of them, and neither can be trusted.
-#
-# Missing from both counts as agreeing: a new branch.
-#
-# Returns 0 if they agree.  Otherwise prints both values and returns 1.
-#
-# safe.directory because compare-index-daily.sh runs as freshports and the
-# repo belongs to ingress.
-#
-latest_commit_check() {
-	local repo refname repodir from_file from_tag
-
-	repo=$1
-	refname=$2
-	repodir=$3
-
-	from_file=$(latest_commit_get ${repo} ${refname})
-	from_tag=$(${GIT:-git} -c safe.directory=${repodir} -C ${repodir} \
-		rev-parse -q --verify "freshports/${refname}^{}")
-
-	[ "${from_file}" = "${from_tag}" ] && return 0
-
-	echo "${repo} ${refname}: ${LATEST_COMMITS_FILE} has '${from_file}' but tag freshports/${refname} in ${repodir} has '${from_tag}'"
-	return 1
 }
 
 #

@@ -20,13 +20,14 @@
 # again at every commit since the last change: in November 2026, two
 # years of commits, about 7 s.
 #
-# The walk stops at freshports/origin/main, the last commit FreshPorts has
-# processed (see compare-index-daily.sh), so the graph never runs ahead of
-# the rest of the site.
+# The walk stops at ports origin/main in latest_commits.txt, the last commit
+# FreshPorts has processed (see latest-commits.sh and compare-index-daily.sh),
+# so the graph never runs ahead of the rest of the site.  This used to be the
+# freshports/origin/main tag in the repo, which git-delta.sh no longer
+# writes; see https://github.com/FreshPorts/freshports/issues/522
 #
 # The repo belongs to the ingress user and this runs as freshports, so
-# safe.directory is given on each git command, as compare-index-daily.sh does.
-# We only read from it.
+# safe.directory is given on each git command.  We only read from it.
 #
 
 use strict;
@@ -44,7 +45,8 @@ my $DryRun = @ARGV && $ARGV[0] eq '--dry-run';
 
 my $Git      = '/usr/local/bin/git';
 my $Repo     = $FreshPorts::Config::BaseDirIngress . '/repos/ports';
-my $Tag      = 'freshports/origin/main';
+my $Latest   = $FreshPorts::Config::BaseDirIngress . '/latest_commits/latest_commits.txt';
+my $Key      = 'ports:freshports/origin/main';
 my @Files    = ('Makefile', 'Mk/bsd.port.mk');
 
 #
@@ -123,9 +125,23 @@ sub same {
 
 my $Start = time();
 
-my $End = git('rev-parse', '-q', '--verify', "$Tag^{}");
-chomp($End);
-die "no $Tag in $Repo -- has git-delta.sh ever completed a batch?\n" if $End eq '';
+# the last line for ports origin/main wins, as latest_commit_get does
+my $End = '';
+open(my $latest, '<', $Latest) or die "could not open $Latest: $!\n";
+while (my $line = <$latest>) {
+	chomp($line);
+	my ($repo, $ref, $commit) = split(/:/, $line);
+	$End = $commit if defined($commit) && "$repo:$ref" eq $Key;
+}
+close($latest);
+
+die "no $Key in $Latest -- has git-delta.sh ever completed a batch?\n" if $End eq '';
+die "'$End' for $Key in $Latest is not a full commit hash\n" if $End !~ /^[0-9a-f]{40}$/;
+
+# e.g. a repo cloned again, and not yet fetched as far as the file says
+my $Verified = git('rev-parse', '-q', '--verify', "$End^{commit}");
+chomp($Verified);
+die "'$End' for $Key in $Latest is not a commit in $Repo\n" if $Verified ne $End;
 
 my $dbh = $DryRun ? undef : FreshPorts::Database::GetDBHandle();
 
@@ -150,7 +166,7 @@ for (my $i = $#Commits; $i >= 0; $i--) {
 }
 
 if (%Have && $From == 0) {
-	die "none of the " . scalar(keys %Have) . " commits in category_history are on $Tag; not adding to it\n";
+	die "none of the " . scalar(keys %Have) . " commits in category_history are on main up to $End; not adding to it\n";
 }
 
 my $insert = $DryRun ? undef : $dbh->prepare('INSERT INTO category_history (commit_hash, commit_date, physical, virtual) VALUES (?, ?, ?, ?)');

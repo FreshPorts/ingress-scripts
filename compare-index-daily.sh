@@ -61,20 +61,6 @@ then
 	exit 1
 fi
 
-#
-# TRANSITION ONLY: git-delta.sh still writes the freshports/origin/main tag
-# too, and the two must agree.  Remove with the tags.
-#
-PORTS_REPO="${INGRESS_PORTS_DIR_BASE}/$(convert_repo_label_to_directory ports)"
-
-if ! MISMATCH=$(latest_commit_check ports origin/main ${PORTS_REPO})
-then
-	logger -p local3.error -t FreshPorts $0 $MISMATCH
-	echo "$0: $MISMATCH" |
-		mail -s "$SUBJECT -- file and tag disagree" "$TO_EMAIL"
-	exit 1
-fi
-
 logger -p local3.notice -t FreshPorts $0 comparing at $COMMIT
 
 #
