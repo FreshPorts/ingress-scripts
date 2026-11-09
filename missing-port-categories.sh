@@ -79,7 +79,17 @@ ROWCOUNT=$(echo "$PORTS" | sed -n 's/^(\([0-9]*\) rows*)$/\1/p')
 $LOGGER -t $LOGGERTAG "found this many invalid entries: $ROWCOUNT"
 if [ "${ROWCOUNT}" != "0" ]
 then
-  TMPFILE="/tmp/missing-ports.$$"
+  # mktemp, not /tmp/missing-ports.$$: a name made from the PID can be
+  # guessed and created first, and one left by a run which died is
+  # appended to by a later run which gets the same PID.
+  TMPFILE=$(mktemp -t missing-ports)
+  if [ $? -ne 0 ]
+  then
+    $LOGGER -t $LOGGERTAG "FATAL: could not create a temporary file for the mail"
+    # job-waiting.pl reruns us while the flag is up
+    rm -f $CHECKPORTSCATEGORIESFILE
+    exit 1
+  fi
   echo 'This is a list of ports that do not have entries in the ports_categories table' >> ${TMPFILE}
   echo 'This can be fixed with this query:'  >> ${TMPFILE}
   echo >> ${TMPFILE}
