@@ -2,7 +2,11 @@
 #
 # Copyright (c) 2026 Dan Langille
 #
-# Rewrite vuxml.topic and vuxml.description from vuln.xml, and nothing else.
+# A FIX SCRIPT, run by hand when needed.  It is not part of regular vuxml
+# processing and nothing schedules it.
+#
+# It rewrites vuxml.topic and vuxml.description from vuln.xml, and nothing
+# else.
 #
 # process_vuxml.pl replaces a changed vuln by deleting it and inserting it
 # again, then marks every affected commit again.  For all ~6700 vulns that
@@ -13,6 +17,20 @@
 #
 # The checksum is set too, so the next process_vuxml.pl run does not
 # select every vuln again.
+#
+# That is also why this is only for that one case.  The checksum is what
+# tells process_vuxml.pl a vuln has changed.  If vuln.xml has a change
+# process_vuxml.pl has not yet loaded -- a new range, a new package --
+# this script stores the new checksum without loading the change, and
+# process_vuxml.pl will never pick it up.  So, before running this:
+#
+#   1. let process_vuxml.sh finish a run, so the database matches vuln.xml
+#   2. run this straight after, before vuln.xml moves on
+#
+# This script reads vuln.xml from origin/main (VUXMLREF in
+# vuxml_fix_text.sh), which can be ahead of what process_vuxml.sh last read.
+# Check the two agree before going further: --dryrun --showvids lists every
+# vuln it would write, and that should be only the ones whose text changed.
 #
 # A vuln whose package names, ranges or references contain non-ASCII
 # text is not updated: the parse encoding could have changed those too.

@@ -2,9 +2,13 @@
 #
 # Copyright (c) 2026 Dan Langille
 #
-# Rewrite vuxml.topic and vuxml.description from vuln.xml, without the
-# delete, insert and commit marking process_vuxml.sh does.  See
-# vuxml_fix_text.pl.
+# A FIX SCRIPT, run by hand when needed; not part of regular vuxml
+# processing.  Rewrite vuxml.topic and vuxml.description from vuln.xml,
+# without the delete, insert and commit marking process_vuxml.sh does.
+#
+# Run it straight after a run of process_vuxml.sh has finished: it stores
+# each vuln's checksum, so a change in vuln.xml which process_vuxml.sh has
+# not loaded yet would never be loaded.  See vuxml_fix_text.pl.
 #
 # Usage: vuxml_fix_text.sh [--dryrun] [--showvids]
 #
