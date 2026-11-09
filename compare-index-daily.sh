@@ -42,7 +42,12 @@ SPOOL_FILE=$(mktemp ${SPOOLINGDIR}/compare-index-daily.XXXXXX) || exit 1
 #
 STARTED=$(mktemp ${SPOOLINGDIR}/compare-index-daily-started.XXXXXX) || exit 1
 
-trap "rm -f $SPOOL_FILE $STARTED" EXIT INT TERM
+trap "rm -f $SPOOL_FILE $STARTED" EXIT
+
+# ^C or a kill: leave, and fail.  Removing the files is the EXIT trap's job.
+# A trap which only removed them would let sh carry on to the next command
+# with the files gone, and exit 0 at the end.
+trap 'exit 1' HUP INT TERM
 
 #
 # The last commit FreshPorts has processed on main.  git-delta.sh records it

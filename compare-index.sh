@@ -200,7 +200,12 @@ out=$(mktemp    ${SPOOLINGDIR}/compare-index-out.XXXXXX)    || exit 1
 loaded=$(mktemp ${SPOOLINGDIR}/compare-index-loaded.XXXXXX) || exit 1
 reasons=$(mktemp ${SPOOLINGDIR}/compare-index-reasons.XXXXXX) || exit 1
 
-trap "rm -f $tsv $out $loaded $reasons" EXIT INT TERM
+trap "rm -f $tsv $out $loaded $reasons" EXIT
+
+# ^C or a kill: leave, and fail.  Removing the files is the EXIT trap's job.
+# A trap which only removed them would let sh carry on to the next command
+# with the files gone, and exit 0 at the end.
+trap 'exit 1' HUP INT TERM
 
 if [ "${COMMIT}x" != 'x' -a $BUILD = 0 ]
 then
