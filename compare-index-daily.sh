@@ -33,7 +33,16 @@ SUBJECT="FreshPorts -- compare-index"
 
 SPOOL_FILE=$(mktemp ${SPOOLINGDIR}/compare-index-daily.XXXXXX) || exit 1
 
-trap "rm -f $SPOOL_FILE" EXIT INT TERM
+#
+# When this run started.  compare-index.sh exits 0 without writing anything
+# when the INDEX has not changed since its last run, leaving refresh.txt
+# from that run behind.  A refresh.txt no newer than this is that old list.
+# The run which wrote it has already dealt with it, by scheduling it or by
+# refusing it as too long, so it is left alone.
+#
+STARTED=$(mktemp ${SPOOLINGDIR}/compare-index-daily-started.XXXXXX) || exit 1
+
+trap "rm -f $SPOOL_FILE $STARTED" EXIT INT TERM
 
 #
 # The last commit FreshPorts has processed on main.  git-delta.sh records it
@@ -112,7 +121,10 @@ then
 		;;
 	esac
 
-	if [ -s $REFRESH_LIST ]
+	if [ -s $REFRESH_LIST -a ! $REFRESH_LIST -nt $STARTED ]
+	then
+		logger -p local3.notice -t FreshPorts $0 the INDEX is unchanged, so $REFRESH_LIST is from an earlier run: not scheduling it again
+	elif [ -s $REFRESH_LIST ]
 	then
 		REFRESH_COUNT=$(wc -l < $REFRESH_LIST | tr -d ' ')
 
@@ -142,8 +154,8 @@ then
 		# count, not a test run writing its lists somewhere else with -o.
 		#
 		# sort may write its output over one of its inputs, so the history
-		# is merged in place.  A rerun on an unchanged INDEX leaves the old
-		# refresh.txt behind and adds it again, which -u makes harmless.
+		# is merged in place.  -u keeps each port once however often it is
+		# named.
 		#
 		# Doing that, sort writes a temporary file and renames it over the
 		# history, so the history ends up 0600 like the temporary file
