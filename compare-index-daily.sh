@@ -143,33 +143,36 @@ then
 			#
 			touch ${REFRESHFROMINDEXFLAG}
 			touch ${JOBWAITINGFLAG}
-		fi
 
-		#
-		# Keep every port refresh.txt has ever named, once each.  refresh.txt
-		# is rewritten on every run, so without this there is no telling
-		# which ports keep drifting.
-		#
-		# Here rather than in compare-index.sh so only the scheduled runs
-		# count, not a test run writing its lists somewhere else with -o.
-		#
-		# sort may write its output over one of its inputs, so the history
-		# is merged in place.  -u keeps each port once however often it is
-		# named.
-		#
-		# Doing that, sort writes a temporary file and renames it over the
-		# history, so the history ends up 0600 like the temporary file
-		# whatever it was before.  chmod puts it back to match refresh.txt,
-		# so it can be read by someone other than freshports.
-		#
-		REFRESH_HISTORY="${SPOOLINGDIR}/refresh-history.txt"
+			#
+			# Keep every port refresh.txt has ever named, once each.
+			# refresh.txt is rewritten on every run, so without this there is
+			# no telling which ports keep drifting.
+			#
+			# Here rather than in compare-index.sh so only the scheduled runs
+			# count, not a test run writing its lists somewhere else with -o.
+			# And only a list which is being scheduled: one refused above as
+			# too long is more likely a fault than drift, and would bury the
+			# ports which really do keep drifting.
+			#
+			# sort may write its output over one of its inputs, so the
+			# history is merged in place.  -u keeps each port once however
+			# often it is named.
+			#
+			# Doing that, sort writes a temporary file and renames it over the
+			# history, so the history ends up 0600 like the temporary file
+			# whatever it was before.  chmod puts it back to match
+			# refresh.txt, so it can be read by someone other than freshports.
+			#
+			REFRESH_HISTORY="${SPOOLINGDIR}/refresh-history.txt"
 
-		touch $REFRESH_HISTORY
-		if sort -u -o $REFRESH_HISTORY $REFRESH_HISTORY $REFRESH_LIST
-		then
-			chmod 644 $REFRESH_HISTORY
-		else
-			logger -p local3.error -t FreshPorts $0 could not add $REFRESH_LIST to $REFRESH_HISTORY
+			touch $REFRESH_HISTORY
+			if sort -u -o $REFRESH_HISTORY $REFRESH_HISTORY $REFRESH_LIST
+			then
+				chmod 644 $REFRESH_HISTORY
+			else
+				logger -p local3.error -t FreshPorts $0 could not add $REFRESH_LIST to $REFRESH_HISTORY
+			fi
 		fi
 	fi
 
