@@ -33,24 +33,15 @@
 #
 # CACHE CLEARING: LEAVE THE TRIGGERS ON.
 #
-# set-pkgversion.pl suggests disabling ports_clear_cache because pkgversion
-# is not displayed.  build_run_depends is: the port page shows it, and
+# set-pkgversion.pl, since removed, suggested disabling ports_clear_cache
+# because pkgversion is not displayed.  Do not do that here.
+# build_run_depends is displayed: the port page shows it, and
 # subtracts it from BUILD_DEPENDS and RUN_DEPENDS.  So does the 'A' section of
 # each dependency's "required by" list.  Every port changed here has stale
 # pages, and the queued re-rendering is wanted.
 #
 # port_dependencies carries cache-clearing triggers on INSERT and DELETE, so
 # the dependencies' pages are queued too.
-
-# So either run it when that is affordable, or disable the trigger for the
-# duration and leave the caches alone:
-#
-#   ALTER TABLE ports DISABLE TRIGGER ports_clear_cache;
-#   ... run this ...
-#   ALTER TABLE ports ENABLE TRIGGER ports_clear_cache;
-#
-# Disabling is safe here only because nothing rendered changes.  It would
-# not be safe for a refresh, which changes plenty.
 
 use strict;
 use FreshPorts::branches;
