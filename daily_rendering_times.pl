@@ -39,17 +39,19 @@ my $dbh = FreshPorts::Database::GetDBHandle();
 my $sql;
 my $sth;
 
-$sql = "select PageLoadSummaryUpdate('$date')";
+# $date is passed as a value, not pasted into the SQL: a placeholder means
+# whatever is on the command line can only ever be a date, or an error.
+$sql = "select PageLoadSummaryUpdate(?::date)";
 $sth = $dbh->prepare($sql);
-$sth->execute ||
-        die "Could not execute SQL $sql ... maybe invalid?";
+$sth->execute($date) ||
+        die "Could not execute SQL $sql with '$date' ... maybe invalid?";
 
 $sth->fetchrow_array;
 
-$sql = "delete from page_load_detail where date < ('$date'::date - interval '7 days')::date";
+$sql = "delete from page_load_detail where date < (?::date - interval '7 days')::date";
 $sth = $dbh->prepare($sql);
-$sth->execute ||
-        die "Could not execute SQL $sql ... maybe invalid?";
+$sth->execute($date) ||
+        die "Could not execute SQL $sql with '$date' ... maybe invalid?";
 
 $sth->finish();
 
