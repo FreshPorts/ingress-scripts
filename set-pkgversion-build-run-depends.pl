@@ -61,6 +61,13 @@ my $ME = basename($0);
 
 my $MAKE = '/usr/bin/make';   # base system make; the ports tree needs no other
 
+#
+# PATH for the make child, the same as refresh-listed-ports.pl's: the .mk
+# files make parses run shell escapes which need /usr/local/bin (jq in
+# Mk/Uses/electron.mk), and the PATH under fp-daemon lacks it.  See there.
+#
+my $MAKE_PATH = '/usr/local/bin:/usr/local/sbin:/bin:/sbin:/usr/bin:/usr/sbin';
+
 my $dryrun = 0;
 my $from   = '';
 my $limit  = 0;
@@ -82,6 +89,8 @@ sub ValuesFromMakefile {
 	my $portsdir = $FreshPorts::Config::JailBaseDir . $FreshPorts::Config::PortsDir;
 
 	my $MAKEOUTPUT;
+	local $ENV{PATH} = $MAKE_PATH;
+
 	if (!open($MAKEOUTPUT, '-|', $MAKE, '-C', "$portsdir/$origin",
 	                               "PORTSDIR=$portsdir",
 	                               '-V', 'PKGVERSION', '-V', 'BUILD_RUN_DEPENDS')) {
