@@ -22,14 +22,25 @@ export PGUSER=$DBUSER
 # separate ZFS filesystems, so a mv between them is a copy, and www could
 # read a half-written categories.php.  Within one filesystem, mv is an
 # atomic rename.
-SPOOL_FILE=$(mktemp ${HTMLROOT}/.categories.php.XXXXXX)
-
-cat << EOF > ${SPOOL_FILE}
-             <OPTION VALUE=""<?php if ($category == '') echo ' SELECTED'?>>all</OPTION>
-EOF
+#
+# If the temporary file cannot be made, stop: there is nothing to write
+# to, and the categories.php www is using stays as it is.
+#
+SPOOL_FILE=$(mktemp ${HTMLROOT}/.categories.php.XXXXXX) || {
+	logger -p local3.error -t FreshPorts $0 could not create a temporary file in ${HTMLROOT} - FATAL
+	exit 1
+}
 
 #
-# we need a blank entry as a default value
+# The whole file comes from this one query.  Its first select is the
+# "all" entry at the top of the search page's Category dropdown: a blank
+# value, which means search every category, and the default.  The second
+# select is one entry per category.
+#
+# Nothing can be written to the file before psql runs: --output empties
+# the file when psql opens it.  This script used to write the "all" line
+# with cat first, and psql always threw that copy away; the entry on the
+# page has only ever come from the query.
 #
 psql -t --output=${SPOOL_FILE} <<EOF
 select '            <OPTION VALUE=""<?php if (\$category == '''') echo '' SELECTED''?>>all</OPTION>'
