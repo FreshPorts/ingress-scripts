@@ -39,8 +39,6 @@ use constant ExpectedCopy    => 5900;
 use constant ExpectedDelete  => 10;
 use constant ExpectedUpdates => 100;
 
-my $PSQL = "/usr/local/bin/psql";
-
 my $filename;
 my $dryrun;        # possibly no longer works - 2025-08-28
 my $showchecksums;
@@ -122,7 +120,11 @@ sub populate_vuxml_import($;$)
     eval {
         $dbh->do($truncate_sql);
         print "committing truncate\n";
-        # we commit this here because the psql import which follows will deadlock.
+        # Commit the truncate before the import. process_vuxml_import_temp_file.py,
+        # run below, loads vuxml_import over its own database connection. Until
+        # this transaction commits, the truncate's lock on vuxml_import blocks that
+        # load, and we are waiting for the script to finish: neither side would
+        # ever proceed.
         $dbh->commit();
 
         # use qx, similar to `backticks` - use chomp to remove the trailing whitespace
@@ -175,7 +177,10 @@ sub remove_deleted_vids($)
             die("bad number of vuxml deleted");
         }
 
-        # We commit because later we will be importing via psql and we don't want those two to deadlock
+        # Commit the deletions now. The vuxml_import load done by
+        # process_vuxml_import_temp_file.py (over its own database connection) has
+        # already run, in populate_vuxml_import(), so nothing later in this script
+        # is waiting on this transaction.
         $dbh->commit();
 
         print "vuln not present in xml files have been deleted from the database.\n";
