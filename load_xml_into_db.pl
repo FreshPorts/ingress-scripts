@@ -80,8 +80,23 @@ print "That commit is of Type: '$source'\n";
 
 print "EOF\n";
 
+#
+# No database, no load: say so and exit 1, so freshports.sh puts the XML
+# in retry/ rather than archiving a commit which was never loaded.
+#
+# Until now this was "if ($dbh->{Active}) { ... }" with nothing in the else:
+# the load was skipped, and the non-zero exit came only by accident, from
+# the END block below dying on "Can't call method "disconnect" on unblessed
+# reference".  Checked on dvl-ingress01 with an unreachable database: that
+# crash gave exit 22.
+#
 my $dbh = FreshPorts::Database::GetDBHandle();
-if ($dbh->{Active}) {
+if (!$dbh || !$dbh->{Active}) {
+	print "FATAL: could not connect to the database; this commit was not loaded\n";
+	exit 1;
+}
+
+{
 
 	if ($source eq 'subversion') {
 
@@ -104,6 +119,12 @@ if ($dbh->{Active}) {
 	$Munger->add_observer($ObserverCommits);
 
 	print "about to process\n";
+	#
+	# $ErrorFound is true when refreshing a port reported errors.  By then
+	# the commit is committed, the errors are recorded as a sanity test
+	# failure and the notice has been mailed, so this still exits 0: loading
+	# it again from retry/ would only find it already loaded.
+	#
 	$ErrorFound = $Munger->process();
 
 	print " now is the commit:\n";
@@ -118,6 +139,7 @@ if ($dbh->{Active}) {
 
 
 END {
-   $dbh->disconnect();
+   # only a handle which connected can be disconnected
+   $dbh->disconnect() if $dbh;
    undef $dbh;
 }
