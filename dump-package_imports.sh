@@ -34,7 +34,7 @@ fi
 
 . config.sh
 
-if [ $OFFLINE = 1 ]
+if [ "$OFFLINE" = 1 ]
 then
 	exit 0
 fi
@@ -55,26 +55,33 @@ export PGUSER=$DBUSER_REPORTING
 # see also PGSSLMODE and PGSSLROOTCERT in config.sh
 
 
-sql=$( mktemp ${SPOOLINGDIR}/packages_last_checked-sql.XXXXXX)
-data=$(mktemp ${SPOOLINGDIR}/packages_last_checked-data.XXXXXX)
+sql=$( mktemp ${SPOOLINGDIR}/packages_last_checked-sql.XXXXXX)  || exit 1
+data=$(mktemp ${SPOOLINGDIR}/packages_last_checked-data.XXXXXX) || exit 1
 
 # fetch and extract the contents of packages_last_checked
 # data to be fetched
 echo 'select abi.name, PLC.* from packages_last_checked PLC join abi on plc.abi_id = abi.id order by ' >> $sql
 echo "$SORT_BY;" >> $sql
 
-# run the SQL
-psql -f $sql >> $data
+# Run the SQL. ON_ERROR_STOP=1 makes psql exit non-zero (3) when the
+# query fails; without it, psql -f exits 0 after an SQL error. A failed
+# connection already exits 2.
+psql -v ON_ERROR_STOP=1 -f $sql >> $data
+psql_rc=$?
 
-# if all good, echo the data & remove the files. If not, leave the files.
-# the output of this script will be saved and an error flagged
-if [ $? == 0 ]
+# On success, print the data and remove both temp files.
+#
+# On failure, print nothing, keep both files for debugging, log where
+# they are, and exit 1. The caller, hourly/990.refresh_package_imports_page
+# in FreshPorts periodics, then keeps the previous copy of the page
+# instead of replacing it with this script's empty output.
+if [ $psql_rc -eq 0 ]
 then
   cat $data
   rm $data $sql
 else
-  # raise an error, somewhere, somehow
-  $LOGGER -t $0[$$] fatal error - see sql at $sql and output at $data
+  $LOGGER -t $0[$$] fatal error: psql exited $psql_rc - see sql at $sql and output at $data
+  exit 1
 fi
 
 $LOGGER -t $0[$$] finishes
