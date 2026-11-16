@@ -6,9 +6,17 @@
 # owner root, group freshports).  Database passwords are not kept here;
 # they are in ~freshports/.pgpass.
 #
-# The only secret in this file to date is the token in the
-# WATCHGOOSE_COMPARE_INDEX URL.  It is low-value (at worst, someone
-# could send false "run worked" pings), so the file stays world-readable.
+# Two values in this file should not be published:
+#
+#   - the token in the WATCHGOOSE_COMPARE_INDEX URL.  It is low-value
+#     (at worst, someone could send false "run worked" pings).
+#
+#   - PORTSCOUT_URL, the location of portscout's results.  It is not a
+#     credential, but it is not meant to be public.
+#
+# With mode 644, any local account on the ingress host can read both.
+# Whether that is acceptable, or the file should lose world read (see
+# the steps below), is the admin's decision.
 #
 # The database information is needed by nrpe for monitoring.
 #
