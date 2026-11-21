@@ -69,5 +69,31 @@ fi
 #	exit 0
 #fi
 
-cd ${FRESHPORTS_JAIL_BASE_DIR}/${PORTSDIR}
-/usr/bin/find -s -f * -type d -regex '[a-z].*' -maxdepth 0 | /usr/bin/xargs
+PORTSTREE="${FRESHPORTS_JAIL_BASE_DIR}/${PORTSDIR}"
+
+if ! cd "${PORTSTREE}"
+then
+	echo "$0: cannot cd to the ports tree ${PORTSTREE}" >&2
+	exit 1
+fi
+
+#
+# The top-level directories which start with a lower-case letter, sorted:
+# accessibility arabic archivers ...
+#
+# This used to be "find -s -f * ...".  When the ports tree was empty, *
+# matched nothing and stayed a literal *, so find read -type as options
+# and failed with "illegal option -- t".  The pipeline still exited 0,
+# with xargs's status, so the caller got an empty list and carried on
+# as if the ports tree had no categories.  Search . instead, and fail
+# when nothing is found.
+#
+CATEGORIES=$(/usr/bin/find -s . -mindepth 1 -maxdepth 1 -type d -name '[a-z]*' | /usr/bin/sed 's|^\./||' | /usr/bin/xargs)
+
+if [ -z "${CATEGORIES}" ]
+then
+	echo "$0: no categories found in ${PORTSTREE}" >&2
+	exit 1
+fi
+
+echo "${CATEGORIES}"
