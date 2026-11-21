@@ -1,6 +1,7 @@
 #!/bin/sh
 
-# Compare the ports INDEX with the database, once a day, and mail the result.
+# Compare the ports INDEX with the database, once a day.  Mail only when
+# there is something to look at: see the end of this script.
 #
 # The INDEX is built at the commit FreshPorts has finished processing, so the
 # two sides describe the same tree.  Without that the comparison reports ports
@@ -17,7 +18,7 @@
 # machine's own time.
 #
 # Nothing here needs arguments.  compare-index.sh does the work; this finds
-# the commit, hands it over, and mails what comes back.
+# the commit, hands it over, and mails what comes back if it needs reading.
 
 . /usr/local/etc/freshports/config.sh
 
@@ -202,17 +203,80 @@ else
 fi
 
 #
-# Mailed whether it worked or not: a silent failure at 02:04 is one nobody
-# finds until the lists go stale.
+# Mail only when there is something for a person to do.  A run that went well
+# used to send mail too, which came to one per host per day, all alike, and
+# those got skimmed past.  A mail which arrives only when it matters gets
+# read.
 #
-# make index names every category as it goes, sixty-odd lines of
-# '--- describe.foo ---' around the five lines anyone reads.  They are left
-# in the spool file, which is what the log wants, and taken out of the mail.
-# Removing the markers rather than whole lines because the first and last are
-# run together with the text either side of them.
+# Worth a mail:
 #
-sed -e 's/--- describe\.[^ ]* ---//g' -e '/^[[:space:]]*$/d' ${SPOOL_FILE} |
-	mail -s "$SUBJECT" "$TO_EMAIL"
+#   - the run failed, or refused a refresh list as too long (RESULT is not 0)
+#   - not-in-index.txt or not-in-freshports.txt has something in it.  Those
+#     two mean the database and the ports tree disagree about which ports
+#     exist, and nothing fixes that automatically.
+#
+# Not worth a mail:
+#
+#   - refresh.txt.  Those ports were handed to refresh-from-index.sh above.
+#   - index-behind.txt.  The INDEX lags the ports tree, and the next INDEX
+#     catches up.  Nothing to do.
+#
+# A list counts only if this run wrote it (newer than STARTED).  When the
+# INDEX is unchanged, the lists are left over from an earlier run, and that
+# run sent its own mail.
+#
+# Still noticed without a mail: a run that never happens, or that dies
+# before getting here, does not ping watchgoose, and watchgoose complains.
+# On a host with no WATCHGOOSE_COMPARE_INDEX nothing would notice that,
+# which was just as true when every run sent mail but nobody read it.
+#
+MAIL=0
+
+if [ $RESULT != 0 ]
+then
+	MAIL=1
+fi
+
+for bucket in not-in-index not-in-freshports
+do
+	LIST="${SPOOLINGDIR}/${bucket}.txt"
+
+	if [ -s $LIST -a $LIST -nt $STARTED ]
+	then
+		MAIL=1
+		COUNT=$(wc -l < $LIST | tr -d ' ')
+		SUBJECT="$SUBJECT -- $COUNT $bucket"
+
+		#
+		# The ports themselves, so the mail can be acted on without
+		# logging in.  Capped: a list this long is more likely a fault
+		# (the wrong tree, a database behind) than that many ports, and the
+		# count above already says so.
+		#
+		echo ""                      >> ${SPOOL_FILE}
+		echo "${bucket}.txt:"        >> ${SPOOL_FILE}
+		head -n 50 $LIST             >> ${SPOOL_FILE}
+		if [ $COUNT -gt 50 ]
+		then
+			echo "... and $((COUNT - 50)) more in $LIST" >> ${SPOOL_FILE}
+		fi
+	fi
+done
+
+if [ $MAIL = 1 ]
+then
+	#
+	# make index names every category as it goes, sixty-odd lines of
+	# '--- describe.foo ---' around the five lines anyone reads.  They are
+	# left in the spool file and taken out of the mail.  The markers are
+	# removed, not whole lines, because the first and last are run together
+	# with the text either side of them.
+	#
+	sed -e 's/--- describe\.[^ ]* ---//g' -e '/^[[:space:]]*$/d' ${SPOOL_FILE} |
+		mail -s "$SUBJECT" "$TO_EMAIL"
+else
+	logger -p local3.notice -t FreshPorts $0 nothing to report, no mail sent
+fi
 
 logger -p local3.notice -t FreshPorts $0 has completed.
 
