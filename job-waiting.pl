@@ -85,14 +85,25 @@ do {
 		if (-f $flag) {
 			$JobFound =1;
 			FreshPorts::Utilities::Report('notice', "$flag exists.  About to run $script via system()");
-			# this must be >> so that each run is appended to the log, which is rotated at midnight
-			FreshPorts::Utilities::Report('notice', "details are: $FreshPorts::Config::ScriptDir/$script >> $FreshPorts::Config::LogJobsWaiting");
-			system("$FreshPorts::Config::ScriptDir/$script >> $FreshPorts::Config::LogJobsWaiting");
-			if ($? == 0) {
-				# all ok
-				FreshPorts::Utilities::ReportError('notice', "$script finished with exit status '$?' and '$!'");
+			# this must be >> so that each run is appended to the log, which is rotated at midnight.
+			# 2>&1 sends the script's error output to that log as well; without it, stderr
+			# went wherever this daemon's stderr goes, which is nowhere anyone reads.
+			FreshPorts::Utilities::Report('notice', "details are: $FreshPorts::Config::ScriptDir/$script >> $FreshPorts::Config::LogJobsWaiting 2>&1");
+			system("$FreshPorts::Config::ScriptDir/$script >> $FreshPorts::Config::LogJobsWaiting 2>&1");
+
+			# $? holds the raw wait status: decode it into an exit code or a signal.
+			# A failure is logged at err, so it stands out from the notice-level chatter.
+			my $status = $?;
+			if ($status == -1) {
+				FreshPorts::Utilities::ReportError('err', "$script could not be run: $!");
+			} elsif ($status & 127) {
+				my $signal = $status & 127;
+				FreshPorts::Utilities::ReportError('err', "$script died from signal $signal; output is in $FreshPorts::Config::LogJobsWaiting");
+			} elsif ($status >> 8) {
+				my $exit = $status >> 8;
+				FreshPorts::Utilities::ReportError('err', "$script failed with exit code $exit; output is in $FreshPorts::Config::LogJobsWaiting");
 			} else {
-				FreshPorts::Utilities::ReportError('notice', "$script failed with exit status '$?' and '$!'");
+				FreshPorts::Utilities::Report('notice', "$script finished with exit code 0");
 			}
 			FreshPorts::Utilities::Report('notice', "Finished running $script");
 		} else {

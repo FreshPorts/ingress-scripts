@@ -16,6 +16,7 @@
 
 if [ ! -f config.sh ]
 then
+	/usr/bin/logger -p local3.err -t FreshPorts "config.sh not found by $0"
 	echo "config.sh not found by $0"
 	exit 1
 fi
@@ -29,6 +30,7 @@ fi
 
 if [ "${MOVEDFLAGFILE}x" = 'x' -o "${PORTSDIR}x" = 'x' -o "${FRESHPORTS_JAIL_BASE_DIR}x" = 'x' ]
 then
+	/usr/bin/logger -p local3.err -t FreshPorts "$0: please set MOVEDFLAGFILE, PORTSDIR, and FRESHPORTS_JAIL_BASE_DIR in config.sh"
 	echo "please set MOVEDFLAGFILE, PORTSDIR, and FRESHPORTS_JAIL_BASE_DIR in config.sh"
 	exit 1
 fi
@@ -37,6 +39,7 @@ if [ -r "${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}/MOVED" -a -f "${FRESHPORTS_JAIL_
 then
     # all good
 else
+   /usr/bin/logger -p local3.err -t FreshPorts "$0: '${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}/MOVED' is not a readable file or does not exist"
    echo "\${FRESHPORTS_JAIL_BASE_DIR}\${PORTSDIR}/MOVED evaluates to '${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}/MOVED' which is not a readable file or does not exist."
    exit 1
 fi

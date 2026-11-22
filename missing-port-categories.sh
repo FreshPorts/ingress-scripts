@@ -9,6 +9,7 @@ QUERYORDER="ORDER BY category, name"
 
 if [ ! -f config.sh ]
 then
+	/usr/bin/logger -p local3.err -t FreshPorts "config.sh not found by $0"
 	echo "config.sh not found by $0"
 	exit 1
 fi
