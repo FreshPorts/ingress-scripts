@@ -44,7 +44,8 @@ fi
 /bin/mv ${SPOOL} ${HTMLROOT}/backend-status.html
 
 #
-# The versions of the ingress code and its packages, one "name version" per line.
+# The versions of the ingress code and its packages, one "name version" per line;
+# a git checkout adds its branch: "name version branch".
 # www shows them as HTML comments on /other-copyrights.php, where the
 # all-hosts versions page reads them.
 #
@@ -54,15 +55,22 @@ VERSIONS="${HTMLROOT}/.ingress-versions.txt.$$.tmp"
 # 9999 placeholder.  Anywhere else, report the package version.
 # The checkout belongs to someone else, so git needs safe.directory.
 #
+# A git checkout also reports the branch it is on, as a third field, so the
+# versions page can show which branch dvl and dev are testing.  A detached
+# HEAD has no branch and gets no third field, nor does a package install,
+# so on a package host every line keeps the "name version" form.
+#
 #   $1 = name to report, $2 = directory, $3 = package which installs it
 ingress_version() {
+	BRANCH=
 	if [ -d "$2/.git" ]
 	then
 		VERSION=$(/usr/local/bin/git -c safe.directory="$2" -C "$2" describe --tags --always 2>/dev/null)
+		BRANCH=$(/usr/local/bin/git -c safe.directory="$2" -C "$2" symbolic-ref --short -q HEAD 2>/dev/null)
 	else
 		VERSION=$(/usr/sbin/pkg query %v "$3" 2>/dev/null)
 	fi
-	echo "$1 ${VERSION:-unknown}"
+	echo "$1 ${VERSION:-unknown}${BRANCH:+ ${BRANCH}}"
 }
 
 ingress_version ingress-scripts /usr/local/libexec/freshports          p5-freshports-ingress-scripts >> ${VERSIONS}
