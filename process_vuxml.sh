@@ -42,8 +42,36 @@ then
 	${LOGGER} -t ${LOGGERTAG} "vuxml processing begins"
 	echo $(date) "${LOGGERTAG}"  "vuxml processing begins"                      >> ${LOGFILE}
 	
-	# define the vuln file we are going to operate on
-	VULNSRC="${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}/security/vuxml/vuln.xml"
+	# Read security/vuxml from origin/main, not from the working tree.
+	# Commit processing leaves the tree at the last commit it loaded, which
+	# can be on a quarterly branch, and VuXML is maintained only on main: a
+	# quarterly tree has an older vuln.xml.  A run against it deletes the
+	# vulns added since (the "deleting way too many rows" guard stops that)
+	# and puts every vuln changed since back to its old text.  A run started
+	# by a VuXML commit always sees main, but one started by hand may not.
+	# git archive reads the local clone only; it does not fetch.
+	PORTSREPO="${FRESHPORTS_JAIL_BASE_DIR}${PORTSDIR}"
+	VUXMLREF=${VUXMLREF:-origin/main}
+	VUXMLDIR=$(mktemp -d -t vuxml-main)
+	if [ $? -ne 0 ]
+	then
+		${LOGGER} -t ${LOGGERTAG} "FATAL could not create temp directory for security/vuxml"
+		rm ${VUXMLMUTEX}
+		exit 1
+	fi
+
+	/usr/local/bin/git -c safe.directory=${PORTSREPO} -C ${PORTSREPO} archive ${VUXMLREF} security/vuxml | tar -xf - -C ${VUXMLDIR}
+	VULNSRC="${VUXMLDIR}/security/vuxml/vuln.xml"
+	if [ ! -s ${VULNSRC} ]
+	then
+		${LOGGER} -t ${LOGGERTAG} "FATAL could not extract security/vuxml from ${VUXMLREF} in ${PORTSREPO}"
+		echo $(date) "FATAL could not extract security/vuxml from ${VUXMLREF} in ${PORTSREPO}" >> ${LOGFILE}
+		rm -rf ${VUXMLDIR}
+		rm ${VUXMLMUTEX}
+		exit 1
+	fi
+
+	echo $(date) "reading security/vuxml from ${VUXMLREF}:" $(/usr/local/bin/git -c safe.directory=${PORTSREPO} -C ${PORTSREPO} log -1 --format='%h %ci %s' ${VUXMLREF} -- security/vuxml) >> ${LOGFILE}
 
 	# vuln.xml pulls in vuln/*.xml via external entities. expat's billion
 	# laughs protection treats that expansion as an attack and aborts with
@@ -54,6 +82,7 @@ then
 	if [ $? -ne 0 ]
 	then
 		${LOGGER} -t ${LOGGERTAG} "FATAL could not create temp file for flattened vuln.xml"
+		rm -rf ${VUXMLDIR}
 		rm ${VUXMLMUTEX}
 		exit 1
 	fi
@@ -65,9 +94,13 @@ then
 	then
 		${LOGGER} -t ${LOGGERTAG} "FATAL xmllint could not flatten ${VULNSRC} - see ${LOGFILE}"
 		rm -f ${VULNFILE}
+		rm -rf ${VUXMLDIR}
 		rm ${VUXMLMUTEX}
 		exit 1
 	fi
+
+	# the flattened copy is all process_vuxml.pl needs
+	rm -rf ${VUXMLDIR}
 
 	${LOGGER} -t ${LOGGERTAG} "process_vuxml.pl begins on ${VULNFILE}"
 	echo $(date) "process_vuxml.pl begins on ${VULNFILE}"                       >> ${LOGFILE}
