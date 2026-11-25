@@ -149,6 +149,10 @@ sub populate_vuxml_import($;$)
     if ($@) {
         warn "Error during COPY: $@";
         $dbh->rollback(); # Rollback on error
+        # Stop here.  Carrying on with a short or empty vuxml_import would
+        # treat every vuln missing from it as deleted upstream.  The die in
+        # the eval above (via ReportError) only ends the eval, not the run.
+        die "$0: stopping: vuxml_import was not loaded correctly\n";
     }
 } # MAIN
 
@@ -188,6 +192,12 @@ sub remove_deleted_vids($)
     if ($@) {
         warn "Error during delete: $@";
         $dbh->rollback(); # Rollback on error
+        # Stop here.  Too many deletions means the vuln.xml just read is not
+        # the one we expected (an old or partial copy).  Carrying on would
+        # load every vuln that differs from it, putting old text back.  The
+        # die in the eval above (via ReportError) only ends the eval, not
+        # the run.
+        die "$0: stopping: refusing to update vulns from this vuln.xml\n";
     }
 }
 
