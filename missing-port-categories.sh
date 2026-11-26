@@ -22,37 +22,6 @@ then
 	exit 0
 fi
 
-# this logging should be found /var/log/freshports.log
-#
-$LOGGER -t $LOGGERTAG "This is debug code for the periodic issue: failed: fe_sendauth: no password supplied"
-
-$LOGGER -t $LOGGERTAG "Checking for the ${DBUSER} user password"
-$LOGGER -t $LOGGERTAG "$(grep -l ${DBUSER} ~/.pgpass)"
-
-# include the -- otherwise this gets interpreted as a argument: -rw------- 1 freshports freshports 230 Aug 28 13:47 /var/db/freshports/.pgpass
-# and we get: logger: illegal option -- r
-# usage: logger [-46Ais] [-f file] [-h host] [-P port] [-p pri] [-t tag]
-#               [-S addr:port] [message ...]
-
-# this sometimes gets a No such file or directory
-$LOGGER -t $LOGGERTAG -- 'looking at my pgpass file'
-$LOGGER -t $LOGGERTAG -- $(ls -l ~/.pgpass)
-$LOGGER -t $LOGGERTAG -- 'looking at my home dir'
-$LOGGER -t $LOGGERTAG -- $(ls -l ~/)
-$LOGGER -t $LOGGERTAG -- 'moving to home dir'
-cd ~
-$LOGGER -t $LOGGERTAG -- 'what is over here?'
-$LOGGER -t $LOGGERTAG -- $(pwd)
-cd -
-$LOGGER -t $LOGGERTAG -- 'and back again'
-
-# so let's try a full path - the "who am i?" below is always showing: uid=10001(freshports) gid=10001(freshports) groups=10001(freshports)
-$LOGGER -t $LOGGERTAG -- $(ls -l /var/db/freshports/.pgpass)
-
-$LOGGER -t $LOGGERTAG "testing"
-$LOGGER -t $LOGGERTAG "done checking for the user password"
-$LOGGER -t $LOGGERTAG "who am i? $(id)"
-
 #
 # One query for both the count and the list, so they come from the same
 # snapshot and cannot disagree.  The count is taken from psql's footer,
