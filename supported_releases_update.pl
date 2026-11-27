@@ -32,6 +32,16 @@
 # change is printed, so it shows up in the daily periodic mail, and logged.
 # A run which changes nothing prints nothing.
 #
+# Port pages label each ABI row of their Packages table CURRENT (the major
+# of branch main) or EOL (a major not in this table, below the highest one
+# which is).  That table is cached per port on the web servers and rebuilt
+# only when the packages cache is cleared.  So when the set of majors in
+# the table changes, or main's major does, this sends NOTIFY
+# packages_imported, as a package import does; fp-listen on each web
+# server then clears its whole packages cache.  The notify is delivered on
+# commit, so it goes out only with the change.  A new releng/N.M within a
+# major already listed changes no label and sends nothing.
+#
 # Nothing is changed unless both files are fetched and pass the checks in
 # wanted().  A failed fetch, or a change in the format of either file,
 # leaves the table as it is and exits non-zero, so periodic reports it.
@@ -153,6 +163,19 @@ sub show_minor {
 	return defined($minor) ? $minor : '-';
 }
 
+#
+# What the port pages' CURRENT / EOL labels depend on: the distinct majors
+# and main's major.  e.g. "16 15 14 main=16".
+#
+sub label_key {
+	my ($Rows) = @_;
+
+	my %majors = map { $_->[0] => 1 } values %$Rows;
+	my $main   = $Rows->{'main'} ? $Rows->{'main'}[0] : '-';
+
+	return (%majors ? join(' ', sort { $b <=> $a } keys %majors) : 'none') . " main=$main";
+}
+
 my $Start = time();
 
 my $Want = wanted();
@@ -199,6 +222,13 @@ foreach my $branch (by_release(\%Have)) {
 
 	$delete->execute($branch) or die "could not remove $branch";
 	push(@Changes, "removed $branch");
+}
+
+my ($LabelsWere, $LabelsNow) = (label_key(\%Have), label_key($Want));
+if ($LabelsWere ne $LabelsNow) {
+	# fp-listen on the web servers clears the packages caches
+	$dbh->do('NOTIFY packages_imported') or die 'could not notify packages_imported';
+	push(@Changes, "majors $LabelsWere -> $LabelsNow, clearing the packages caches");
 }
 
 $dbh->commit();
