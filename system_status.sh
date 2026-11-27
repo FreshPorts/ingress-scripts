@@ -76,8 +76,12 @@ ingress_version() {
 ingress_version ingress-scripts /usr/local/libexec/freshports          p5-freshports-ingress-scripts >> ${VERSIONS}
 ingress_version ingress-modules /usr/local/lib/perl5/site_perl/FreshPorts p5-freshports-ingress-modules >> ${VERSIONS}
 
-# every other FreshPorts package; the two above are already reported
-/usr/sbin/pkg query '%n %v' | /usr/bin/grep -i freshports | \
+# every other FreshPorts package; the two above are already reported.
+# Pick them by origin (the freshports/ category of the FreshPorts ports
+# tree), not by name: py314-packages-import has no "freshports" in its
+# name, so matching names left it off the versions page.
+/usr/sbin/pkg query '%o %n %v' | \
+	/usr/bin/awk '$1 ~ /^freshports\// { print $2, $3 }' | \
 	/usr/bin/grep -v -e '^p5-freshports-ingress-scripts ' -e '^p5-freshports-ingress-modules ' >> ${VERSIONS}
 
 # Replace the file only when a version changes: www uses its mtime for
