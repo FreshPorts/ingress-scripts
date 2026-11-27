@@ -8,6 +8,7 @@ fetch-parse-meta.conf
 get_packagesite.txz_date
 import-via-copy-packagesite-all-raw-fields.py
 import_packagesite.py
+packages-delete-missing-repos.py
 
 # py*-freshports-git-proc-commit
 check_git.sh

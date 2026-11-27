@@ -86,4 +86,10 @@ else
   $LOGGER -t $0[$$] fatal error - see sql at $sql
 fi
 
+# Delete the packages of repos which have been missing from pkg.freebsd.org
+# for more than 7 days, e.g. FreeBSD:14:armv6 latest.  It prints one line
+# per repo emptied, so that shows in the daily periodic mail; most days it
+# prints nothing.  re https://github.com/FreshPorts/freshports/issues/449
+./packages-delete-missing-repos.py || $LOGGER -t $0[$$] packages-delete-missing-repos.py failed
+
 $LOGGER -t $0[$$] finishes
