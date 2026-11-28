@@ -29,7 +29,6 @@ print "\$FreshPorts::Config::JailName                              = '$FreshPort
 print "\$FreshPorts::Config::JobWaiting                            = '$FreshPorts::Config::JobWaiting'\n";
 print "\$FreshPorts::Config::MovedFileFlag                         = '$FreshPorts::Config::MovedFileFlag'\n";
 print "\$FreshPorts::Config::NotifyAdmin                           = '$FreshPorts::Config::NotifyAdmin'\n";
-print "\$FreshPorts::Config::PortsFreezeFile                       = '$FreshPorts::Config::PortsFreezeFile'\n";
 print "\$FreshPorts::Config::PortsTreeCount                        = '$FreshPorts::Config::PortsTreeCount'\n";
 print "\$FreshPorts::Config::Ports_Default_Directory               = '$FreshPorts::Config::Ports_Default_Directory'\n";
 print "\$FreshPorts::Config::QueueBaseDir                          = '$FreshPorts::Config::QueueBaseDir'\n";

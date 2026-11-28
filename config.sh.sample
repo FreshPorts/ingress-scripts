@@ -145,7 +145,6 @@ JOBWAITINGFLAG=${JOBWAITINGFLAG:-${BASEDIR}/signals/job_waiting}
 REFRESH_FROM_INDEX_MAX=50
 
 CHECKPORTSCATEGORIESFILE="${BASEDIR}/signals/check_port_categories"
-PORTSFREEZEFILE="${BASEDIR}/signals/PortsFreezeIsOn"
 
 VUXMLFLAGFILE="${BASEDIR}/signals/vuxml"
 VUXMLMUTEX="${BASEDIR}/signals/vuxml_mutex"
